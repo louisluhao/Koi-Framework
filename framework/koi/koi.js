@@ -722,6 +722,13 @@
 	 */
 	$(function ()
 	{
+		$('meta[scheme="koi"]').each(function ()
+		{
+			var tag = $(this).remove();
+		
+			_.metadata[tag.attr('name')] = tag.attr('content');
+		});
+
 		_.readyQueue.documentReady = true;
 		
 		_.makeReady();

@@ -43,8 +43,27 @@
 		
 		/**
 		 *	A collection of scripts to embed.
+		 *
+		 *	Signature:
+		 *	[
+		 *		<fileName>,
+		 *
+		 *		...
+		 *	]
 		 */
 		scripts = [],
+		
+		/**
+		 *	A collection of the files which have been included.
+		 *
+		 *	Signature:
+		 *	{
+		 *		<fileName>: <true|false>,
+		 *
+		 *		...
+		 *	}
+		 */
+		included = {},
 		
 		/**
 		 *	A collection of manifest documents.
@@ -247,6 +266,13 @@
 	 */
 	function simpleRequest(file, listener)
 	{
+		if (included[file] !== undefined)
+		{
+			return;
+		}
+		
+		included[file] = true;
+	
 			/**
 			 *	The request object.
 			 */
@@ -292,14 +318,40 @@
 	 */
 	function each(source, callback)
 	{
-		var key;
+			/**
+			 *	The source key.
+			 */
+		var key,
 		
-		for (key in source)
+			/**
+			 *	The length of the source.
+			 */
+			length = source.length;
+
+		//	For objects
+		if (length === undefined)
 		{
-			if (callback.call(source[key], key, source[key]) === false)
+			for (key in source)
 			{
-				break;
+				if (callback.call(source[key], key, source[key]) === false)
+				{
+					break;
+				}
 			}
+		}
+		
+		//	For arrays
+		else
+		{
+			key = 0;
+			
+			for (; key < length; key++)
+			{
+				if (callback.call(source[key], key, source[key]) === false)
+				{
+					break;
+				}
+			}	
 		}
 	}
 	
@@ -360,7 +412,7 @@
 	 */
 	function attemptResourceLoad(resource)
 	{
-		if (isHeld(resource))
+		if (isHeld(resource) || resource.included)
 		{
 			return;
 		}
@@ -458,6 +510,16 @@
 			throw new SyntaxError("ProjectManifest.includes");
 		}
 		
+		//	Handle configurations
+		if (manifest.application !== undefined)
+		{
+			each(manifest.application, function (index, file)
+			{
+				embedScript(file + '.js');
+			});
+		}
+		
+		//	Handle functional includes.
 		each(manifest.includes, function (framework, types)
 		{
 			each(types, function (type, resources)
@@ -485,25 +547,13 @@
 	 */
 	(function ()
 	{
-			/**
-			 *	A metadata tag.
-			 */
-		var tag,
-		
-			/**
-			 *	The current index in the metatags array.
-			 */
-			index = 0;
-			
-		for (; index < metatags.length; index++)
+		each(metatags, function (index, tag)
 		{
-			tag = metatags[index];
-			
 			if (tag.getAttribute("scheme") === "koi-bootstrap")
 			{
 				metadata[tag.getAttribute("name")] = tag.getAttribute("content");
 			}
-		}
+		});
 		
 		//	Cleanup
 		metatags = undefined;
@@ -528,5 +578,5 @@
 	{
 		simpleRequest(metadata.manifest, processProjectManifest);
 	}
-	
+
 }());
