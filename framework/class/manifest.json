@@ -1,0 +1,11 @@
+{
+	"name": "class",
+	
+	"class": "framework",
+	
+	"framework": "koi",
+	
+	"composition": ["js"],
+	
+	"version": "1.0.0"
+}
