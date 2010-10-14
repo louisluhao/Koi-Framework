@@ -23,7 +23,7 @@
 		{
 			"framework":
 			{
-				"class": "1.0.0"
+				"class": "1.0.x"
 			}
 		}
 	}

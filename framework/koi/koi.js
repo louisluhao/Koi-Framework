@@ -166,6 +166,11 @@
 		metadata: application('metadata', {}),
 		
 		/**
+		 *	System Modules
+		 */
+		module: {},
+		
+		/**
 		 *	If the framework has dispatched its ready event.
 		 */
 		isReady: false,

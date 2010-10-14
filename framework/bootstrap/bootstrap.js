@@ -123,6 +123,16 @@
 		resourceCache = {},
 		
 		/**
+		 *	Flag to determine if the application resources have been loaded.
+		 */
+		applicationResourcesLoaded = false,
+		
+		/**
+		 *	The manifest for this application.
+		 */
+		applicationManifest,
+		
+		/**
 		 *	The head of this document.
 		 */
 		head = document.getElementsByTagName('head')[0];
@@ -318,6 +328,11 @@
 	 */
 	function each(source, callback)
 	{
+		if (source === undefined)
+		{
+			return;
+		}
+	
 			/**
 			 *	The source key.
 			 */
@@ -406,6 +421,48 @@
 	}
 	
 	/**
+	 *	Once the bootstrapping process has finished, load any application resources.
+	 */
+	function loadApplicationResources()
+	{
+		if (applicationResourcesLoaded)
+		{
+			return;
+		}
+	
+		var ready = true
+		
+		each(resourceCache, function (key, resource)
+		{
+			if (!resource.included)
+			{
+				ready = false;
+				return false;
+			}
+		});
+		
+		if (!ready)
+		{
+			return;
+		}
+		
+		applicationResourcesLoaded = true;
+		
+		if (applicationManifest.application !== undefined)
+		{
+			each(applicationManifest.application.scripts, function (index, file)
+			{
+				embedScript(file + '.js');
+			});
+			
+			each(applicationManifest.application.styles, function (index, file)
+			{
+				embedStylesheet(file + '.css');
+			});
+		}
+	}
+	
+	/**
 	 *	Attempt to load a resource.
 	 *
 	 *	@param resource	The resource item to load.
@@ -454,6 +511,8 @@
 			
 			attemptResourceLoad(item);
 		});
+		
+		loadApplicationResources();
 	}
 	
 	//------------------------------
@@ -510,10 +569,12 @@
 			throw new SyntaxError("ProjectManifest.includes");
 		}
 		
+		applicationManifest = manifest;
+		
 		//	Handle configurations
-		if (manifest.application !== undefined)
+		if (manifest.configuration !== undefined)
 		{
-			each(manifest.application, function (index, file)
+			each(manifest.configuration, function (index, file)
 			{
 				embedScript(file + '.js');
 			});
