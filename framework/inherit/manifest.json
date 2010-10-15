@@ -1,0 +1,22 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js"], 
+	
+	"class": "framework", 
+	
+	"version": "development", 
+	
+	"name": "inherit",
+	
+	"dependencies":
+	{
+		"koi":
+		{			
+			"framework":
+			{
+				"koi": "development"
+			}
+		}
+	}
+}

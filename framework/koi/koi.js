@@ -219,11 +219,13 @@
 		 *
 		 *	@param styles	An array of strings, each representing a CSS class.
 		 *
+		 *	@param context	The context of the inject. Defaults to head.
+		 *
 		 *	@return	self
 		 */
-		createStylesheet: function (styles)
+		createStylesheet: function (styles, context)
 		{
-			$('<style type="text/css">' + styles.join('') + '</style>').appendTo("head");
+			(context || $("head")).append('<style type="text/css">' + styles.join('') + '</style>');
 			
 			return _;
 		},
@@ -778,7 +780,7 @@
 	_.bind('application-ready', function ()
 	{
 		$('#koi-application-loading').hide();
-		$('#koi-application-wrapper').show();
+		$('#koi-application-wrapper').show().removeClass("not-loaded");
 	});
 	
 	//------------------------------
