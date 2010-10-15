@@ -144,6 +144,16 @@
 	//------------------------------
 	
 	/**
+	 *	Return a cachebuster.
+	 *
+	 *	@param A cachebuster string.
+	 */
+	function cachebust()
+	{
+		return '?_=' + (new Date()).valueOf();
+	}
+	
+	/**
 	 *	Embed a stylesheet.
 	 *
 	 *	@param item	The URL of the css item to load.
@@ -160,7 +170,7 @@
 		
 		sheet.setAttribute("media", "screen");
 		sheet.setAttribute("rel", "stylesheet");
-		sheet.setAttribute("href", item);
+		sheet.setAttribute("href", item + cachebust());
 
 		head.appendChild(sheet);
 	}
@@ -214,7 +224,7 @@
 		};
 		
 		script.setAttribute("type", "text/javascript");
-		script.setAttribute("src", item + '?_=' + (new Date()).valueOf());
+		script.setAttribute("src", item + cachebust());
 		
 		head.insertBefore(script, head.firstChild);
 	}

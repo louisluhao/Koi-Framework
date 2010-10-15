@@ -38,11 +38,6 @@
 		_ = {},
 		
 		/**
-		 *	The plugin core class, defined below.
-		 */
-		Plugin,
-		
-		/**
 		 *	The event delegate.
 		 */
 		delegate = $(_),
@@ -61,7 +56,7 @@
 		 *	Application configuration.
 		 */
 		application;
-		
+
 	//------------------------------
 	//
 	//	Internal Methods
@@ -88,8 +83,11 @@
 		 *	@param value	The default value to use, should no setting be provided.
 		 */
 		this.get = function (property, value)
-		{				
-			this.values[property] = this.values[property] || value;
+		{
+			if (this.values[property] === undefined)
+			{
+				this.values[property] = value;
+			}
 	
 			return this.values[property];
 		};
@@ -103,7 +101,7 @@
 	function getConfiguration(namespace)
 	{
 		var reference = new Configuration(namespace);
-	
+
 		/**
 		 *	Returns a lamda function which can retrieve properties, set default values, and destroy itself
 		 *	onces it's finished being used. To destroy a configuration object, simply call config().
@@ -174,6 +172,11 @@
 		 *	If the framework has dispatched its ready event.
 		 */
 		isReady: false,
+		
+		/**
+		 *	Automatically ready the application on framework ready.
+		 */
+		autoReadyApplication: application('autoReadyApplication', true),
 		
 		/**
 		 *	Because multiple plugins may wish to prevent the framework from readying and starting the application
@@ -278,16 +281,28 @@
 		 *
 		 *	@param version		The version of the plugin.
 		 *
+		 *	@param pluginClass	A class which extends from the base plugin class.
+		 *
 		 *	@return The created plugin instance.
 		 */
-		plugin: function (namespace, version)
+		plugin: function (namespace, version, pluginClass)
 		{
 			if (namespace === 'core' || _[namespace] !== undefined)
 			{
-				throw new Error('A collision occurred while trying to create plugin: ' + namespace);
+				throw new Error("KOI.plugin:NamespaceCollision");
 			}
 			
-			var plugin = this[namespace] = new Plugin(namespace, version);
+			if (pluginClass === undefined)
+			{
+				pluginClass = _.module.plugin;
+			}
+			
+			if (!(pluginClass.prototype instanceof _.module.plugin))
+			{
+				throw new TypeError("KOI.plugin:pluginClass");
+			}
+			
+			var plugin = this[namespace] = new pluginClass(namespace, version);
 			
 			plugins.push(plugin);
 			
@@ -557,8 +572,10 @@
 			_.isReady = true;
 			_.trigger('platform-ready');
 			
-			$('#koi-application-loading').hide();
-			$('#koi-application-wrapper').show();
+			if (_.autoReadyApplication)
+			{
+				_.trigger('application-ready');
+			}
 			
 			$.each(plugins, function (plugin)
 			{
@@ -577,14 +594,96 @@
 	//------------------------------
 	
 	/**
+	 *	The event dispatcher simply provides a bind/trigger interface.
+	 */
+	_.module.eventdispatcher = Class.extend({
+	
+		//------------------------------
+		//  Internal Properties
+		//------------------------------
+		
+		/**
+		 *	The delegate for dispatching this plugin's events.
+		 */
+		__delegate: undefined,
+		
+		/**
+		 *	Flag to determine if this plugin is ready.
+		 */
+		isReady: undefined,
+		
+		//------------------------------
+		//  Constructor
+		//------------------------------
+		
+		/**
+		 *	Constructor.
+		 */
+		init: function ()
+		{
+			this.__delegate = $(this);
+			this.isReady = false;
+		},
+		
+		//------------------------------
+		//  Methods
+		//------------------------------
+		
+		/**
+		 *	Plugin specific alias of jQuery.bind
+		 */
+		bind: function ()
+		{
+			this.__delegate.bind.apply(this.__delegate, arguments);
+		},
+		
+		/**
+		 *	Plugin specific alias of jQuery.triggerHandler
+		 */
+		trigger: function ()
+		{
+			this.__delegate.triggerHandler.apply(this.__delegate, arguments);
+		},
+		
+		/**
+		 *	Bind a listener for this module's ready event.
+		 *
+		 *	@param listener The listener to notify when the module is ready.
+		 */
+		ready: function (listener)
+		{
+			if (this.isReady)
+			{
+				_.notify(listener, this);
+			}
+			else
+			{
+				this.bind('ready', listener);
+			}
+		},
+		
+		/**
+		 *	Mark this module as ready.
+		 */
+		makeReady: function ()
+		{
+			this.isReady = true;
+			
+			this.trigger('ready');
+			
+			delete this.makeReady;
+		}
+	});
+	
+	/**
 	 *	The KOI plugin is the base for all extensible functionality within KOI. By calling to
 	 *	KOI.plugin(), a new scoped chunk of functionality can be added to the KOI object.
 	 *
 	 *	The base plugin class only contains some very basic reference accessors to the KOI framework,
 	 *	as well as some extensibility methods.
 	 */
-	Plugin = Class.extend({
-	
+	_.module.plugin = _.module.eventdispatcher.extend(
+	{
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -593,11 +692,6 @@
 		 *	Flag to determine if auto-ready (once build finishes) indicates readyness.
 		 */
 		__disableAutoReady: false,
-		
-		/**
-		 *	The delegate for dispatching this plugin's events.
-		 */
-		__delegate: undefined,
 	
 		//------------------------------
 		//	Properties
@@ -614,11 +708,6 @@
 		 */
 		name: undefined,
 		
-		/**
-		 *	Flag to determine if this plugin is ready.
-		 */
-		isReady: false,
-		
 		//------------------------------
 		//	Constructor
 		//------------------------------
@@ -634,7 +723,7 @@
 		{
 			this.name = name;
 			this.version = version;
-			this.__delegate = $(this);
+			this._super();
 		},
 		
 		//------------------------------
@@ -660,39 +749,6 @@
 		},
 		
 		/**
-		 *	Plugin specific alias of jQuery.bind
-		 */
-		bind: function ()
-		{
-			this.__delegate.bind.apply(this.__delegate, arguments);
-		},
-		
-		/**
-		 *	Plugin specific alias of jQuery.triggerHandler
-		 */
-		trigger: function ()
-		{
-			this.__delegate.triggerHandler.apply(this.__delegate, arguments);
-		},
-		
-		/**
-		 *	Bind a listener for this plugin's ready event.
-		 *
-		 *	@param listener The listener to notify when the plugin is ready.
-		 */
-		ready: function (listener)
-		{
-			if (this.isReady)
-			{
-				_.notify(listener, this);
-			}
-			else
-			{
-				_.bind('koi-plugin-created-' + this.name, listener);
-			}
-		},
-		
-		/**
 		 *	Make this plugin ready if it's internal requirements are met.
 		 */
 		makeReady: function ()
@@ -701,13 +757,11 @@
 			{
 				return;
 			}
-	
-			this.isReady = true;
+			
+			this._super();
 			
 			_.trigger('koi-plugin-created', [this.name, this.version]);
 			_.trigger('koi-plugin-created-' + this.name);
-			
-			delete this.makeReady;
 		}
 	});
 	
@@ -716,6 +770,16 @@
 	//	Startup Code
 	//
 	//------------------------------
+	
+	//------------------------------
+	//  Application Ready Handler
+	//------------------------------
+	
+	_.bind('application-ready', function ()
+	{
+		$('#koi-application-loading').hide();
+		$('#koi-application-wrapper').show();
+	});
 	
 	//------------------------------
 	//	Ready State Handler
