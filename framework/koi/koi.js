@@ -283,28 +283,28 @@
 		 *
 		 *	@param version		The version of the plugin.
 		 *
-		 *	@param pluginClass	A class which extends from the base plugin class.
+		 *	@param PluginClass	A class which extends from the base plugin class.
 		 *
 		 *	@return The created plugin instance.
 		 */
-		plugin: function (namespace, version, pluginClass)
+		plugin: function (namespace, version, PluginClass)
 		{
 			if (namespace === 'core' || _[namespace] !== undefined)
 			{
 				throw new Error("KOI.plugin:NamespaceCollision");
 			}
 			
-			if (pluginClass === undefined)
+			if (PluginClass === undefined)
 			{
-				pluginClass = _.module.plugin;
+				PluginClass = _.module.plugin;
 			}
 			
-			if (!(pluginClass.prototype instanceof _.module.plugin))
+			if (!(PluginClass.prototype instanceof _.module.plugin || PluginClass.prototype === _.module.plugin.prototype))
 			{
-				throw new TypeError("KOI.plugin:pluginClass");
+				throw new TypeError("KOI.plugin:PluginClass");
 			}
 			
-			var plugin = this[namespace] = new pluginClass(namespace, version);
+			var plugin = this[namespace] = new PluginClass(namespace, version);
 			
 			plugins.push(plugin);
 			

@@ -440,7 +440,7 @@
 			return;
 		}
 	
-		var ready = true
+		var ready = true;
 		
 		each(resourceCache, function (key, resource)
 		{

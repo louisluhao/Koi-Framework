@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global Class, window, jQuery */
+/*global KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -100,7 +100,7 @@
 			}
 		});
 	};
-
+	
 	//------------------------------
 	//
 	//	Inheritance Provider
@@ -119,6 +119,21 @@
 	 */
 	window.inherit = function (child, id)
 	{
+			/**
+			 *	A callback function for testing DomReady.
+			 */
+		var DOMContentLoaded,
+		
+			/**
+			 *	A jQuery Proxy for the child.
+			 */
+			proxy,
+			
+			/**
+			 *	A window.unload Proxy for the child.
+			 */
+			unloadProxy;
+	
 		/**
 		 *	First, bind a copy of jQuery down into the DOM of the iFrame so we can hook in
 		 *	funcitonality. This may seem a bit awkward here, as we're creating this function
@@ -154,10 +169,66 @@
 		};
 		
 		/**
+		 *	Due to an issue with IE and event binding on a foreign window, we need to force the
+		 *	setInterval method into a proxy, and nil it out.
+		 */
+		child._setInterval = child.setInterval;
+		child.setInterval = null;
+		
+		/**
+		 *	Bind a DOMContentLoaded function for the child.
+		 */
+		if (child.document.addEventListener)
+		{
+			DOMContentLoaded = function ()
+			{
+				child.document.removeEventListener("DOMContentLoaded", DOMContentLoaded, false);
+				child.jQueryInherit.hooks.ready();
+			};
+		}
+		else if (child.document.attachEvent)
+		{
+			DOMContentLoaded = function ()
+			{
+				if (child.document.readyState === "complete") 
+				{
+					child.document.detachEvent("onreadystatechange", DOMContentLoaded);
+					child.jQueryInherit.hooks.ready();
+				}
+			};
+		}
+		
+		/**
+		 *	Create a function for checking IE readyness.
+		 */
+		function doScrollCheck() 
+		{
+			if (child.jQueryInherit.hooks.isReady) 
+			{
+				return;
+			}
+		
+			try 
+			{
+				// If IE is used, use the trick by Diego Perini
+				// http://javascript.nwbox.com/IEContentLoaded/
+				child.document.documentElement.doScroll("left");
+			} 
+			catch (error) 
+			{
+				setTimeout(doScrollCheck, 1);
+				return;
+			}
+		
+			// and execute any waiting functions
+			child.jQueryInherit.hooks.ready();
+		}
+		
+		/**
 		 *	Create a namespace for hooking some functionality into the iFrame, like document.ready
 		 *	detection and handling.
 		 */
-		child.jQueryInherit.hooks = 
+		child.jQueryInherit.hooks =
 		{
 			//------------------------------
 			//	Properties
@@ -186,64 +257,47 @@
 				
 				child.jQueryInherit.hooks.readyBound = true;
 				
-				/**
-				 *	Mozilla, Opera, and webkit nightlies support
-				 */
-				if (child.document.addEventListener)
+				// Catch cases where $(document).ready() is called after the
+				// browser event has already occurred.
+				if (child.document.readyState === "complete") 
 				{
-					child.document.addEventListener("DOMContentLoaded", function ()
-					{
-						child.document.removeEventListener("DOMContentLoaded", arguments.callee, false);
-						child.jQueryInherit.hooks.ready();
-					}, false);
+					return child.jQueryInherit.hooks.ready();
 				}
-				
-				//	For IE
-				else if (child.document.attachEvent)
+		
+				// Mozilla, Opera and webkit nightlies currently support this event
+				if (child.document.addEventListener) 
 				{
-					/**
-					 *	Ensure firing before onload. It may be late, but it's safe for iFrames
-					 */
-					child.document.attachEvent("onreadystatechange", function ()
-					{
-						if (child.document.readyState === "complete")
-						{
-							child.document.detachEvent("onreadystatechange", arguments.callee);
-							child.jQueryInherit.hooks.ready();
-						}
-					});
+					// Use the handy event callback
+					child.document.addEventListener("DOMContentLoaded", DOMContentLoaded, false);
 					
-					/**
-					 *	If IE and not an iframe, continually check to see if the document is ready.
-					 */
-					if (child.document.documentElement.doScroll && child === child.top) 
+					// A fallback to window.onload, that will always work
+					child.addEventListener("load", child.jQueryInherit.hooks.ready, false);
+				} 
+				// If IE event model is used
+				else if (child.document.attachEvent) 
+				{
+					// ensure firing before onload,
+					// maybe late but safe also for iframes
+					child.document.attachEvent("onreadystatechange", DOMContentLoaded);
+					
+					// A fallback to window.onload, that will always work
+					child.attachEvent("onload", child.jQueryInherit.hooks.ready);
+		
+					// If IE and not a frame
+					// continually check to see if the document is ready
+					var toplevel = false;
+		
+					try 
 					{
-						(function ()
-						{
-							if (child.jQueryInherit.hooks.isReady)
-							{
-								return;
-							}
-							
-							try {
-								// If IE is used, use the trick by Diego Perini
-								// http://javascript.nwbox.com/IEContentLoaded/
-								child.document.documentElement.doScroll("left");
-							} 
-							catch (error)
-							{
-								setTimeout(arguments.callee, 0);
-								return;
-							}
-	
-							// and execute any waiting functions
-							child.jQueryInherit.hooks.ready();
-						}());
+						toplevel = child.frameElement === null;
+					} 
+					catch (e) {}
+		
+					if (child.document.documentElement.doScroll && toplevel) 
+					{
+						doScrollCheck();
 					}
 				}
-				
-				// A fallback to window.onload, that will always work
-				jQuery.event.add(child, "load", child.jQueryInherit.hooks.ready);
 			},
 			
 			/**
@@ -254,6 +308,12 @@
 				//	Make sure the DOM is not already loaded
 				if (!child.jQueryInherit.hooks.isReady)
 				{
+					// Make sure body exists, at least, in case IE gets a little overzealous (ticket #5443).
+					if (!child.document.body)
+					{
+						return setTimeout(child.jQueryInherit.hooks.ready, 13);
+					}
+				
 					child.jQueryInherit.hooks.isReady = true;
 					
 					//	If there are functions bound...
@@ -270,45 +330,48 @@
 					}
 				}
 				
-				jQuery(child.document).triggerHandler('ready');
+				if (jQuery.fn.triggerHandler)
+				{
+					jQuery(child.document).triggerHandler('ready');
+				}
 			}
 		};
 		
+		/**
+		 *	Create the jQuery Proxy Object.
+		 */
+		proxy = function (selector, context)
+		{
 			/**
-			 *	Create the jQuery Proxy Object.
+			 *	 Test and see if we're handling a shortcut bind
+			 *	 for the document.ready function. This occurs when
+			 *	 the selector is a function. Because firefox throws
+			 *	 xpconnect objects around in iFrames, the standard
+			 *	 jQuery.isFunction test returns false negatives.
 			 */
-		var proxy = function (selector, context)
+			if (selector.constructor.toString().match(/Function/) !== null)
 			{
-				/**
-				 *	 Test and see if we're handling a shortcut bind
-				 *	 for the document.ready function. This occurs when
-				 *	 the selector is a function. Because firefox throws
-				 *	 xpconnect objects around in iFrames, the standard
-				 *	 jQuery.isFunction test returns false negatives.
-				 */
-				if (selector.constructor.toString().match(/Function/) !== null)
-				{
-					return child.jQueryInherit.fn.ready(selector);
-				}
-				
-				/**
-				 *	Otherwise, just let the jQuery init function handle the rest. Be sure we pass in proper
-				 *	context of the child document, or we'll never select anything useful.
-				 */
-				else
-				{
-					return child.jQueryInherit.fn.init(selector || child.document, context || child.document);
-				}
-			},
+				return child.jQueryInherit.fn.ready(selector);
+			}
 			
 			/**
-			 *	Create the unload proxy function.
+			 *	Otherwise, just let the jQuery init function handle the rest. Be sure we pass in proper
+			 *	context of the child document, or we'll never select anything useful.
 			 */
-			unloadProxy = function ()
+			else
 			{
-				KOI.trigger("inherited-child-close", [id]);
-				KOI.trigger("inherited-child-close-" + id, [id]);
-			};
+				return child.jQueryInherit.fn.init(selector || child.document, context || child.document);
+			}
+		};
+		
+		/**
+		 *	Create the unload proxy function.
+		 */
+		unloadProxy = function ()
+		{
+			KOI.trigger("inherited-child-close", [id]);
+			KOI.trigger("inherited-child-close-" + id, [id]);
+		};
 		
 		//	Map the proxy to the child
 		child.jQuery = proxy;

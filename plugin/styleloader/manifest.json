@@ -1,0 +1,22 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js"], 
+	
+	"class": "plugin", 
+	
+	"version": "development", 
+	
+	"name": "styleloader",
+	
+	"dependencies":
+	{
+		"koi":
+		{			
+			"framework":
+			{
+				"koi": "development"
+			}
+		}
+	}
+}
