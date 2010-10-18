@@ -277,6 +277,18 @@
 		},
 		
 		/**
+		 *	Perform an extends from check on a non-instanciated class object.
+		 *
+		 *	@param classObj	The class to check.
+		 *
+		 *	@param compare	The class to compare against.
+		 */
+		extendsFrom: function (classObj, compare)
+		{
+			return classObj.prototype instanceof compare || classObj.prototype === compare.prototype;
+		},
+		
+		/**
 		 *	Creates a plugin within the KOI namespace.
 		 *
 		 *	@param namespace	The namespace of the plugin.
@@ -299,7 +311,7 @@
 				PluginClass = _.module.plugin;
 			}
 			
-			if (!(PluginClass.prototype instanceof _.module.plugin || PluginClass.prototype === _.module.plugin.prototype))
+			if (!_.extendsFrom(PluginClass, _.module.plugin))
 			{
 				throw new TypeError("KOI.plugin:PluginClass");
 			}
