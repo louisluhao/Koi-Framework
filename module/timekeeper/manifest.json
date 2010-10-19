@@ -1,0 +1,22 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js"], 
+	
+	"class": "module", 
+	
+	"version": "development",
+	
+	"name": "timekeeper",
+	
+	"dependencies":
+	{
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development"
+			}
+		}
+	}
+}

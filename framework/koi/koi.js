@@ -635,7 +635,7 @@
 		 */
 		init: function ()
 		{
-			this.__delegate = $(this);
+			this.__delegate = $({});
 			this.isReady = false;
 		},
 		

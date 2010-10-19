@@ -1,0 +1,22 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js"], 
+	
+	"class": "module", 
+	
+	"version": "development", 
+	
+	"name": "contentprovider",
+
+	"dependencies":
+	{
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development"
+			}
+		}
+	}
+}

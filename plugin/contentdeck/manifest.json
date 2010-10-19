@@ -1,0 +1,28 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js", "css"], 
+	
+	"class": "plugin", 
+	
+	"version": "development", 
+	
+	"name": "contentdeck",
+
+	"dependencies":
+	{
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development"
+			},
+			
+			"module":
+			{
+				"contentprovider": "development",
+				"timeline": "development"
+			}
+		}
+	}
+}
