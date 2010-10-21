@@ -27,9 +27,9 @@
 	var methods = {},
 	
 		/**
-		 *	Variable which contains the name of the jQuery.fn method while walking the tree.
+		 *	The object containing non-proxy method methods for jSet.	
 		 */
-		fnMethod;
+		_;
 	
 	//------------------------------
 	//
@@ -91,21 +91,6 @@
 			return response === null ? this : response;
 		};
 	}
-
-	//------------------------------
-	//
-	//  Setup Code
-	//
-	//------------------------------
-		
-	//	Loop through the jQuery.fn object and set all available methods.
-	for (fnMethod in jQuery.prototype)
-	{
-		if (jQuery.prototype.hasOwnProperty(fnMethod))
-		{
-			createCallProxy(fnMethod);
-		}
-	}
 	
 	//------------------------------
 	//
@@ -159,7 +144,7 @@
 	 *	of a standard jQuery object. This is utilized with the inheritance framework to
 	 *	provide an interface to manage multiple DOM's version of the same item.
 	 */
-	KOI.module.jset = Class.extend($.extend({}, methods, 
+	_ =
 	{
 		//------------------------------
 		//  Internal Properties
@@ -226,20 +211,26 @@
 		 */
 		find: function (selector, refresh)
 		{
-			if (this.__childrenCache[selector] === undefined || refresh === true)
-			{
-				var children = [];
-			
-				$.each(this.__setObjects, function (index, object)
-				{
-					children.push(object.find(selector));
-				});
-				
-				this.__childrenCache[selector] = new KOI.module.jset(true, children);
-			}
-			
-			return this.__childrenCache[selector];
+			return this.__children_selection("find", selector, selector, refresh);
 		},
+		
+		/**
+		 *	Override the eq method, allowing us to select subsets of children.
+		 *
+		 *	@param index	The index of the element to grab.
+		 *
+		 *	@param refresh	If true, will regenerate the children even if already defined.
+		 *
+		 *	@return	jSet containing the selected children.
+		 */
+		eq: function (index, refresh)
+		{
+			return this.__children_selection("eq", index, "__eq_" + index, refresh);
+		},
+		
+		//------------------------------
+		//  Set Methods
+		//------------------------------
 		
 		/**
 		 *	Add items into the set.
@@ -345,7 +336,63 @@
 		__purge_childrenCache: function ()
 		{
 			this.__childrenCache = {};
+		},
+		
+		/**
+		 *	Select children of this element.
+		 *
+		 *	@param method		The method of selection to use.
+		 *
+		 *	@param selector		The selector to pass to the non-proxy function.
+		 *
+		 *	@param cacheName	The name of the cache item to fetch.
+		 *
+		 *	@param refresh		Flag to determine if we should refresh, regardless of cache status.
+		 */
+		__children_selection: function (method, selector, cacheName, refresh)
+		{
+			if (this.__childrenCache[cacheName] === undefined || refresh === true)
+			{
+				var children = [];
+			
+				$.each(this.__setObjects, function (index, object)
+				{
+					children.push(object[method](selector));
+				});
+				
+				this.__childrenCache[cacheName] = new KOI.module.jset(true, children);
+			}
+			
+			return this.__childrenCache[cacheName];
 		}
-	}));
+	};
+	
+	/**
+	 *	Define the module.
+	 */
+	KOI.module.jset = Class.extend(_);
+	
+	//------------------------------
+	//
+	//  Startup Code
+	//
+	//------------------------------
+		
+	KOI.bind("platform-initialized", function ()
+	{	
+		var fnMethod;
+	
+		//	Loop through the jQuery.fn object and set all available methods.
+		for (fnMethod in jQuery.prototype)
+		{
+			if (jQuery.prototype.hasOwnProperty(fnMethod) && !(fnMethod in _))
+			{
+				createCallProxy(fnMethod);
+			}
+		}
+		
+		//	Extend the jQuery objects into the jset.
+		$.extend(KOI.module.jset.prototype, methods);
+	});
 		
 }(jQuery));

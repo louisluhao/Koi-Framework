@@ -89,11 +89,6 @@
 				throw new Error("KOI.contentdeck.create:name");
 			}
 			
-			if (!(display instanceof jQuery))
-			{
-				display = $(display);
-			}
-			
 			decks[name] = new KOI.module.contentdeck(timekeeper, display, autostart, precision);
 			
 			return _.get(name);
@@ -188,11 +183,6 @@
 			this._super();
 		
 			var self = this;
-			
-			if (!(display instanceof jQuery))
-			{
-				throw new TypeError("contentdeck.init:display");
-			}
 		
 			this.__display = display;
 			this.__autostart = autostart || false;

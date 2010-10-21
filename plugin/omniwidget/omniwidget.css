@@ -1,0 +1,35 @@
+/*!
+ *  Plugin - Omniwidget
+ *
+ *  Copyright (c) 2010 Knewton
+ *  Dual licensed under:
+ *      MIT: http://www.opensource.org/licenses/mit-license.php
+ *      GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
+ */
+ 
+/*  Generic Styles
+----------------------------------*/
+
+.omniwidget
+	{ display: none; position: relative; }
+
+.omniwidget-footer
+	{ position: absolute; bottom: 0; left: 0; height: 16px; width: 100%; margin: 0 0 -16px; }
+
+.omniwidget-header
+	{ position: absolute; top: 0; left: 0; height: 40px; width: 100%; margin: -40px 0 0; }
+
+.omniwidget-content
+	{ overflow-y: auto; height: 100%; width: 100%; }
+
+.omniwidget-header, 
+.omniwidget-footer
+	{ display: none; }
+	
+.omniwidget-draggable .omniwidget-header, 
+.omniwidget-inheritable .omniwidget-header, 
+.omniwidget-closeable .omniwidget-header
+	{ display: block; }
+	
+.omniwidget-resizable .omniwidget-footer
+	{ display: block; }

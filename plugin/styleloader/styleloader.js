@@ -66,23 +66,35 @@
 	//------------------------------
 	
 	/**
+	 *	Set data in the cache.
+	 *
+	 *	@param name		The name of the style.
+	 *
+	 *	@param source	The source of the style.
+	 *
+	 *	@param style	The style to set.
+	 */
+	function setData(name, source, style)
+	{
+		styles[name] = 
+		{
+			source: source,
+			
+			style: style
+		};
+		
+		_.trigger("style-loaded-" + name, [style]);
+		_.trigger("style-loaded", [name, style]);
+	}
+	
+	/**
 	 *	Handle a stylesheet load.
 	 *
 	 *	@param data	The sheet data.
 	 */
 	function handleLoad(data)
 	{
-		var name = this.name;
-		
-		styles[name] = 
-		{
-			source: this.source,
-			
-			style: data
-		};
-		
-		_.trigger("style-loaded-" + name, [data]);
-		_.trigger("style-loaded", [name, data]);
+		setData(this.name, this.source, data);
 	}
 	
 	//------------------------------
@@ -136,16 +148,9 @@
 		 */
 		load: function (name, source, listener)
 		{
-			if (listener)
-			{
-				_.__delegate.one("style-loaded-" + name, listener);
-			}
+			_.get(name, listener);
 		
-			if (styles[name] !== undefined)
-			{
-				_.trigger("style-loaded-" + name);
-			}
-			else
+			if (styles[name] === undefined)
 			{
 				loadSheet(name, source);
 			}
@@ -156,14 +161,38 @@
 		 *
 		 *	@param name	The name of the sheet.
 		 */
-		get: function (name)
+		get: function (name, listener)
 		{
+			if (listener === undefined)
+			{
+				return;
+			}
+			
 			if (styles[name] === undefined)
 			{
-				throw new Error("KOI.styleloader.getSheet:undefined");
+				_.__delegate.bind("style-loaded-" + name, listener);
 			}
+			else
+			{
+				KOI.notify("style-loaded-" + name, listener, _.__delegate, [styles[name].style]);
+			}
+		},
 		
-			return styles[name].style;
+		/**
+		 *	Set a style in the loader.
+		 *
+		 *	@param name		The name of the style.
+		 *
+		 *	@param style	The style to set.
+		 */
+		set: function (name, style)
+		{
+			if (styles[name] !== undefined)
+			{
+				throw new Error("KOI.styleloader.set:name");
+			}
+			
+			setData(name, "manual", style);
 		}
 	});
 	

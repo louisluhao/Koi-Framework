@@ -78,12 +78,7 @@
 		 *	@param display	The display object used for rendering.
 		 */
 		init: function (name, display)
-		{
-			if (!(display instanceof jQuery))
-			{
-				throw new TypeError("contentprovider.init:display");
-			}
-			
+		{			
 			this.name = name;
 			this.__display = display;
 			

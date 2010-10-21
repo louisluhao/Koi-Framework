@@ -195,7 +195,12 @@
 			/**
 			 *	Require the document ready before we ready the framework.
 			 */
-			documentReady: false
+			documentReady: false,
+			
+			/**
+			 *	Require the framework be initialized.
+			 */
+			initialized: false
 		},
 		
 		//------------------------------
@@ -365,6 +370,8 @@
 		 *	If the provided listener is a valid function, it will be triggered with the provided context
 		 *	and parameters.
 		 *
+		 *	@param type			The type of the event.
+		 *
 		 *	@param listener		The listener being triggered.
 		 *	
 		 *	@param context		The context to provide to the listener.
@@ -373,11 +380,19 @@
 		 *
 		 *	@return The response of the notified listener.
 		 */
-		notify: function (listener, context, parameters)
+		notify: function (type, listener, context, parameters)
 		{
 			if (_.typecheck(listener, 'Function'))
 			{
-				return listener.apply(context || _, _.typecheck(parameters, 'Array') ? parameters : [parameters]);
+				var event = $.Event(type);
+				event.preventDefault();
+				event.stopPropagation();
+				
+				parameters = _.typecheck(parameters, 'Array') ? parameters : [parameters];
+				parameters.unshift(event);
+				
+				listener.apply(context || _, parameters);
+				return 
 			}
 		},
 		
@@ -552,7 +567,7 @@
 		{
 			if (_.isReady)
 			{
-				_.notify(listener);
+				_.notify("platform-ready", listener);
 			}
 			else
 			{
@@ -560,6 +575,21 @@
 			}
 	
 			return _;
+		},
+		
+		/**
+		 *	Initialize the framework.
+		 */
+		initialize: function ()
+		{
+			if (_.isReady)
+			{
+				return;
+			}
+
+			_.trigger("platform-initialized");
+			_.readyQueue.initialized = true;
+			_.makeReady();
 		},
 		
 		/**
@@ -591,9 +621,12 @@
 				_.trigger('application-ready');
 			}
 			
-			$.each(plugins, function (plugin)
+			$.each(plugins, function (index, plugin)
 			{
-				plugin.makeReady();
+				if (!plugin.__disableAutoReady)
+				{
+					plugin.makeReady();
+				}
 			});
 			
 			delete this.makeReady;
@@ -668,7 +701,7 @@
 		{
 			if (this.isReady)
 			{
-				_.notify(listener, this);
+				_.notify("ready", listener, this);
 			}
 			else
 			{
@@ -683,7 +716,7 @@
 		{
 			this.isReady = true;
 			
-			this.trigger('ready');
+			this.trigger('ready', [this]);
 			
 			delete this.makeReady;
 		}

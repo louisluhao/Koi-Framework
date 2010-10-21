@@ -1,10 +1,10 @@
 /*!
- *  Framework - Bootstrap
+ *	Framework - Bootstrap
  *
- *  Copyright (c) 2010 Knewton
- *  Dual licensed under:
- *      MIT: http://www.opensource.org/licenses/mit-license.php
- *      GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
+ *	Copyright (c) 2010 Knewton
+ *	Dual licensed under:
+ *		MIT: http://www.opensource.org/licenses/mit-license.php
+ *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
 "use strict";
@@ -17,7 +17,7 @@
 {
 	//------------------------------
 	//
-	//  Property Declaration
+	//	 Property Declaration
 	//
 	//------------------------------
 	
@@ -135,13 +135,37 @@
 		/**
 		 *	The head of this document.
 		 */
-		head = document.getElementsByTagName('head')[0];
+		head = document.getElementsByTagName('head')[0],
+		
+		/**
+		 *	Themes to use for includes with thematic support.
+		 *
+		 *	Signature:
+		 *	{
+		 *		<themeGroup>: <theme>,
+		 *
+		 *		...
+		 *	}
+		 */
+		themes = {};
 	
 	//------------------------------
 	//
-	//  Internal Methods
+	//	 Internal Methods
 	//
 	//------------------------------
+
+	/**
+	 *	Check the type.
+	 *
+	 *	@param type		The type of object to compare.
+	 *
+	 *	@param compare	The Object constructor to check.
+	 */
+	function typecheck(type, compare)
+	{
+		return !type ? false : !type.constructor ? false : type.constructor.toString().match(new RegExp(compare + '\\(\\)', 'i')) !== null;	 
+	}
 	
 	/**
 	 *	Return a cachebuster.
@@ -494,6 +518,22 @@
 			 */
 			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, resource.loadVersion || manifest.version];
 		
+		if (manifest.themegroup !== undefined && manifest.theme !== undefined)
+		{		
+			if (themes[manifest.themegroup] !== undefined)
+			{
+				if (!typecheck(manifest.theme, "Array"))
+				{
+					manifest.theme = [manifest.theme];
+				}
+				
+				each(manifest.theme, function (index, style)
+				{
+					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'))
+				});
+			}
+		}
+		
 		each(resource.manifest.composition, function (index, type)
 		{
 			switch (type)
@@ -527,7 +567,7 @@
 	
 	//------------------------------
 	//
-	//  Processors
+	//	 Processors
 	//
 	//------------------------------
 	
@@ -590,6 +630,15 @@
 			});
 		}
 		
+		//	Add our theme definitions
+		if (manifest.themes !== undefined)
+		{
+			each(manifest.themes, function (group, theme)
+			{
+				themes[group] = theme;
+			});
+		}
+		
 		//	Handle functional includes.
 		each(manifest.includes, function (framework, types)
 		{
@@ -609,7 +658,7 @@
 	
 	//------------------------------
 	//
-	//  Execution
+	//	 Execution
 	//
 	//------------------------------
 	

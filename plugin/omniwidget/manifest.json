@@ -1,0 +1,38 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js", "css"], 
+	
+	"class": "plugin", 
+	
+	"version": "development", 
+	
+	"name": "omniwidget",
+	
+	"dependencies":
+	{
+		"jquery":
+		{
+			"plugin":
+			{
+				"ui.draggable": "1.8.5",
+				"ui.resizable": "1.8.5",
+				"opener": "development"
+			}
+		},
+			
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development",
+				"inherit": "development"
+			},
+			
+			"module":
+			{
+				"jset": "development"
+			}
+		}
+	}
+}
