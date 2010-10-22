@@ -11,16 +11,25 @@
 ----------------------------------*/
 
 .omniwidget
-	{ display: none; position: relative; }
+	{ display: none; position: absolute; }
+	
+.omniwidget-draggable
+	{ z-index: 5000; }
 
 .omniwidget-footer
-	{ position: absolute; bottom: 0; left: 0; height: 16px; width: 100%; margin: 0 0 -16px; }
+	{ position: absolute; bottom: 0; left: 0; height: 16px; width: 100%; margin: 0 0 -16px; z-index: 10; }
 
 .omniwidget-header
-	{ position: absolute; top: 0; left: 0; height: 40px; width: 100%; margin: -40px 0 0; }
+	{ position: absolute; top: 0; left: 0; height: 40px; width: 100%; margin: -40px 0 0; z-index: 10; }
 
 .omniwidget-content
-	{ overflow-y: auto; height: 100%; width: 100%; }
+	{ overflow-y: auto; height: 100%; width: 100%; z-index: 5; }
+	
+.omniwidget-inherit
+	{ display: block; float: right; margin: 0 3px; }
+
+.omniwidget-close
+	{ float: right; margin: 0 3px; }
 
 .omniwidget-header, 
 .omniwidget-footer

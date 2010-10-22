@@ -9,6 +9,10 @@
 	
 	"version": "development",
 	
+	"themegroup": "koi-application",
+	
+	"theme": "application",
+	
 	"dependencies":
 	{
 		"jquery":

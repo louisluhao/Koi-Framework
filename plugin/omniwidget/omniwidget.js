@@ -40,7 +40,7 @@
 		/**
 		 *	The template for the close button on an omniwidget.
 		 */
-		WIDGET_CLOSE_TEMPLATE = '<div class="omniwidget-close"></div>',
+		WIDGET_CLOSE_TEMPLATE = '<a href="#" class="omniwidget-close"></a>',
 		
 		/**
 		 *	The template for the inherit button on an omniwidget.
@@ -118,18 +118,6 @@
 		{
 			widget.__element.addClass(configuration.className);
 		}
-	
-		//------------------------------
-		//  Draggable
-		//------------------------------
-		
-		if (widget.__draggable)
-		{
-			widget.__element.addClass("omniwidget-draggable").draggable($.extend(true, {}, 
-			{
-				handle: ".omniwidget-header"
-			}, configuration.draggableOptions));
-		}
 		
 		//------------------------------
 		//  Embedding
@@ -152,6 +140,18 @@
 				handles: "se"
 			}, configuration.resizableOptions));
 		}
+		
+		//------------------------------
+		//  Draggable
+		//------------------------------
+		
+		if (widget.__draggable)
+		{
+			widget.__element.addClass("omniwidget-draggable").draggable($.extend(true, {}, 
+			{
+				handle: ".omniwidget-header"
+			}, configuration.draggableOptions));
+		}
 	
 		//------------------------------
 		//  Closeable
@@ -160,7 +160,12 @@
 		if (widget.__closeable)
 		{
 			widget.__element.addClass("omniwidget-closeable");
-			widget.__header.append($(WIDGET_CLOSE_TEMPLATE).html(configuration.closeText || ''));
+			widget.__header.append($(WIDGET_CLOSE_TEMPLATE).html(configuration.closeText || '').click(function (event)
+			{
+				event.preventDefault();
+				
+				widget.hide();
+			}));
 		}
 
 		//------------------------------
@@ -205,6 +210,7 @@
 				if (widget.closeOnInherit)
 				{
 					widget.hide();
+					widget.inheritClosed = true;
 				}
 			});
 			
@@ -219,6 +225,7 @@
 
 				if (widget.closeOnInherit)
 				{
+					widget.inheritClosed = false;
 					widget.show();
 				}
 			});
@@ -419,6 +426,16 @@
 		//------------------------------
 		
 		/**
+		 *	Flag to keep the state of being open or closed.
+		 */
+		open: undefined,
+		
+		/**
+		 *	Flag to determine if closed becaues of inheritance.
+		 */
+		inheritClosed: undefined,
+		
+		/**
 		 *	The name of this omniwidget. Should be unique.
 		 */
 		name: undefined,
@@ -535,6 +552,12 @@
 		 */
 		show: function ()
 		{
+			if (this.inheritClosed)
+			{
+				return;
+			}
+			
+			this.open = true;
 			this.__element.show();
 		},
 		
@@ -543,7 +566,28 @@
 		 */
 		hide: function ()
 		{
+			if (this.inheritClosed)
+			{
+				return;
+			}
+			
+			this.open = false;
 			this.__element.hide();
+		},
+		
+		/**
+		 *	Toggle the state of the gallery.
+		 */
+		toggle: function ()
+		{
+			if (this.open)
+			{
+				this.hide();
+			}
+			else
+			{
+				this.show();
+			}
 		},
 		
 		/**
