@@ -137,6 +137,11 @@
 			{
 				self.__timeChange(parseInt(time, 10));
 			});
+			
+			timekeeper.bind("seek", function (event, time)
+			{
+				self.__dispatchEvents(self.closestPreviousEventTime(time));
+			});
 		},
 		
 		//------------------------------

@@ -62,6 +62,8 @@
 		 *
 		 *			javascript: <true|false|null>,
 		 *
+		 *			stylesheet: <true|false|null>,
+		 *
 		 *			target: <jQueryObject>,
 		 *
 		 *			processor: <null|processorMethod>
@@ -100,17 +102,7 @@
 		 *		...
 		 *	}
 		 */
-		instances = config("instances", {}),
-		
-		//------------------------------
-		//  Configuration
-		//------------------------------
-		
-		/**
-		 *	Flag to determine if we should ignore loading styles. Release builds should
-		 *	ignore styles being loaded.
-		 */
-		ignoreStyleLoad = config("ignoreStyleLoad", false);
+		instances = config("instances", {});
 	
 	//------------------------------
 	//
@@ -174,7 +166,9 @@
 	{
 		var definition = components[id];
 		
-		if (!definition.html || (definition.javascript !== null && !definition.javascript))
+		if (!definition.html || 
+			(definition.javascript !== null && !definition.javascript) ||
+			(definition.stylesheet !== null && !definition.stylesheet))
 		{
 			return;
 		}
@@ -241,24 +235,17 @@
 	 *	Embed a stylesheet. This should be disabled in production.
 	 *
 	 *	@param item	The URL of the css item to load.
+	 *
+	 *	@param id	The id of the component.
 	 */
-	function embedStylesheet(item)
+	function loadStylesheet(item, id)
 	{
-		item += ".css?_=" + (new Date()).valueOf().toString();
-	
-		if (document.createStyleSheet !== undefined)
+		KOI.styleloader.load("component-" + id, item + ".css", function (event, sheet)
 		{
-			document.createStyleSheet(item);
-			return;
-		}
-		
-		var sheet = document.createElement("link");
-		
-		sheet.setAttribute("media", "screen");
-		sheet.setAttribute("rel", "stylesheet");
-		sheet.setAttribute("href", item);
-
-		$('head').append(sheet);
+			components[id].stylesheet = true;
+			KOI.createStylesheet(sheet);
+			process(id);
+		});
 	}
 	
 	/**
@@ -368,6 +355,8 @@
 					
 					javascript: null,
 					
+					stylesheet: null,
+					
 					version: version,
 					
 					target: target
@@ -391,10 +380,8 @@
 				{
 				
 				case "stylesheet":
-					if (!ignoreStyleLoad)
-					{
-						embedStylesheet(basePath);
-					}
+					definition.stylesheet = false;
+					loadStylesheet(basePath, id);
 					break;
 				
 				case "javascript":

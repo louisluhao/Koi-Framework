@@ -1,26 +1,21 @@
 {
 	"framework": "koi", 
 	
-	"composition": ["css", "js"], 
+	"composition": ["js"], 
 	
-	"class": "plugin", 
+	"class": "module", 
 	
 	"version": "development", 
 	
-	"name": "component",
+	"name": "textscroll",
 	
 	"dependencies":
 	{
 		"koi":
-		{			
+		{
 			"framework":
 			{
 				"koi": "development"
-			},
-			
-			"plugin":
-			{
-				"styleloader": "development"
 			}
 		}
 	}

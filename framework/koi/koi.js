@@ -230,6 +230,8 @@
 		 */
 		createStylesheet: function (styles, context)
 		{
+			styles = KOI.typecheck(styles, "Array") ? styles : [styles];
+			
 			(context || $("head")).append('<style type="text/css">' + styles.join('') + '</style>');
 			
 			return _;
