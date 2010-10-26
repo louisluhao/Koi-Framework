@@ -284,6 +284,24 @@
 		},
 		
 		/**
+		 *	Invert an object, swapping it's keys with its values. This should only be used
+		 *	with simple objects, the values of which do not overlap.
+		 *
+		 *	@param object	The object to swap.
+		 */
+		invertObject: function (object)
+		{
+			var buffer = {};
+		
+			$.each(object, function (key, value)
+			{
+				buffer[value] = key;
+			});
+			
+			return buffer;
+		},
+		
+		/**
 		 *	Perform an extends from check on a non-instanciated class object.
 		 *
 		 *	@param classObj	The class to check.
