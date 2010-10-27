@@ -25,12 +25,12 @@
 		/**
 		 *	The template for a new omniwidget.
 		 */
-	var WIDGET_TEMPLATE = '<div class="omniwidget"><div class="omniwidget-header ui-helper-clearfix"><span class="omniwidget-title"></span></div><div class="omniwidget-content ui-helper-clearfix"></div><div class="omniwidget-footer ui-helper-clearfix"></div></div>',
+	var WIDGET_TEMPLATE = '<div class="omniwidget"><div class="omniwidget-header ui-helper-clearfix"><span class="omniwidget-title"></span></div><div class="omniwidget-content ui-helper-clearfix scroll-manager"></div><div class="omniwidget-footer ui-helper-clearfix"></div></div>',
 	
 		/**
 		 *	The inheritable template for an omniwidget.
 		 */
-		INHERIT_TEMPLATE = '<div class="omniwidget-header"></div><div class="omniwidget-content">%CONTENT_SEED%</div>',
+		INHERIT_TEMPLATE = '<div class="omniwidget-content">%CONTENT%</div><h1 class="close-self">CLOSE ME</h1>',
 	
 		/**
 		 *	The template for the resize indicator.
@@ -46,6 +46,12 @@
 		 *	The template for the inherit button on an omniwidget.
 		 */
 		WIDGET_INHERIT_TEMPLATE = '<a href="#" class="omniwidget-inherit trigger-new-window"></a>',
+		
+		/**
+		 *	The delay between initial content injection and the inherit-ready event, to allow for time to setup
+		 *	the external dom.
+		 */
+		INHERIT_READY_DELAY = 1500,
 	
 		/**
 		 *	Grab our config object.
@@ -197,12 +203,15 @@
 					{
 						KOI.createStylesheet(widget.inheritStyles, proxy("head"));
 					}
-				
-					proxy("body").html(INHERIT_TEMPLATE.replace('%CONTENT_SEED%', widget.content().html()));
-				
+					
+					proxy("body").html(INHERIT_TEMPLATE.replace('%CONTENT%', widget.content().html()));
+					
 					widget.__content._set_add(proxy("body").find(".omniwidget-content"));
-				
-					widget.trigger("inherit-ready", [proxy, widget]);
+					
+					setTimeout(function ()
+					{
+						widget.trigger("inherit-ready", [proxy, widget]);
+					}, INHERIT_READY_DELAY);
 				});
 				
 				widget.__header.find(".omniwidget-inherit").hide();
@@ -212,6 +221,14 @@
 					widget.hide();
 					widget.inheritClosed = true;
 				}
+				
+				$.each(widget.__liveEvents, function (type, events)
+				{
+					$.each(events, function (index, event)
+					{
+						proxy(event.selector).live(type, event.listener);
+					});
+				});
 			});
 			
 			KOI.bind("inherited-child-close-" + widget.name, function (event)
@@ -307,6 +324,8 @@
 		 *		closeText: <linkTextForCloseTrigger>,
 		 *
 		 *		draggable: <makeDraggable(false)>,
+		 *
+		 *		liveEvents: <eventsObjects>,
 		 *
 		 *		draggableOptions: <optionsForDraggable>,
 		 *
@@ -420,6 +439,11 @@
 		 *	Flag to determine if we should show when ready.
 		 */
 		__showOnReady: undefined,
+		
+		/**
+		 *	A collection of live events to bind to the inheriter.
+		 */
+		__liveEvents: undefined,
 	
 		//------------------------------
 		//  Properties
@@ -483,6 +507,7 @@
 			this.closeOnInherit = configuration.closeOnInherit || false;
 			this.inheritStyles = configuration.inheritStyles || [];
 			
+			this.__liveEvents = {};
 			this.__inheritable = configuration.inheritable || false;
 			this.__draggable = configuration.draggable || false;
 			this.__resizable = configuration.resizable || false;
@@ -498,11 +523,50 @@
 			this.__configuration = configuration;
 			
 			setup(this);
+			
+			var self = this;
+			
+			if (configuration.liveEvents !== undefined)
+			{
+				$.each(configuration.liveEvents, function (type, events)
+				{
+					$.each(events, function (index, event)
+					{
+						self.liveBind(type, event.selector, event.listener);
+					});
+				});
+			}
 		},
 		
 		//------------------------------
 		//  Methods
 		//------------------------------
+		
+		/**
+		 *	Bind a live event to the omniwidget handler for inheritable event pipes.
+		 *
+		 *	@param eventType	The live event type to listen for.
+		 *
+		 *	@param selector		The selector string.
+		 *
+		 *	@param listener		The listener to bind.
+		 */
+		liveBind: function (eventType, selector, listener)
+		{
+			if (this.__liveEvents[eventType] === undefined)
+			{
+				this.__liveEvents[eventType] = [];
+			}
+			
+			this.__liveEvents[eventType].push(
+			{
+				selector: selector,
+				
+				listener: listener
+			});
+			
+			$(selector).live(eventType, listener);
+		},
 		
 		/**
 		 *	Make the widget ready.
@@ -559,6 +623,7 @@
 			
 			this.open = true;
 			this.__element.show();
+			this.trigger("show");
 		},
 		
 		/**
@@ -573,6 +638,7 @@
 			
 			this.open = false;
 			this.__element.hide();
+			this.trigger("hide");
 		},
 		
 		/**

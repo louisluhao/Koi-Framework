@@ -31,6 +31,9 @@
 .omniwidget-close
 	{ float: right; margin: 0 3px; }
 
+.omniwidget-title
+	{ display: block; float: left; }
+
 .omniwidget-header, 
 .omniwidget-footer
 	{ display: none; }

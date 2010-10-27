@@ -157,7 +157,7 @@
 			{
 				self.finished = true;
 				self.__destroy();
-				self.__listener.apply(self.__context, self.__params);
+				self.__listener.apply(self.__context, self.__params || []);
 			}, this.__duration);
 		},
 		

@@ -175,6 +175,15 @@
 		__childrenCache: undefined,
 		
 		//------------------------------
+		//  Properties
+		//------------------------------
+		
+		/**
+		 *	The length of the object.
+		 */
+		length: undefined,
+		
+		//------------------------------
 		//	 Constructor
 		//------------------------------
 		
@@ -211,7 +220,7 @@
 		 */
 		find: function (selector, refresh)
 		{
-			return this.__children_selection("find", selector, selector, refresh);
+			return this.__traversal("find", selector, "__find_" + selector, refresh);
 		},
 		
 		/**
@@ -225,7 +234,22 @@
 		 */
 		eq: function (index, refresh)
 		{
-			return this.__children_selection("eq", index, "__eq_" + index, refresh);
+			return this.__traversal("eq", index, "__eq_" + index, refresh);
+		},
+		
+		/**
+		 *	Override the parents method, allowing us to select some parents, wrap them
+		 *	in a new jSet proxy, and return them.
+		 *
+		 *	@param selector	The selector to use to grab new children.
+		 *
+		 *	@param refresh	If true, will regenerate the children even if already defined.
+		 *
+		 *	@return	jSet containing the selected children.
+		 */
+		parents: function (selector, refresh)
+		{
+			return this.__traversal("parents", selector, "__parents_" + selector, refresh);
 		},
 		
 		//------------------------------
@@ -265,7 +289,8 @@
 				}
 			});
 			
-			self.__purge_childrenCache();
+			this.__purge_childrenCache();
+			this.__generate_length();
 		},
 		
 		/**
@@ -308,7 +333,8 @@
 				}
 			});
 			
-			self.__purge_childrenCache();
+			this.__purge_childrenCache();
+			this.__generate_length();
 		},
 		
 		/**
@@ -322,6 +348,7 @@
 			
 			this.__purge_childrenCache();
 			this.__setObjects = [];
+			this.length = 0;
 			
 			return buffer;
 		},
@@ -339,7 +366,7 @@
 		},
 		
 		/**
-		 *	Select children of this element.
+		 *	Perform a traversal operation.
 		 *
 		 *	@param method		The method of selection to use.
 		 *
@@ -349,7 +376,7 @@
 		 *
 		 *	@param refresh		Flag to determine if we should refresh, regardless of cache status.
 		 */
-		__children_selection: function (method, selector, cacheName, refresh)
+		__traversal: function (method, selector, cacheName, refresh)
 		{
 			if (this.__childrenCache[cacheName] === undefined || refresh === true)
 			{
@@ -364,6 +391,18 @@
 			}
 			
 			return this.__childrenCache[cacheName];
+		},
+		
+		__generate_length: function ()
+		{
+			var length = 0;
+			
+			$.each(this.__setObjects, function (index, item)
+			{
+				length += item.length;
+			});
+			
+			this.length = length;
 		}
 	};
 	

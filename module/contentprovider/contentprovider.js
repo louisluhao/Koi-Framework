@@ -174,7 +174,7 @@
 
 			if (this.__current === undefined || this.__current === null)
 			{
-				throw new Error("contentprovider.__getCurrent:__current");
+				return null;
 			}
 			
 			return this.__data[this.__current];

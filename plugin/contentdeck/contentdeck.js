@@ -260,6 +260,11 @@
 			
 			this.__providers[provider.name] = provider;
 			
+			if (events !== undefined)
+			{
+				this.bindEvents(provider.name, events);
+			}
+			
 			var self = this;
 			
 			provider.ready(function ()
@@ -267,11 +272,6 @@
 				provider.__display.appendTo(self.__display);
 				self.makeReady();
 			});
-			
-			if (events !== undefined)
-			{
-				this.bindEvents(provider.name, events);
-			}
 		},
 		
 		/**
