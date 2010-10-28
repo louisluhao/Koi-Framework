@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global ModuleException, Exception, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -107,7 +107,7 @@
 	{
 		if (!(object instanceof jQuery))
 		{
-			throw new TypeError("jQuery.fn.equalTo:object");
+			throw new Exception("jQuery", "fn.equalTo", "object", undefined, "Must be instanceof jQuery");
 		}
 		
 		//	If the objects do not have the same length, they can't be equal.
@@ -285,7 +285,7 @@
 				}
 				else
 				{
-					throw new TypeError("jset._set_add:instanceof_jQuery");
+					throw new ModuleException("jset", "_set_add", "objectAtIndex", index, "Must be instanceof jQuery");
 				}
 			});
 			
@@ -329,7 +329,7 @@
 				}
 				else
 				{
-					throw new TypeError("jset._set_remove:instanceof_jQuery");
+					throw new ModuleException("jset", "_set_remove", "objectAtIndex", index, "Must be instanceof jQuery");
 				}
 			});
 			

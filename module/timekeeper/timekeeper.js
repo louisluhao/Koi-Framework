@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global InterfaceException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -33,7 +33,7 @@
 		
 		currentTime: function ()
 		{
-			throw new Error("timekeeper.currentTime:NotImplemented");
+			throw new InterfaceException("timekeeper", "currentTime");
 		}
 	});
 		

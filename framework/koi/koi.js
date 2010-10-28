@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global Class, window, jQuery */
+/*global Exception, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -117,6 +117,23 @@
 				reference = undefined;
 			}
 		};
+	}
+	
+	/**
+	 *	Handle any exceptions in the system by passing them through the error handling
+	 *	system in koi.
+	 *
+	 *	@param exception	The exception object thrown.
+	 */
+	function processException(exception)
+	{
+		
+	
+		/**
+		 *	If we reach this point in processing, rethrow the excpetion, as the
+		 *	framework did not handle it.
+		 */
+		throw exception;
 	}
 	
 	//------------------------------
@@ -230,7 +247,7 @@
 		 */
 		createStylesheet: function (styles, context)
 		{
-			styles = KOI.typecheck(styles, "Array") ? styles : [styles];
+			styles = _.typecheck(styles, "Array") ? styles : [styles];
 			
 			(context || $("head")).append('<style type="text/css">' + styles.join('') + '</style>');
 			
@@ -326,9 +343,9 @@
 		 */
 		plugin: function (namespace, version, PluginClass)
 		{
-			if (namespace === 'core' || _[namespace] !== undefined)
+			if (_[namespace] !== undefined)
 			{
-				throw new Error("KOI.plugin:NamespaceCollision");
+				throw new Exception("KOI", "plugin", "namespace", namespace, "Namespace collision");
 			}
 			
 			if (PluginClass === undefined)
@@ -338,7 +355,7 @@
 			
 			if (!_.extendsFrom(PluginClass, _.module.plugin))
 			{
-				throw new TypeError("KOI.plugin:PluginClass");
+				throw new Exception("KOI", "plugin", "PluginClass", undefined, "Must extend from KOI.module.plugin");
 			}
 			
 			var plugin = this[namespace] = new PluginClass(namespace, version);
@@ -412,7 +429,6 @@
 				parameters.unshift(event);
 				
 				listener.apply(context || _, parameters);
-				return 
 			}
 		},
 		
@@ -660,6 +676,10 @@
 	//
 	//------------------------------
 	
+	//------------------------------
+	//  Event Dispatcher Module
+	//------------------------------
+	
 	/**
 	 *	The event dispatcher simply provides a bind/trigger interface.
 	 */
@@ -741,6 +761,10 @@
 			delete this.makeReady;
 		}
 	});
+	
+	//------------------------------
+	//  Plugin Module
+	//------------------------------
 	
 	/**
 	 *	The KOI plugin is the base for all extensible functionality within KOI. By calling to
@@ -833,10 +857,279 @@
 	});
 	
 	//------------------------------
+	//  Exception
+	//------------------------------
+	
+	/**
+	 *	Using the class object, create a global Exception class for specific
+	 *	koi error handling.
+	 *
+	 *	We extend the Error class as the injected core class of the Class object.
+	 *	This will prevent Exception instanceof Class from returning true, which is
+	 *	fine for the intended use of this object.
+	 *
+	 *	By extending the Error class, the cross browser property "message" is defined
+	 *	for this class.
+	 */
+	window.Exception = Class.extend.call(Error,
+	{
+		//------------------------------
+		//  Properties
+		//------------------------------
+		
+		/**
+		 *	The closure item of an exception should provide some meningful information as
+		 *	to the file or closure within a file that the error was raised inside of.
+		 */
+		closure: undefined,
+		
+		/**
+		 *	The method of an exception should describe the functional wrapper which raised
+		 *	the excpetion.
+		 */
+		method: undefined,
+		
+		/**
+		 *	The property of an exception should describe the variable or parameter which was
+		 *	improperly assigned.
+		 */
+		property: undefined,
+		
+		/**
+		 *	The value of an exception should print a meaningful readback of the value of the property
+		 *	which raised the issue.
+		 */
+		value: undefined,
+		
+		/**
+		 *	A description of the problem.
+		 */
+		description: undefined,
+		
+		//------------------------------
+		//  Constructor
+		//------------------------------
+		
+		/**
+		 *	Constructor.
+		 *
+		 *	@param closure		The closure which raised the error.
+		 *
+		 *	@param method		The method which raised the error.
+		 *
+		 *	@param property		The property which raised the error.
+		 *
+		 *	@param value		The value of the property.
+		 *
+		 *	@param description	The description of the error.
+		 */
+		init: function (closure, method, property, value, description)
+		{
+			this.closure = closure;
+			this.method = method;
+			this.property = property;
+			this.value = value;
+			this.description = description;
+			
+			this.message = this.toString();
+		},
+		
+		//------------------------------
+		//  Methods
+		//------------------------------
+		
+		/**
+		 *	Override the toString method to return a properly formatted excpetion.
+		 */
+		toString: function ()
+		{
+			var buffer = [];
+
+			if (this.closure)
+			{
+				buffer.push(this.closure);
+			}
+			
+			if (this.method)
+			{
+				buffer.push(this.method);
+			}
+			
+			buffer = buffer.join(".");
+			
+			if (this.property)
+			{
+				if (buffer.length > 0)
+				{
+					buffer += ":";
+				}
+				
+				buffer += this.property;
+			}
+			
+			if (this.value)
+			{
+				buffer += '{' + this.value + '}';
+			}
+			
+			if (this.description)
+			{
+				buffer += '[' + this.description + ']';
+			}
+		
+			return buffer;
+		}
+	});
+	
+	//------------------------------
+	//  ModuleException
+	//------------------------------
+	
+	/**
+	 *	Exceptions specific to modules.
+	 */
+	window.ModuleException = window.Exception.extend(
+	{
+		//------------------------------
+		//  Properties
+		//------------------------------
+	
+		/**
+		 *	The module which raised this error.
+		 */
+		module: undefined,
+	
+		//------------------------------
+		//  Constructor
+		//------------------------------
+	
+		/**
+		 *	Constructor.
+		 *
+		 *	@param module		The module which raised the error.
+		 *
+		 *	@param method		The method which raised the error.
+		 *
+		 *	@param property		The property which raised the error.
+		 *
+		 *	@param value		The value of the property.
+		 *
+		 *	@param description	The description of the error.
+		 */
+		init: function (module, method, property, value, description)
+		{
+			this.module = module;
+			
+			this._super("KOI.module." + module, method, property, value, description);
+		}
+	});
+	
+	//------------------------------
+	//  InterfaceException
+	//------------------------------
+	
+	/**
+	 *	Exceptions specific to interfaces.
+	 */
+	window.InterfaceException = window.ModuleException.extend(
+	{	
+		//------------------------------
+		//  Constructor
+		//------------------------------
+	
+		/**
+		 *	Constructor.
+		 *
+		 *	@param module		The module which raised the error.
+		 *
+		 *	@param method		The method which raised the error.
+		 */
+		init: function (module, method)
+		{
+			this._super(module, method, undefined, undefined, "Interface improperly implemented");
+		}
+	});
+	
+	//------------------------------
+	//  PluginException
+	//------------------------------
+	
+	/**
+	 *	Exceptions specific to plugins.
+	 */
+	window.PluginException = window.Exception.extend(
+	{
+		//------------------------------
+		//  Properties
+		//------------------------------
+	
+		/**
+		 *	The plugin which raised this error.
+		 */
+		plugin: undefined,
+	
+		//------------------------------
+		//  Constructor
+		//------------------------------
+	
+		/**
+		 *	Constructor.
+		 *
+		 *	@param plugin		The plugin which raised the error.
+		 *
+		 *	@param method		The method which raised the error.
+		 *
+		 *	@param property		The property which raised the error.
+		 *
+		 *	@param value		The value of the property.
+		 *
+		 *	@param description	The description of the error.
+		 */
+		init: function (plugin, method, property, value, description)
+		{
+			this.plugin = plugin;
+			
+			this._super("KOI." + plugin, method, property, value, description);
+		}
+	});
+	
+	//------------------------------
 	//
 	//	Startup Code
 	//
 	//------------------------------
+	
+	//------------------------------
+	//  Hook jQuery
+	//------------------------------
+	
+	/**
+	 *	For the given objects, create error encapsulation for all the 
+	 *	standard and plausible sources of script execution. This setup
+	 *	should support any standard code exceution which occurs within
+	 *	an application, providing they follow the standard pattern for execution
+	 *	wrapping, which is binding to either the jQuery ready or any 
+	 *	system/koi events.
+	 */
+	$.each(
+	[
+		jQuery.prototype.ready, 
+		jQuery.ready, 
+		jQuery.event.handle
+	], function (index, fn)
+	{
+		fn = _.hook(fn, function ()
+		{
+			try
+			{
+				this.original.apply(this.scope, arguments);
+			}
+			catch (e)
+			{
+				processException(e);
+			}
+		});
+	});
 	
 	//------------------------------
 	//  Application Ready Handler

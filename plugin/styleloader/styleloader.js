@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global PluginException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -94,6 +94,7 @@
 	 */
 	function handleLoad(data)
 	{
+		//	JSLint complains about a strict violation here. It's not.
 		setData(this.name, this.source, data);
 	}
 	
@@ -189,7 +190,7 @@
 		{
 			if (styles[name] !== undefined)
 			{
-				throw new Error("KOI.styleloader.set:name");
+				throw new PluginException("styleloader", "set", "name", name, "Namespace collision");
 			}
 			
 			setData(name, "manual", style);

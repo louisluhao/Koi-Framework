@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global PluginException, ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -86,7 +86,7 @@
 		{
 			if (decks[name] !== undefined)
 			{
-				throw new Error("KOI.contentdeck.create:name");
+				throw new PluginException("contentdeck", "create", "name", name, "Namespace collision");
 			}
 			
 			decks[name] = new KOI.module.contentdeck(timekeeper, display, autostart, precision);
@@ -103,7 +103,7 @@
 		{
 			if (decks[name] === undefined)
 			{
-				throw new Error("KOI.contentdeck.get:name");
+				throw new PluginException("contentdeck", "get", "name", undefined, "Not defined");
 			}
 			
 			return decks[name];
@@ -250,12 +250,12 @@
 		{
 			if (!(provider instanceof KOI.module.contentprovider))
 			{
-				throw new TypeError("contentdeck.addProvider:provider");
+				throw new ModuleException("contentdeck", "addProvider", "provider", undefined, "Must be instanceof KOI.module.contentprovider");
 			}
 			
 			if (this.__providers[provider.name] !== undefined)
 			{
-				throw new Error("contentdeck.addProvider:provider.name");
+				throw new ModuleException("contentdeck", "addProvider", "provider.name", provider.name, "Namespace collision");
 			}
 			
 			this.__providers[provider.name] = provider;
@@ -285,7 +285,7 @@
 		{
 			if (this.__providers[name] === undefined)
 			{
-				throw new Error("contentdeck.getProvider:provider.name");
+				throw new ModuleException("contentdeck", "getProvider", "name", name, "Not defined");
 			}
 			
 			return this.__providers[name];
@@ -346,7 +346,7 @@
 		{
 			if (this.__providers[name] === undefined)
 			{
-				throw new Error("contentdeck.__setCurrentProvider:name");
+				throw new ModuleException("contentdeck", "__setCurrentProvider", "name", undefined, "Not defined");
 			}
 			
 			try
@@ -371,7 +371,7 @@
 		{
 			if (this.__currentProvider === undefined || this.__currentProvider === null)
 			{
-				throw new Error("contentdeck.__getCurrentProvider:__currentProvider");
+				throw new ModuleException("contentdeck", "__getCurrentProvider", "__currentProvider", undefined, "Not defined");
 			}
 			
 			return this.getProvider(this.__currentProvider);

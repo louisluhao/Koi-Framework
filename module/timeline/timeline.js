@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -122,7 +122,7 @@
 		{
 			if (!(timekeeper instanceof KOI.module.timekeeper))
 			{
-				throw new TypeError("timeline.init:timekeeper");
+				throw new ModuleException("timeline", "init", "timekeeper", timekeeper, "Must be instanceof KOI.module.timekeeper");
 			}
 		
 			this.__dispatchers = [];
@@ -159,7 +159,7 @@
 		{
 			if (!KOI.typecheck(dispatcher, 'Function'))
 			{
-				throw new TypeError("timeline.registerDispatcher:dispatcher");
+				throw new ModuleException("timeline", "registerDispatcher", "dispatcher", typeof dispatcher, "Must be typeof Function");
 			}
 		
 			var uid = this.__dispatchers.length;
@@ -182,7 +182,7 @@
 		{
 			if (this.__dispatchers[dispatcher] === undefined)
 			{
-				throw new TypeError("timeline.registerEvent:dispatcher");
+				throw new ModuleException("timeline", "registerEvent", "dispatcher", dispatcher, "Must be index of dispatcher; use return from `registerDispatcher`");
 			}
 			
 			if (params !== undefined && !KOI.typecheck(params, "Array"))
@@ -218,7 +218,7 @@
 		{
 			if (this.__dispatchers[dispatcher] === undefined)
 			{
-				throw new TypeError("timeline.registerEvent:dispatcher");
+				throw new ModuleException("timeline", "registerEvents", "dispatcher", dispatcher, "Must be index of dispatcher; use return from `registerDispatcher`");
 			}
 		
 			var self = this;

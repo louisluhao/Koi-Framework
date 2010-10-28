@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global PluginException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -111,7 +111,7 @@
 	//------------------------------
 	
 	//------------------------------
-	//  Utilities
+	//	 Utilities
 	//------------------------------
 
 	/**
@@ -139,22 +139,22 @@
 	 */
 	function disabled(element)
 	{
-		var disabled = false;
+		var isDisabled = false;
 	
 		$.each(element.attr('class').split(' '), function (index, className)
 		{
 			if ($.inArray(className, _.disabledClasses) !== -1)
 			{
-				disabled = true;
+				isDisabled = true;
 				return false;
 			}
 		});
 		
-		return disabled;
+		return isDisabled;
 	}
 	
 	//------------------------------
-	//  Processors
+	//	 Processors
 	//------------------------------
 	
 	/**
@@ -183,7 +183,7 @@
 	}
 	
 	//------------------------------
-	//  Handlers
+	//	 Handlers
 	//------------------------------
 	
 	/**
@@ -196,7 +196,8 @@
 	function documentHandler(data)
 	{
 			/**
-			 *	The component definition
+			 *	The component definition.
+			 *	JSLint complains about strict violation here. It's not.
 			 */
 		var definition = components[this.id],
 		
@@ -224,11 +225,12 @@
 		_.load();
 		
 		//	Process the component
+		//	JSLint complains about strict violation here. It's not.
 		process(this.id);
 	}
 	
 	//------------------------------
-	//  Requests
+	//	 Requests
 	//------------------------------
 
 	/**
@@ -341,7 +343,7 @@
 		{
 			if (components[id] !== undefined)
 			{
-				throw new Error("KOI.component.register:name");
+				throw new PluginException("component", "register", "id", id, "Namespace collision");
 			}
 			
 				/**
@@ -409,7 +411,7 @@
 			//	Only allow processors which have been stubbed in.
 			if (processors[name] === undefined)
 			{
-				throw new Error("KOI.component.process:name");
+				throw new PluginException("component", "process", "name", name, "Not registered");
 			}
 			
 			var component = processors[name];
@@ -418,6 +420,49 @@
 			components[component].javascript = true;
 			
 			process(component);
+		}
+	});
+	
+	//------------------------------
+	//  ComponentException
+	//------------------------------
+	
+	/**
+	 *	Exceptions specific to components.
+	 */
+	window.ComponentException = window.Exception.extend(
+	{
+		//------------------------------
+		//  Properties
+		//------------------------------
+	
+		/**
+		 *	The component which raised this error.
+		 */
+		component: undefined,
+	
+		//------------------------------
+		//  Constructor
+		//------------------------------
+	
+		/**
+		 *	Constructor.
+		 *
+		 *	@param component	The component which raised the error.
+		 *
+		 *	@param method		The method which raised the error.
+		 *
+		 *	@param property		The property which raised the error.
+		 *
+		 *	@param value		The value of the property.
+		 *
+		 *	@param description	The description of the error.
+		 */
+		init: function (component, method, property, value, description)
+		{
+			this.component = component;
+			
+			this._super("KOI.component<" + component + ">", method, property, value, description);
 		}
 	});
 	
@@ -442,96 +487,96 @@
 	 *				will be injected into the content receiver.
 	 */
 	$('.koi-component').live('load-component', function ()
-    {
-    		/**
-    		 *	The element representing a component.
-    		 */
-    	var element = $(this),
-    	
-    		/**
-    		 *	The ID of the component.
-    		 */
-    		id = element.attr("id"),
-    	
-    		/**
-    		 *	The instance name.
-    		 */
-    		instance,
-    		
-    		/**
-    		 *	The version of the component to load.
-    		 */
-    		version,
-    		
-    		/**
-    		 *	Content for injection, if applicable.
-    		 */
-    		content,
-    		
-    		/**
-    		 *	The composition for this component.
-    		 */
-    		composition = [];
-    	
-    	if (disabled(element))
-    	{
-    		return;
-    	}
-    	
-    	//	Mark the component as loading, to prevent double loading.
-    	element.addClass("component-loading");
-    	
-    	/**
-    	 *	If the configuration declared an instance definition for
-    	 *	this component, use that over the default configs.
-    	 */
-    	if (instances[id] !== undefined)
-    	{
-    		instance = instances[id];
-    		
-    		version = instance.version;
-    		instance = instance.instance;
-    	}
-    	
-    	/**
-    	 *	Parse the instance string to grab the name/version.
-    	 *
-    	 *	title should be in the "instance-name:version" format.
-    	 */
-    	else if (element.attr("title") !== undefined)
-    	{
-    		instance = element.attr("title").split(":");
-    		
-    		version = instance[1];
-    		instance = instance[0];
-    	}
-    	
-    	/**
-    	 *	Otherwise, this is misconfigured, and we need to error.
-    	 */
-    	else
-    	{
-    		throw new Error("KOI.component[load-component]:title");
-    	}
-    	
-    	/**
-    	 *	If we have composition, set it here.
-    	 */
-    	if (element.attr("lang") !== undefined)
-    	{
-    		composition = element.attr("lang").split(",");
-    	}
-    	
-    	/**
-    	 *	If the element contains children, they are for content injection.
-    	 */
-    	if (element.children().length > 0)
-    	{
-    		content = element.children().remove();
-    	}
-    	
-    	_.register(id, instance, version, composition, element, content);
-    });
+	{
+			/**
+			 *	The element representing a component.
+			 */
+		var element = $(this),
+		
+			/**
+			 *	The ID of the component.
+			 */
+			id = element.attr("id"),
+		
+			/**
+			 *	The instance name.
+			 */
+			instance,
+			
+			/**
+			 *	The version of the component to load.
+			 */
+			version,
+			
+			/**
+			 *	Content for injection, if applicable.
+			 */
+			content,
+			
+			/**
+			 *	The composition for this component.
+			 */
+			composition = [];
+		
+		if (disabled(element))
+		{
+			return;
+		}
+		
+		//	Mark the component as loading, to prevent double loading.
+		element.addClass("component-loading");
+		
+		/**
+		 *	If the configuration declared an instance definition for
+		 *	this component, use that over the default configs.
+		 */
+		if (instances[id] !== undefined)
+		{
+			instance = instances[id];
+			
+			version = instance.version;
+			instance = instance.instance;
+		}
+		
+		/**
+		 *	Parse the instance string to grab the name/version.
+		 *
+		 *	title should be in the "instance-name:version" format.
+		 */
+		else if (element.attr("title") !== undefined)
+		{
+			instance = element.attr("title").split(":");
+			
+			version = instance[1];
+			instance = instance[0];
+		}
+		
+		/**
+		 *	Otherwise, this is misconfigured, and we need to error.
+		 */
+		else
+		{
+			throw new Error("KOI.component[load-component]:title");
+		}
+		
+		/**
+		 *	If we have composition, set it here.
+		 */
+		if (element.attr("lang") !== undefined)
+		{
+			composition = element.attr("lang").split(",");
+		}
+		
+		/**
+		 *	If the element contains children, they are for content injection.
+		 */
+		if (element.children().length > 0)
+		{
+			content = element.children().remove();
+		}
+		
+		_.register(id, instance, version, composition, element, content);
+	});
 	
 	//------------------------------
 	//
@@ -540,7 +585,7 @@
 	//------------------------------
 	
 	//------------------------------
-	//  On Ready
+	//	 On Ready
 	//------------------------------
 		
 	_.ready(function ()
@@ -550,7 +595,7 @@
 	});
 		
 	//------------------------------
-	//  Destroy Configuration
+	//	 Destroy Configuration
 	//------------------------------
 		
 	config();

@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -143,7 +143,7 @@
 				break;
 				
 			default:
-				throw new TypeError("textscroll.init:direction");
+				throw new ModuleException("textscroll", "init", "direction", direction.toLowerCase(), "Direction only supports: right/left");
 				
 			}
 			
@@ -199,7 +199,7 @@
 		{
 			if (this.mustScroll === undefined)
 			{
-				throw new Error("textscroll.start:mustScroll");
+				throw new ModuleException("textscroll", "start", "mustScroll", "undefined", "State undetermined; call `text' first");
 			}
 
 			if (this.__running)
@@ -310,7 +310,7 @@
 				break;
 			
 			default:
-				throw new Error("textscroll.__handlePhase:__currentPhase");
+				throw new ModuleException("textscroll", "__handlePhase", "__currentPhase", this.__currentPhase, "Phase only supports: primary/full/marquee");
 			
 			}
 			
@@ -350,7 +350,7 @@
 				break;
 			
 			default:
-				throw new Error("textscroll.__phaseCleanup:__currentPhase");
+				throw new ModuleException("textscroll", "__phaseCleanup", "__currentPhase", this.__currentPhase, "Phase only supports: primary/full/marquee");
 			
 			}
 			

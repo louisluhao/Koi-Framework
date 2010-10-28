@@ -529,7 +529,7 @@
 				
 				each(manifest.theme, function (index, style)
 				{
-					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'))
+					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'));
 				});
 			}
 		}

@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -149,12 +149,12 @@
 		{
 			if (!this.isReady)
 			{
-				throw new Error("contentprovider.__setCurrent:isReady");
+				throw new ModuleException("contentprovider", "__setCurrent", "isReady", undefined, "Provider not ready");
 			}
 			
 			if (this.__data[key] === undefined)
 			{
-				throw new RangeError("contentprovider.__setCurrent:key");
+				throw new ModuleException("contentprovider", "__setCurrent", "key", undefined, "Out of bounds");
 			}
 			
 			this.__current = key;
@@ -169,7 +169,7 @@
 		{
 			if (!this.isReady)
 			{
-				throw new Error("contentprovider.__getCurrent:isReady");
+				throw new ModuleException("contentprovider", "__getCurrent", "isReady", undefined, "Provider not ready");
 			}
 
 			if (this.__current === undefined || this.__current === null)

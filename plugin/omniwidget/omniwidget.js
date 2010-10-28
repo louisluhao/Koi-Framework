@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global PluginException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -30,7 +30,7 @@
 		/**
 		 *	The inheritable template for an omniwidget.
 		 */
-		INHERIT_TEMPLATE = '<div class="omniwidget-content">%CONTENT%</div><h1 class="close-self">CLOSE ME</h1>',
+		INHERIT_TEMPLATE = '<div class="omniwidget-content">%CONTENT%</div>',
 	
 		/**
 		 *	The template for the resize indicator.
@@ -51,7 +51,7 @@
 		 *	The delay between initial content injection and the inherit-ready event, to allow for time to setup
 		 *	the external dom.
 		 */
-		INHERIT_READY_DELAY = 1500,
+		INHERIT_READY_DELAY = 150,
 	
 		/**
 		 *	Grab our config object.
@@ -114,7 +114,7 @@
 	function setup(widget)
 	{
 		//	Grab our configuration.
-		configuration = widget.__configuration;
+		var configuration = widget.__configuration;
 	
 		//------------------------------
 		//  Classes
@@ -243,7 +243,15 @@
 				if (widget.closeOnInherit)
 				{
 					widget.inheritClosed = false;
-					widget.show();
+					
+					if (widget.skipNextInheritCloseShow)
+					{
+						widget.skipNextInheritCloseShow = false;
+					}
+					else
+					{
+						widget.show();
+					}
 				}
 			});
 		}
@@ -346,7 +354,7 @@
 		{
 			if (widgets[name] !== undefined)
 			{
-				throw new Error("KOI.omniwidget.create:name");
+				throw new PluginException("omniwidget", "create", "name", name, "Namespace collision");
 			}
 			
 			widgets[name] = new KOI.module.omniwidget(name, configuration);
@@ -363,7 +371,7 @@
 		{
 			if (widgets[name] === undefined)
 			{
-				throw new Error("KOI.omniwidget.get:name");
+				throw new PluginException("omniwidget", "get", "name", name, "Not defined");
 			}
 			
 			return widgets[name];
@@ -484,6 +492,11 @@
 		 */
 		inheritStyles: undefined,
 		
+		/**
+		 *	Flag to determine if the next inherit close show should be skipped.
+		 */
+		skipNextInheritCloseShow: undefined,
+		
 		//------------------------------
 		//  Constructor
 		//------------------------------
@@ -506,6 +519,7 @@
 			this.inheritableTitle = configuration.inheritableTitle;
 			this.closeOnInherit = configuration.closeOnInherit || false;
 			this.inheritStyles = configuration.inheritStyles || [];
+			this.skipNextInheritCloseShow = false;
 			
 			this.__liveEvents = {};
 			this.__inheritable = configuration.inheritable || false;

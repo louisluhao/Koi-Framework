@@ -9,7 +9,7 @@
 
 "use strict";
 
-/*global KOI, Class, window, jQuery */
+/*global ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
@@ -86,7 +86,7 @@
 		{
 			if (!KOI.typecheck(listener, "Function"))
 			{
-				throw new TypeError("timer.init:listener");
+				throw new ModuleException("timer", "init", "listener", typeof listener, "Must be typeof Function");
 			}
 			
 			if (params !== undefined)
