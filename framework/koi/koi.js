@@ -127,13 +127,95 @@
 	 */
 	function processException(exception)
 	{
-		
+		var exit = false;
 	
+		$.each(_.errorHandlers, function (index, metrics)
+		{
+				/**
+				 *	Flag to determine if this handler can consume the error.
+				 */
+			var canHandle = false,
+			
+				/**
+				 *	Flag to determine if the handler consumed the error.
+				 */
+				consumed;
+		
+			if (metrics.instance !== undefined)
+			{
+				if (exception instanceof metrics.instance)
+				{
+					canHandle = true;
+				}
+			}
+			
+			if (!canHandle && metrics.properties !== undefined)
+			{
+				$.each(metrics.properties, function (key, value)
+				{
+					if (exception[key] === undefined && value === undefined)
+					{
+						canHandle = true;
+						return false;
+					}
+					else if (exception[key] !== undefined)
+					{
+						if (_.typecheck(value, "RegExp"))
+						{
+							if (value.test(exception[key]))
+							{
+								canHandle = true;
+								return false;
+							}
+						}
+						else if (value === exception[key])
+						{
+							canHandle = true;
+							return false;
+						}
+					}
+				});
+			}
+			
+			if (canHandle)
+			{
+				consumed = metrics.handler(exception);
+				
+				if (consumed === true)
+				{
+					exit = true;
+					return false;
+				}
+				else if (consumed === false)
+				{
+					return false;
+				}
+			}
+		});
+		
 		/**
 		 *	If we reach this point in processing, rethrow the excpetion, as the
 		 *	framework did not handle it.
 		 */
-		throw exception;
+		if (!exit)
+		{
+			throw exception;
+		}
+	}
+	
+	/**
+	 *	A generic function to consume exceptions.
+	 */
+	function exceptionConsumer()
+	{
+		try
+		{
+			this.original.apply(this.scope, arguments);
+		}
+		catch (e)
+		{
+			processException(e);
+		}
 	}
 	
 	//------------------------------
@@ -220,9 +302,81 @@
 			initialized: false
 		},
 		
+		/**
+		 *	A collection of error handlers for catching uncaught events.
+		 *
+		 *	Signature:
+		 *	[
+		 *		{
+		 *			instance: <ClassForInstanceofCheck>,
+		 *
+		 *			properties:
+		 *			{
+		 *				<propertyName>: <stringToMatch|RegexToMatch>,
+		 *
+		 *				...
+		 *			},
+		 *
+		 *			handler: <handler>
+		 *		},
+		 *
+		 *		...
+		 *	]
+		 */
+		errorHandlers: [],
+		
 		//------------------------------
 		//	Methods
 		//------------------------------
+		
+		/**
+		 *	Bind an error handler.
+		 *
+		 *	@param handler		A handler to process the error. Return:
+		 *							* true to consume the error,
+		 *							* false to redispatch the error
+		 *							* nothing to ignore.
+		 *
+		 *	@param type			A type to match on. (ex. Exception)
+		 *
+		 *	@param properties	A collection of properties to match on.
+		 *
+		 *	handler Signature:
+		 *		function(exception);
+		 *
+		 *	properties Signature:
+		 *	{
+		 *		<propertyName>: <string|regex>,
+		 *
+		 *		...
+		 *	}
+		 */
+		handleError: function (handler, type, properties)
+		{
+			if (!_.typecheck(handler, "Function"))
+			{
+				throw new Exception("KOI", "handleError", "handler", typeof handler, "Must be a function");
+			}
+		
+			_.errorHandlers.push(
+			{
+				instance: type,
+				
+				properties: properties,
+				
+				handler: handler
+			});
+		},
+		
+		/**
+		 *	Raise an exception into the handler for special error cases.
+		 *
+		 *	@param exception	The exception to raise.
+		 */
+		raise: function (exception)
+		{
+			processException(exception);
+		},
 		
 		/**
 		 *	Gets a configuration object for the requested namespace.
@@ -1111,24 +1265,18 @@
 	 *	wrapping, which is binding to either the jQuery ready or any 
 	 *	system/koi events.
 	 */
-	$.each(
-	[
-		jQuery.prototype.ready, 
-		jQuery.ready, 
-		jQuery.event.handle
-	], function (index, fn)
+	jQuery.prototype.ready = _.hook(jQuery.prototype.ready, exceptionConsumer);
+	jQuery.ready = _.hook(jQuery.ready, exceptionConsumer);
+	jQuery.event.handle = _.hook(jQuery.event.handle, exceptionConsumer);
+	jQuery.handleError = _.hook(jQuery.handleError, exceptionConsumer);
+	jQuery.ajax = _.hook(jQuery.ajax, function (settings)
 	{
-		fn = _.hook(fn, function ()
+		if (settings.success)
 		{
-			try
-			{
-				this.original.apply(this.scope, arguments);
-			}
-			catch (e)
-			{
-				processException(e);
-			}
-		});
+			settings.success = _.hook(settings.success, exceptionConsumer);
+		}
+		
+		this.original.call(this.scope, settings);
 	});
 	
 	//------------------------------

@@ -493,6 +493,17 @@
 			{
 				embedStylesheet(file + '.css');
 			});
+			
+			each(applicationManifest.application.themes, function (group, definition)
+			{
+				if (themes[group] !== undefined)
+				{
+					each(definition.sheets, function (index, style)
+					{
+						embedStylesheet([metadata.sdk, "koi", "theme", themes[group], definition.version, (style + ".css")].join('/'));
+					});
+				}
+			});
 		}
 	}
 	
