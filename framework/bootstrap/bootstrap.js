@@ -707,7 +707,7 @@
 	}
 	else
 	{
-		simpleRequest(metadata.manifest, processProjectManifest);
+		simpleRequest(metadata.manifest + cachebust(), processProjectManifest);
 	}
 
 }());
