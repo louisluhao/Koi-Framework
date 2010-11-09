@@ -50,7 +50,7 @@
 		/**
 		 *	The configurations for this application.
 		 */
-		configurations = window.__CONFIG || {},
+		configurations = $.extend(true, {}, window.__CONFIG, window.__SDK),
 		
 		/**
 		 *	Application configuration.

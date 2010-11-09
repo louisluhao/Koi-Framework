@@ -92,17 +92,29 @@
 		 *
 		 *	Signature:
 		 *	{
-		 *		<componentId>: 
-		 *		{
-		 *			instance: <instanceName>,
+		 *		<componentId>: <instanceName>,
 		 *
-		 *			version: <instanceVersion>
+		 *		...
+		 *	}
+		 */
+		instances = config("instances", {}),
+		
+		/**
+		 *	If the configuration provides a list of specifications, read them in here.
+		 *
+		 *	Signature:
+		 *	{
+		 *		<instanceName>:
+		 *		{
+		 *			version: <instanceVersion>,
+		 *			
+		 *			composition: <instanceComposition>
 		 *		},
 		 *
 		 *		...
 		 *	}
 		 */
-		instances = config("instances", {});
+		specifications = config("specifications", {});
 	
 	//------------------------------
 	//
@@ -302,7 +314,7 @@
 		/**
 		 *	The path from the current document to the components directory.
 		 */
-		path: config("path", ""),
+		path: config("path", "components"),
 		
 		/**
 		 *	A list of the classes which disable a given component.
@@ -326,30 +338,41 @@
 		 *
 		 *	@param id			The ID of the component.
 		 *
-		 *	@param instance		The instance name for the component ID.
-		 *
-		 *	@param version		The version of the component instance to load.
-		 *
-		 *	@param composition	The composition of the component. 
-		 *						['stylesheet', 'javascript'] are acceptable values.
-		 *
 		 *	@param target		The target element to replace for component injection.
 		 *
 		 *	@param content		Optional content to inject into the component, if supported.
-		 *
-		 *	@param path			A path override to use, instead of the default.
 		 */
-		register: function (id, instance, version, composition, target, content, path)
+		register: function (id, target, content)
 		{
+			if (instances[id] === undefined)
+			{
+				throw new PluginException("component", "register", "id", id, "No instance registered");
+			}
+			
+			if (specifications[instances[id]] === undefined)
+			{
+				throw new PluginException("component", "register", "instance", instances[id], "No specification listed");
+			}
+		
 			if (components[id] !== undefined)
 			{
 				throw new PluginException("component", "register", "id", id, "Namespace collision");
 			}
 			
 				/**
+				 *	The instance to create in this component.
+				 */
+			var instance = instances[id],
+			
+				/**
+				 *	The specification for the instance.
+				 */
+				specification = specifications[instance],
+			
+				/**
 				 *	The definition for this component.
 				 */
-			var definition = 
+				definition = 
 				{
 					instance: instance,
 					
@@ -359,7 +382,7 @@
 					
 					stylesheet: null,
 					
-					version: version,
+					version: specification.version,
 					
 					target: target
 				},
@@ -367,7 +390,7 @@
 				/**
 				 *	The base path for includes.
 				 */
-				basePath = getPath(instance, version, path);
+				basePath = getPath(instance, specification.version);
 			
 			if (content !== undefined)
 			{
@@ -376,7 +399,7 @@
 
 			components[id] = definition;
 			
-			$.each(composition, function (index, type)
+			$.each(specification.composition, function (index, type)
 			{
 				switch ($.trim(type))
 				{
@@ -497,26 +520,11 @@
 			 *	The ID of the component.
 			 */
 			id = element.attr("id"),
-		
-			/**
-			 *	The instance name.
-			 */
-			instance,
-			
-			/**
-			 *	The version of the component to load.
-			 */
-			version,
 			
 			/**
 			 *	Content for injection, if applicable.
 			 */
-			content,
-			
-			/**
-			 *	The composition for this component.
-			 */
-			composition = [];
+			content;
 		
 		if (disabled(element))
 		{
@@ -527,47 +535,6 @@
 		element.addClass("component-loading");
 		
 		/**
-		 *	If the configuration declared an instance definition for
-		 *	this component, use that over the default configs.
-		 */
-		if (instances[id] !== undefined)
-		{
-			instance = instances[id];
-			
-			version = instance.version;
-			instance = instance.instance;
-		}
-		
-		/**
-		 *	Parse the instance string to grab the name/version.
-		 *
-		 *	title should be in the "instance-name:version" format.
-		 */
-		else if (element.attr("title") !== undefined)
-		{
-			instance = element.attr("title").split(":");
-			
-			version = instance[1];
-			instance = instance[0];
-		}
-		
-		/**
-		 *	Otherwise, this is misconfigured, and we need to error.
-		 */
-		else
-		{
-			throw new Error("KOI.component[load-component]:title");
-		}
-		
-		/**
-		 *	If we have composition, set it here.
-		 */
-		if (element.attr("lang") !== undefined)
-		{
-			composition = element.attr("lang").split(",");
-		}
-		
-		/**
 		 *	If the element contains children, they are for content injection.
 		 */
 		if (element.children().length > 0)
@@ -575,7 +542,7 @@
 			content = element.children().remove();
 		}
 		
-		_.register(id, instance, version, composition, element, content);
+		_.register(id, element, content);
 	});
 	
 	//------------------------------
