@@ -21,6 +21,11 @@
 	//
 	//------------------------------
 	
+		/**
+		 *	Regular expression to extract image URLs from loaded stylesheet, repathing them.
+		 */
+	var RX_IMAGES = /url\((images\/.*)\)/g,
+	
 	//------------------------------
 	//
 	//	Property Declaration
@@ -30,7 +35,7 @@
 		/**
 		 *	Plugin stub.
 		 */
-	var _ = KOI.plugin("styleloader", "development"),
+		_ = KOI.plugin("styleloader", "development"),
 	
 		/**
 		 *	Grab our configuration object
@@ -76,6 +81,15 @@
 	 */
 	function setData(name, source, style)
 	{
+		if (source !== "manual")
+		{
+			source = source.split('/');
+			source.pop();
+			source = source.join('/');
+			
+			style = style.replace(RX_IMAGES, "url(" + source + "/$1)");
+		}
+		
 		styles[name] = 
 		{
 			source: source,

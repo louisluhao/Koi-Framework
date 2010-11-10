@@ -27,9 +27,19 @@
 	var RX_ASSET = /@.*@/g,
 	
 		/**
+		 *	Regular expression to extract a static asset token from config files.
+		 */
+		RX_STATIC = /\|.*\|/g,
+	
+		/**
 		 *	Regular expression to clean the asset token.
 		 */
-		RX_CLEAN_TOKEN = /@/g,
+		RX_CLEAN_ASSET = /@/g,
+		
+		/**
+		 *	Regular expression to clean the static asset token.
+		 */
+		RX_CLEAN_STATIC = /\|/g,
 
 	//------------------------------
 	//
@@ -419,7 +429,7 @@
 	 */
 	function each(source, callback)
 	{
-		if (source === undefined)
+		if (source === undefined || source === null)
 		{
 			return;
 		}
@@ -717,6 +727,22 @@
 				});
 			});
 		}
+		
+		if (manifest.themegroup !== undefined && manifest.theme !== undefined)
+		{		
+			if (themes[manifest.themegroup] !== undefined)
+			{
+				if (!typecheck(manifest.theme, "Array"))
+				{
+					manifest.theme = [manifest.theme];
+				}
+				
+				each(manifest.theme, function (index, style)
+				{
+					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'));
+				});
+			}
+		}
 	}
 	
 	/**
@@ -731,7 +757,7 @@
 				/**
 				 *	Resource information about the asset.
 				 */
-			var details = token.replace(RX_CLEAN_TOKEN, '').split(":"),
+			var details = token.replace(RX_CLEAN_ASSET, '').split(":"),
 			
 				/**
 				 *	The asset being requested.
@@ -753,6 +779,11 @@
 			}
 			
 			config = config.replace(token, [metadata.sdk].concat(details, [version, asset]).join('/'));
+		});
+		
+		each(config.match(RX_STATIC), function (index, token)
+		{
+			config = config.replace(token, token.replace(RX_CLEAN_STATIC, ''));
 		});
 		
 		evalScript(config);
