@@ -464,6 +464,11 @@
 		{
 			var buffer = {};
 		
+			if (object === undefined)
+			{
+				throw new Exception("KOI", "invertObject", "object", "undefined", "Must be an object");
+			}
+		
 			$.each(object, function (key, value)
 			{
 				buffer[value] = key;

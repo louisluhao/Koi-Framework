@@ -158,6 +158,11 @@
 		 *	timeline event when starting.
 		 */
 		__autostart: undefined,
+		
+		/**
+		 *	The display object for this content area.
+		 */
+		__display: undefined,
 	
 		//------------------------------
 		//  Properties
