@@ -11,10 +11,10 @@
 ----------------------------------*/
 
 .omniwidget
-	{ display: none; position: absolute; }
+	{ display: none; }
 	
 .omniwidget-draggable
-	{ z-index: 5000; }
+	{ z-index: 5000; position: absolute; }
 
 .omniwidget-footer
 	{ position: absolute; bottom: 0; left: 0; height: 16px; width: 100%; margin: 0 0 -16px; z-index: 10; }
