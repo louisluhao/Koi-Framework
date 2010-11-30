@@ -184,7 +184,8 @@
 			widget.__header.append($(WIDGET_INHERIT_TEMPLATE).attr(
 			{
 				href: (configuration.inheritableTarget || inheritableTarget) + '#' + widget.name,
-				rel: configuration.inheritableWindowOptions || inheritableWindowOptions
+				rel: configuration.inheritableWindowOptions || inheritableWindowOptions,
+				target: ("omniwidget_" + widget.name).replace("-", "_")
 			}).html(configuration.inheritableText || ''));
 			widget.__content = new KOI.module.jset(widget.__content);
 			
@@ -243,7 +244,10 @@
 				if (widget.closeOnInherit)
 				{
 					widget.inheritClosed = false;
-					
+				}
+				
+				if (widget.openOnInheritClose)
+				{	
 					if (widget.skipNextInheritCloseShow)
 					{
 						widget.skipNextInheritCloseShow = false;
@@ -316,6 +320,8 @@
 		 *		embed: <jQueryParentToEmbedIn>,
 		 *
 		 *		closeOnInherit: <closeWhenInherits(false)>,
+		 *
+		 *		openOnInheritClose: <openWhenInheritCloses(true)>,
 		 *
 		 *		inheritable: <true|false>,
 		 *
@@ -468,6 +474,11 @@
 		inheritClosed: undefined,
 		
 		/**
+		 *	Flag to detemrmine if open should follow an inheritance close.
+		 */
+		openOnInheritClose: undefined,
+		
+		/**
 		 *	The name of this omniwidget. Should be unique.
 		 */
 		name: undefined,
@@ -518,6 +529,7 @@
 			this.title = configuration.title;
 			this.inheritableTitle = configuration.inheritableTitle;
 			this.closeOnInherit = configuration.closeOnInherit || false;
+			this.openOnInheritClose = configuration.openOnInheritClose === undefined ? true : configuration.openOnInheritClose;
 			this.inheritStyles = configuration.inheritStyles || [];
 			this.skipNextInheritCloseShow = false;
 			

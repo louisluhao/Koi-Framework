@@ -17,6 +17,20 @@
 {
 	//------------------------------
 	//
+	//  Properties
+	//
+	//------------------------------
+
+		/**
+		 *	Sort numbers.
+		 */
+	var SORT_NUMBER = function (a, b)
+		{
+			return a - b;
+		};
+
+	//------------------------------
+	//
 	//	Class Definition
 	//
 	//------------------------------
@@ -177,8 +191,10 @@
 		 *	@param time			The time this event should occur at.
 		 *
 		 *	@param params		The parameters to pass to the dispatcher.
+		 *
+		 *	@param suppressSort	Internal use. Allows the suppression of the event sort.
 		 */
-		registerEvent: function (dispatcher, time, params)
+		registerEvent: function (dispatcher, time, params, suppressSort)
 		{
 			if (this.__dispatchers[dispatcher] === undefined)
 			{
@@ -198,6 +214,11 @@
 			}
 			
 			this.__events[time].push({dispatcher: this.__dispatchers[dispatcher], params: params});
+			
+			if (!suppressSort)
+			{
+				this.__sortEvents();
+			}
 		},
 		
 		/**
@@ -225,8 +246,10 @@
 		
 			$.each(timing, function (time, params)
 			{
-				self.registerEvent(dispatcher, time, params);
+				self.registerEvent(dispatcher, time, params, true);
 			});
+			
+			this.__sortEvents();
 		},
 		
 		/**
@@ -284,6 +307,41 @@
 		//------------------------------
 		//	 Internal Methods
 		//------------------------------
+		
+		/**
+		 *	Sort the events for this timeline, and order them properly.
+		 */
+		__sortEvents: function ()
+		{	
+				/**
+				 *	Buffer for sorting the time codes
+				 */
+			var sortBuffer = [],
+			
+				/**
+				 *	The actual buffer object.
+				 */
+				buffer = {},
+				
+				/**
+				 *	This timeline.
+				 */
+				self = this;
+			
+			$.each(this.__events, function (time, event)
+			{
+				sortBuffer.push(parseInt(time, 10));
+			});
+			
+			sortBuffer.sort(SORT_NUMBER);
+			
+			$.each(sortBuffer, function (index, time)
+			{
+				buffer[time] = self.__events[time];
+			});
+			
+			this.__events = buffer;
+		},
 		
 		/**
 		 *	Search for an event. Designed to be called by public methods

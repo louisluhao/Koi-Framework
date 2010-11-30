@@ -229,6 +229,7 @@
 	
 	//	Clear the config object out of the window namespace.
 	window.__CONFIG = undefined;
+	window.__SDK = undefined;
 	
 	//------------------------------
 	//
@@ -266,6 +267,11 @@
 		 *	System Modules
 		 */
 		module: {},
+		
+		/**
+		 *	Check if we're in release mode.
+		 */
+		development: !configurations.__release__,
 		
 		/**
 		 *	If the framework has dispatched its ready event.

@@ -17,6 +17,17 @@
 {
 	//------------------------------
 	//
+	//  Constants
+	//
+	//------------------------------
+
+		/**
+		 *	Frequency to check inherited windows for being open.
+		 */
+	var WATCHER_FREQUENCY = 3e3;
+
+	//------------------------------
+	//
 	//  KOI Extension
 	//
 	//------------------------------
@@ -56,17 +67,38 @@
 	 *	@param id		The ID of the child window.
 	 *
 	 *	@param child	The child window.
+	 *
+	 *	@param child	Unload proxy.
 	 */
-	KOI.bind("framework-inherited", function (event, proxy, id, child)
+	KOI.bind("framework-inherited", function (event, proxy, id, child, unloadProxy)
 	{
 		KOI.inherited[id] = 
 		{
 			$: proxy,
 			
+			unloadProxy: unloadProxy,
+			
 			window: child,
 			
-			active: true
+			active: true,
+			
+			watcher: undefined
 		};
+		
+		if (KOI.inherited[id].watcher === undefined)
+		{
+			KOI.inherited[id].watcher = setInterval(function ()
+			{
+				if (!!KOI.inherited[id].window && KOI.inherited[id].window.closed)
+				{
+					KOI.trigger("inherited-child-closed-by-watcher", [id]);
+					KOI.trigger("inherited-child-closed-by-watcher-" + id, [id]);
+					KOI.inherited[id].unloadProxy();
+					clearInterval(KOI.inherited[id].watcher);
+					KOI.inherited[id].watcher = undefined;
+				}
+			}, WATCHER_FREQUENCY);
+		}
 	});
 
 	/**
@@ -81,6 +113,12 @@
 		if (KOI.inherited[id] !== undefined)
 		{
 			KOI.inherited[id].active = false;
+			
+			if (KOI.inherited[id].watcher !== undefined)
+			{
+				clearInterval(KOI.inherited[id].watcher);
+				KOI.inherited[id].watcher = undefined;
+			}
 		}
 	});
 	
@@ -369,6 +407,11 @@
 		 */
 		unloadProxy = function ()
 		{
+			if (!(id in KOI.inherited && KOI.inherited[id].active))
+			{
+				return;
+			}
+			
 			KOI.trigger("inherited-child-close", [id]);
 			KOI.trigger("inherited-child-close-" + id, [id]);
 		};
@@ -378,8 +421,8 @@
 		child.$ = proxy;
 					
 		//	Notify the framework an inheritance has occurred
-		KOI.trigger("framework-inherited", [proxy, id, child]);
-		KOI.trigger("framework-inherited-" + id, [proxy, child]);
+		KOI.trigger("framework-inherited", [proxy, id, child, unloadProxy]);
+		KOI.trigger("framework-inherited-" + id, [proxy, child, unloadProxy]);
 		
 		//	Return the proxy for easy binding of ready events.
 		return {

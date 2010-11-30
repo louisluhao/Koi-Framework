@@ -81,7 +81,7 @@
 	 */
 	function setData(name, source, style)
 	{
-		if (source !== "manual")
+		if (source !== "manual" && KOI.development)
 		{
 			source = source.split('/');
 			source.pop();

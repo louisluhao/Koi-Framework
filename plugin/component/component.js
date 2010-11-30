@@ -261,11 +261,14 @@
 	{
 		KOI.styleloader.load("component-" + id, item + ".css", function (event, sheet)
 		{
-			item = item.split("/");
-			item.pop();
-			item = item.join("/");
-			
-			sheet = sheet.replace(RX_IMAGES, "url(" + item + "/$1)");
+			if (KOI.development)
+			{
+				item = item.split("/");
+				item.pop();
+				item = item.join("/");
+				
+				sheet = sheet.replace(RX_IMAGES, "url(" + item + "/$1)");
+			}
 			
 			components[id].stylesheet = true;
 			KOI.createStylesheet(sheet);
