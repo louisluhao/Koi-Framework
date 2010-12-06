@@ -1,0 +1,27 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["js"], 
+	
+	"class": "plugin", 
+	
+	"version": "development", 
+	
+	"name": "contentshuffler",
+
+	"dependencies":
+	{
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development"
+			},
+			
+			"module":
+			{
+				"timer": "development"
+			}
+		}
+	}
+}

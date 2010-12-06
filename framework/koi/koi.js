@@ -295,7 +295,7 @@
 		 *		...
 		 *	}
 		 */
-		readyQueue: 
+		readyQueue: $.extend(application('readyQueue', {}),
 		{
 			/**
 			 *	Require the document ready before we ready the framework.
@@ -306,7 +306,7 @@
 			 *	Require the framework be initialized.
 			 */
 			initialized: false
-		},
+		}),
 		
 		/**
 		 *	A collection of error handlers for catching uncaught events.
