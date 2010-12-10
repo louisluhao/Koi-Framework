@@ -1,0 +1,30 @@
+{
+	"framework": "koi", 
+	
+	"composition": ["css", "js"], 
+	
+	"class": "plugin", 
+	
+	"version": "development", 
+	
+	"name": "deeplink",
+	
+	"dependencies":
+	{
+		"jquery":
+		{
+			"plugin":
+			{
+				"address": "1.2.2"
+			}
+		},
+		
+		"koi":
+		{
+			"framework":
+			{
+				"koi": "development"
+			}
+		}
+	}
+}
