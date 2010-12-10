@@ -1276,20 +1276,23 @@
 	 *	wrapping, which is binding to either the jQuery ready or any 
 	 *	system/koi events.
 	 */
-	jQuery.prototype.ready = _.hook(jQuery.prototype.ready, exceptionConsumer);
-	jQuery.ready = _.hook(jQuery.ready, exceptionConsumer);
-	jQuery.event.handle = _.hook(jQuery.event.handle, exceptionConsumer);
-	jQuery.handleError = _.hook(jQuery.handleError, exceptionConsumer);
-	jQuery.ajax = _.hook(jQuery.ajax, function (settings)
+	if (!application("allowExcpetions", false))
 	{
-		if (settings.success)
+		jQuery.prototype.ready = _.hook(jQuery.prototype.ready, exceptionConsumer);
+		jQuery.ready = _.hook(jQuery.ready, exceptionConsumer);
+		jQuery.event.handle = _.hook(jQuery.event.handle, exceptionConsumer);
+		jQuery.handleError = _.hook(jQuery.handleError, exceptionConsumer);
+		jQuery.ajax = _.hook(jQuery.ajax, function (settings)
 		{
-			settings.success = _.hook(settings.success, exceptionConsumer);
-		}
-		
-		this.original.call(this.scope, settings);
-	});
-	
+			if (settings.success)
+			{
+				settings.success = _.hook(settings.success, exceptionConsumer);
+			}
+			
+			this.original.call(this.scope, settings);
+		});
+	}	
+
 	//------------------------------
 	//  Application Ready Handler
 	//------------------------------
