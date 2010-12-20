@@ -911,7 +911,9 @@
 		if (window[id])
 		{
 			canEvalScripts = true;
-		}	
+		}
+		
+		root.removeChild(script);
 	}());
 	
 	/**

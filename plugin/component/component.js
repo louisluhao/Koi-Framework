@@ -182,7 +182,7 @@
 	function process(id)
 	{
 		var definition = components[id];
-		
+
 		if (!definition.html || 
 			(definition.javascript !== null && !definition.javascript) ||
 			(definition.stylesheet !== null && !definition.stylesheet))
