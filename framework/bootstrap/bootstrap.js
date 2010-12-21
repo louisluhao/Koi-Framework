@@ -58,6 +58,11 @@
 		metatags = document.getElementsByTagName('meta'),
 		
 		/**
+		 *	The number of files currently being requested.
+		 */
+		requestingFiles = 0,
+		
+		/**
 		 *	Unique identifier for each resource.
 		 */
 		uid = 0,
@@ -382,6 +387,8 @@
 			return;
 		}
 		
+		requestingFiles += 1;
+		
 		included[file] = true;
 	
 			/**
@@ -394,6 +401,7 @@
 			 */
 			processor = function ()
 			{
+				requestingFiles -= 1;
 				handleResponse(xhr, listener, asText);
 			};
 		
@@ -526,7 +534,7 @@
 	 */
 	function loadApplicationResources()
 	{
-		if (applicationResourcesLoaded)
+		if (applicationResourcesLoaded || requestingFiles > 0)
 		{
 			return;
 		}
