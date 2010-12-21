@@ -1397,6 +1397,11 @@
 	{
 		event.preventDefault();
 		
+		if ($(this).hasClass("disabled-link"))
+		{
+			return;
+		}
+		
 		var to = $(this).attr("rel");
 		
 		if (KOI.pathing[to] !== undefined)
@@ -1414,9 +1419,24 @@
 	{
 		event.preventDefault();
 		
+		if ($(this).hasClass("disabled-link"))
+		{
+			return;
+		}
+		
 		var send = $(this).attr("rel");
 		
 		KOI.trigger(send, [this]);
+	});
+	
+	/**
+	 *	Disabled Links simply terminate.
+	 *
+	 *	@param event	The event object.
+	 */
+	$(".disabled-link").live("click", function (event)
+	{
+		event.preventDefault();
 	});
 	
 	//------------------------------
