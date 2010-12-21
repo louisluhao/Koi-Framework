@@ -58,11 +58,6 @@
 		metatags = document.getElementsByTagName('meta'),
 		
 		/**
-		 *	The number of files currently being requested.
-		 */
-		requestingFiles = 0,
-		
-		/**
 		 *	Unique identifier for each resource.
 		 */
 		uid = 0,
@@ -71,6 +66,16 @@
 		 *	Flag to determine if we're pending the loading of a script.
 		 */
 		pendingLoad = false,
+		
+		/**
+		 *	The number of pending manifest documents.
+		 */
+		pendingManifests = 0,
+		
+		/**
+		 *	Flaf to determine if the project manifest has been fully processed.
+		 */
+		projectProcessed = false,
 		
 		/**
 		 *	A collection of scripts to embed.
@@ -222,6 +227,8 @@
 	 *	Embed a stylesheet.
 	 *
 	 *	@param item	The URL of the css item to load.
+	 *
+	 *	@param callback	The callback to notify when the style is included.
 	 */
 	function embedStylesheet(item)
 	{
@@ -243,13 +250,19 @@
 	/**
 	 *	Embed a script. Based somewhat on jQuery.getScript
 	 *
-	 *	@param item	The URL of the js item to load.
+	 *	@param item		The URL of the js item to load.
+	 *
+	 *	@param callback	The callback to notify when the script is included.
 	 */
-	function embedScript(item)
+	function embedScript(item, callback)
 	{
 		if (pendingLoad)
 		{
-			scripts.push(item);
+			scripts.push(
+			[
+				item,
+				callback
+			]);
 			return;
 		}
 
@@ -280,10 +293,15 @@
 				}
 				
 				pendingLoad = false;
+
+				if (callback !== undefined)
+				{
+					callback.call(callback);
+				}
 				
 				if (scripts.length > 0)
 				{
-					embedScript(scripts.shift());
+					embedScript.apply(embedScript, scripts.shift());
 				}
 			}
 		};
@@ -384,10 +402,8 @@
 	{
 		if (included[file] !== undefined)
 		{
-			return;
+			return false;
 		}
-		
-		requestingFiles += 1;
 		
 		included[file] = true;
 	
@@ -401,7 +417,6 @@
 			 */
 			processor = function ()
 			{
-				requestingFiles -= 1;
 				handleResponse(xhr, listener, asText);
 			};
 		
@@ -426,6 +441,8 @@
 		}
 		
 		xhr.send(null);
+		
+		return true;
 	}
 	
 	/**
@@ -534,7 +551,7 @@
 	 */
 	function loadApplicationResources()
 	{
-		if (applicationResourcesLoaded || requestingFiles > 0)
+		if (applicationResourcesLoaded || !projectProcessed || pendingManifests > 0)
 		{
 			return;
 		}
@@ -583,6 +600,33 @@
 	}
 	
 	/**
+	 *	Update the status of a resource inclusion.
+	 *
+	 *	@param resource	The resource to update.
+	 */
+	function updateResourceInclusion(resource)
+	{
+		if (resource.hasJS && !resource.includedJS)
+		{
+			return;
+		}
+	
+		resource.included = true;
+
+		each(resource.holding, function (id, status)
+		{
+			var item = resourceCache[id];
+			
+			item.heldby[resource.uid] = false;
+			resource.holding[id] = false;
+			
+			attemptResourceLoad(item);
+		});
+		
+		loadApplicationResources();
+	}
+	
+	/**
 	 *	Attempt to load a resource.
 	 *
 	 *	@param resource	The resource item to load.
@@ -626,29 +670,31 @@
 			{
 			
 			case 'js':
-				embedScript(path.concat([manifest.name + '.js']).join('/'));
+				resource.hasJS = true;
+				resource.includedJS = false;
 				break;
 				
 			case 'css':
-				embedStylesheet(path.concat([manifest.name + '.css']).join('/'));
+				resource.hasCSS = true;
 				break;
 			
 			}
 		});
 		
-		resource.included = true;
-
-		each(resource.holding, function (id, status)
+		if (resource.hasJS)
 		{
-			var item = resourceCache[id];
-			
-			item.heldby[resource.uid] = false;
-			resource.holding[id] = false;
-			
-			attemptResourceLoad(item);
-		});
+			embedScript(path.concat([manifest.name + '.js']).join('/'), function ()
+			{
+				resource.includedJS = true;
+				updateResourceInclusion(resource);
+			});
+		}
 		
-		loadApplicationResources();
+		if (resource.hasCSS)
+		{
+			embedStylesheet(path.concat([manifest.name + '.css']).join('/'));
+			updateResourceInclusion(resource);
+		}
 	}
 	
 	//------------------------------
@@ -667,6 +713,7 @@
 		var item = createResourceTree(manifest.framework, manifest["class"], manifest.name);
 	
 		item.manifest = manifest;
+		pendingManifests -= 1;
 		
 		if (manifest.dependencies !== undefined)
 		{
@@ -684,7 +731,11 @@
 							item.heldby[dependency.uid] = true;
 						}
 						
-						simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest);
+						pendingManifests += 1;
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
+						{
+							pendingManifests -= 1;
+						}
 					});
 				});
 			});
@@ -701,6 +752,8 @@
 	function processComponentManifest(manifest)
 	{
 		var composition = [];
+		
+		pendingManifests -= 1;
 	
 		each(manifest.composition, function (index, type)
 		{
@@ -730,7 +783,11 @@
 					{
 						var dependency = createResourceTree(framework, type, resource);
 						
-						simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest);
+						pendingManifests += 1;
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
+						{
+							pendingManifests -= 1;
+						}
 					});
 				});
 			});
@@ -853,7 +910,11 @@
 							version: version
 						};
 						
-						simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processComponentManifest);					
+						pendingManifests += 1;
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processComponentManifest))
+						{
+							pendingManifests -= 1;
+						}					
 					});
 				}
 				else
@@ -864,11 +925,17 @@
 						
 						item.loadVersion = version;
 						
-						simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest);					
+						pendingManifests += 1;
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
+						{
+							pendingManifests -= 1;
+						}				
 					});
 				}
 			});
 		});
+		
+		projectProcessed = true;
 	}
 	
 	//------------------------------

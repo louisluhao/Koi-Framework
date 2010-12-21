@@ -26,6 +26,16 @@
 		 */
 	var VERSION_NUMBER = '0.2.0',
 	
+		/**
+		 *	Regular Expression to parse flags out of a text set.
+		 */
+		RX_TMPL_FLAGS = /[a-zA-Z]{1}([0-9]+)?/g,
+		
+		/**
+		 *	Regular expression to match against the text.
+		 */
+		RX_TMPL_FLAG = /koi\-template\-\-/,
+	
 	//------------------------------
 	//
 	//	Property Declaration
@@ -394,6 +404,120 @@
 		configuration: function (namespace)
 		{
 			return getConfiguration(namespace);
+		},
+		
+		/**
+		 *	Update text based on classes in the HTML. The general syntax should
+		 *	follow:
+		 *		koi-template-<key_name>
+		 *
+		 *	This will call .html() on the element and inject the "value_content" from
+		 *	the provided object for a matching key.
+		 *
+		 *	Classes can also provide conversion flags using:
+		 *		koi-tmpl--ut25
+		 *
+		 *	Possible flags:
+		 *		u:			Uppercase
+		 *		l:			Lowercase
+		 *		t<size>:	Truncate to size
+		 *		d:			Toggle display
+		 *
+		 *	@param object	The object to set text against.
+		 *
+		 *	object Signature:
+		 *	{
+		 *		key_name: value_content,
+		 *
+		 *		...
+		 *	}
+		 */
+		template: function (object)
+		{
+			$.each(object, function (key, value)
+			{
+				$(".koi-template-" + key).each(function ()
+				{
+						/**
+						 *	This element.
+						 */
+					var element = $(this),
+					
+						/**
+						 *	The set flags for the element.
+						 */
+						flags,
+						
+						/**
+						 *	Flag to determine if the value should be set.
+						 */
+						setValue = true;
+					
+					$.each(element.attr("class").split(" "), function (index, className)
+					{
+						if (className.match(RX_TMPL_FLAG) === null)
+						{
+							return;
+						}
+						
+						flags = className.replace(RX_TMPL_FLAG, "").match(RX_TMPL_FLAGS);
+						return false;
+					});
+					
+					if (flags !== undefined)
+					{
+						$.each(flags, function (index, rawFlag)
+						{
+								/**
+								 *	Grab the flag.
+								 */
+							var flag = rawFlag.substr(0, 1),
+							
+								/**
+								 *	Compute a size argument.
+								 */
+								size = parseInt(rawFlag.substr(1), 10);
+								
+							switch (flag)
+							{
+							
+							case "u":
+								value = value.toUpperCase();
+								break;
+								
+							case "l":
+								value = value.toLowerCase();
+								break;
+								
+							case "t":
+								if (!isNaN(size) && value.length > size)
+								{
+									value = value.substr(0, size) + "&hellip;";
+								}
+								break;
+								
+							case "d":
+								if (value === true)
+								{
+									element.show();
+								}
+								else
+								{
+									element.hide();
+								}
+								setValue = false;
+								return false;
+	
+							}
+						});
+					}
+					
+					if (setValue)
+					{
+						element.html(value);
+					}
+				});
+			});
 		},
 		
 		/**
@@ -1256,6 +1380,43 @@
 			
 			this._super("KOI." + plugin, method, property, value, description);
 		}
+	});
+	
+	//------------------------------
+	//
+	//  Event Bindings
+	//
+	//------------------------------
+	
+	/**
+	 *	Pathing Links set the URL using the value of a KOI.pathing key which matches the rel attribute.
+	 *
+	 *	@param event	The event object.
+	 */
+	$(".pathing-link").live("click", function (event)
+	{
+		event.preventDefault();
+		
+		var to = $(this).attr("rel");
+		
+		if (KOI.pathing[to] !== undefined)
+		{
+			window.location = KOI.pathing[to];
+		}
+	});
+	
+	/**
+	 *	Event Links send events matching the rel attribute.
+	 *
+	 *	@param event	The event object.
+	 */
+	$(".event-link").live("click", function (event)
+	{
+		event.preventDefault();
+		
+		var send = $(this).attr("rel");
+		
+		KOI.trigger(send, [this]);
 	});
 	
 	//------------------------------
