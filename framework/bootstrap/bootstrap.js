@@ -234,7 +234,7 @@
 	{
 		if (document.createStyleSheet !== undefined)
 		{
-			document.createStyleSheet(item);
+			document.createStyleSheet(item + cachebust());
 			return;
 		}
 		

@@ -36,6 +36,11 @@
 		 *	Selector to grab all deeplink items and stacks.
 		 */
 		SELECTOR_ALL = '.koi-deeplink-item-stack, .koi-deeplink-item, .koi-deeplink-stack',
+		
+		/**
+		 *	The configuration object.
+		 */
+		config = KOI.configuration("deeplink"),
 	
 	//------------------------------
 	//
@@ -59,6 +64,78 @@
 		 *	]
 		 */
 		listeners = [],
+		
+		/**
+		 *	Should first child automation be enabled?
+		 */
+		enableFirstChildAutomation = config("enableFirstChildAutomation", true),
+		
+		/**
+		 *	A collection of routes to be considered variable declarations instead of deeplink routes.
+		 *
+		 *	These variables will consume the next path argument when detected.
+		 *
+		 *	In the URL:
+		 *		/foo/1234/bar/12345/baz/
+		 *
+		 *	With route variables:
+		 *		foo, bar
+		 *
+		 *	The resultant URL which is routed to will be:
+		 *		/baz/
+		 *
+		 *	Providing as parameters:
+		 *		foo: 1234,
+		 *		bar: 12345
+		 *
+		 *	Signature:
+		 *	[
+		 *		<routeVariable>,
+		 *
+		 *		...
+		 *	]
+		 */
+		route_variables = config("route_variables", []),
+	
+		/**
+		 *	A route map will reappend extracted route variables to the path.
+		 *
+		 *	In the URL:
+		 *		/foo/1234/bar/12345/baz/
+		 *
+		 *	With route variables:
+		 *		foo, bar
+		 *
+		 *	And route maps:
+		 *		bar
+		 *
+		 *	The resultant URL which is routed to will be:
+		 *		/bar/baz/
+		 *
+		 *	Providing as parameters:
+		 *		foo: 1234,
+		 *		bar: 12345
+		 *
+		 *	Signature:
+		 *	[
+		 *		<routeVariable>,
+		 *
+		 *		...
+		 *	]
+		 */
+		route_map = config("route_map", []),
+		
+		/**
+		 *	An explicit route to all proxying, which prevents 404 dispatches when the explict route matches.
+		 *
+		 *	Signature:
+		 *	{
+		 *		<routeProxy>: <pageTitle>,
+		 *
+		 *		...
+		 *	}
+		 */
+		route_proxies = config("route_proxies", {}),
 	
 		/**
 		 *	Flag to determine if the initial deeplinking mapping has finished.
@@ -77,10 +154,20 @@
 		currentPath = [],
 		
 		/**
+		 *	The route corrected path being handled.
+		 */
+		routedPath = [],
+		
+		/**
 		 *	A string representation of what the current path should be after processing. Will always contain trailing
 		 *	and leading slashes.
 		 */
 		explicitPath,
+		
+		/**
+		 *	A string representation of the routed path. Will always contain trailing and leading slashes.
+		 */
+		explicitRoute,
 		
 		/**
 		 *	Flag to determine if processing through deeplinking should be disabled.
@@ -93,15 +180,92 @@
 		currentParameters = {},
 		
 		/**
+		 *	The current route parmaeters.
+		 */
+		routeParameters = {},
+		
+		/**
 		 *	The currently visible child element.
 		 */
-		currentChild;
+		currentChild,
+		
+		/**
+		 *	Flag to determine if a routing error is the last action taken.
+		 */
+		routingError = false;
 	
 	//------------------------------
 	//
 	//	Internal Methods
 	//
 	//------------------------------
+	
+	/**
+	 *	Correct a route.
+	 *
+	 *	@param path	The path to correct as a route.
+	 *
+	 *	@return	The path corrected for routing.
+	 */
+	function correctRoute(path)
+	{
+			/**
+			 *	A rerouted URL.
+			 */
+		var routed = [],
+	
+			/**
+			 *	Collection of path arguments.
+			 */
+			pathArgs = path.split("/"),
+			
+			/**
+			 *	Flag to determine if the next path argument should be consumed.
+			 */
+			extractNextArgument = false,
+			
+			/**
+			 *	The argument key for the next extracted argument.
+			 */
+			argumentKey;
+			
+		//	Remove slash pieces.
+		pathArgs.pop();
+		pathArgs.shift();
+		
+		/**
+		 *	Reset the route parameters.
+		 */
+		routeParameters = {};
+		
+		$.each(pathArgs, function (index, route)
+		{
+			if (extractNextArgument)
+			{
+				routeParameters[argumentKey] = route;
+				extractNextArgument = false;
+				argumentKey = undefined;
+				return;
+			}
+			else if ($.inArray(route, route_variables) !== -1)
+			{
+				argumentKey = route;
+				extractNextArgument = true;
+				
+				if ($.inArray(route, route_map) === -1)
+				{
+					return;
+				}
+			}
+			
+			routed.push(route);
+		});
+		
+		routedPath = routed;
+		explicitRoute = correctPath(routed.join("/"));
+		
+		return explicitRoute;
+	}
 	
 	/**
 	 *	Whenever the map is generated and firstChildAutomation is enabled, show the first
@@ -121,7 +285,11 @@
 		}
 		else if (mapGenerated && currentPath)
 		{
-			var path = [].concat(currentPath);
+			var path = correctRoute(correctPath([].concat(currentPath).join("/"))).split("/");
+			
+			//	Handle the trailing and leading slashes
+			path.shift();
+			path.pop();
 			
 			$('#koi-deeplink-root').showDeeplinkChild(path);
 		}
@@ -136,34 +304,16 @@
 	}
 	
 	/**
-	 *	Notify current path listeners.
-	 *
-	 *	@param notifyPath	The path to notify.
-	 */
-	function notifyListeners(notifyPath)
-	{
-		notifyPath = notifyPath || explicitPath;
-
-		var paramProxy = $.extend({}, currentParameters);
-		
-		if ($.inArray(notifyPath, listeners) !== -1)
-		{
-			_.trigger("path-set-" + notifyPath, [paramProxy]);
-		}
-	}
-	
-	/**
 	 *	Notify external plugins that the path has been set.
-	 *
-	 *	@param path The path to force.
 	 */
-	function triggerPathSet(path)
+	function triggerPathSet()
 	{
-		var paramProxy = $.extend({}, currentParameters);
-		
-		_.trigger("path-set", [currentPath, paramProxy]);
+		_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
 
-		notifyListeners(path);
+		if ($.inArray(explicitRoute, listeners) !== -1)
+		{
+			_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
+		}
 	}
 	
 	/**
@@ -184,9 +334,12 @@
 	
 			if ($.address.value() === '/')
 			{
-				firstChildAutomation = true;
-				processAutomation();
-				firstChildAutomation = false;
+				if (enableFirstChildAutomation)
+				{
+					firstChildAutomation = true;
+					processAutomation();
+					firstChildAutomation = false;
+				}
 				
 				activateCurrentComponents();
 				
@@ -225,24 +378,38 @@
 	
 	/**
 	 *	Set the current title.
+	 *
+	 *	@param titleOverride	The title to set. If undefined, will use current children.
 	 */
-	function setCurrentTitle()
+	function setCurrentTitle(titleOverride)
 	{
 		var title = [_.baseTitle];
 		
-		currentChild.parentsUntil('#koi-deeplink-root').each(function ()
+		if (titleOverride !== undefined)
 		{
-			if ($(this).children('.koi-deeplink-title').length)
+			if (!$.isArray(titleOverride))
 			{
-				title.unshift($(this).children('.koi-deeplink-title').text());
+				titleOverride = [titleOverride];
 			}
-		});
 		
-		if (currentChild.children('.koi-deeplink-title').length)
-		{
-			title.unshift(currentChild.children('.koi-deeplink-title').text());
+			title = title.concat(titleOverride).reverse();
 		}
-		
+		else
+		{
+			currentChild.parentsUntil('#koi-deeplink-root').each(function ()
+			{
+				if ($(this).children('.koi-deeplink-title').length)
+				{
+					title.unshift($(this).children('.koi-deeplink-title').text());
+				}
+			});
+			
+			if (currentChild.children('.koi-deeplink-title').length)
+			{
+				title.unshift(currentChild.children('.koi-deeplink-title').text());
+			}		
+		}
+				
 		document.title = title.join(_.titleSeparator);
 	}
 	
@@ -299,7 +466,17 @@
 		 */
 		path: function ()
 		{
-			return currentPath;
+			return $.extend([], currentPath);
+		},
+		
+		/**
+		 *	Returns the current route.
+		 *
+		 *	@param Array containing route elements.
+		 */
+		route: function ()
+		{
+			return $.extend([], currentRoute);
 		},
 
 		/**
@@ -310,6 +487,16 @@
 		parameters: function ()
 		{
 			return $.extend({}, currentParameters);
+		},
+		
+		/**
+		 *	Returns the route parameters.
+		 *
+		 *	@return Object containing named route parameters.
+		 */
+		routeParameters: function ()
+		{
+			return $.extend({}, routeParameters);
 		},
 
 		/**
@@ -333,7 +520,10 @@
 		 */
 		set: function (path, parameters)
 		{
-			path += '?' + $.param(parameters || currentParameters);
+			if (!$.isEmptyObject(parameters) || !$.isEmptyObject(currentParameters))
+			{
+				path += '?' + $.param(parameters || currentParameters);
+			}
 
 			$.address.value(path);
 		},
@@ -347,6 +537,7 @@
 		 */
 		recover: function (path, parameters)
 		{
+			routingError = false;
 			path = correctPath(path);
 			
 			if (path === explicitPath)
@@ -372,9 +563,12 @@
 				if (path === '/')
 				{
 					currentPath = [];
-					firstChildAutomation = true;
-					processAutomation();
-					firstChildAutomation = false;
+					if (enableFirstChildAutomation)
+					{
+						firstChildAutomation = true;
+						processAutomation();
+						firstChildAutomation = false;
+					}
 				}
 				else
 				{
@@ -397,14 +591,22 @@
 				triggerPathSet();
 			}
 
-			if ('/' + currentPath.join('/') + '/' !== explicitPath)
+			if (correctPath(currentPath.join('/')) !== explicitPath)
 			{
 				ignoreProcessing = true;
- 
-				explicitPath = '/' + currentPath.join('/') + '/';
+ 				
+ 				if (currentPath.length === 0)
+ 				{
+ 					explicitPath = "/";
+ 				}
+ 				else
+ 				{
+ 					explicitPath = correctPath(currentPath.join('/'));
+ 				}
+				
 				triggerPathSet();
 				
-				_.set('/' + currentPath.join('/') + '/', currentParameters);
+				_.set(explicitPath, currentParameters);
 				
 				ignoreProcessing = false;
 			}
@@ -444,8 +646,78 @@
 			
 			if (explicitPath === path)
 			{
+				_.trigger(event, [_.parameters(), _.routeParameters()]);
+			}
+		},
+		
+		/**
+		 *	Register a handler for all path changes.
+		 *
+		 *	@param listener	The listener function.
+		 */
+		registerHandler: function (listener)
+		{
+				/**
+				 *	Namespace the event for dispatching.
+				 */
+			var event = "path-set." + (new Date()).valueOf();
+			
+			_.bind(event, listener);
+			_.trigger(event, [routedPath, _.parameters(), _.routeParameters()]);
+		},
+		
+		/**
+		 *	Register a handler for routing errors.
+		 *
+		 *	@param listener	The listener function.
+		 */
+		routingError: function (listener)
+		{
+			/**
+				 *	Namespace the event for dispatching.
+				 */
+			var event = "routing-error." + (new Date()).valueOf();
+			
+			_.bind(event, listener);
+			
+			if (routingError)
+			{
 				_.trigger(event);
 			}
+			
+		},
+		
+		/**
+		 *	Raise a 404 page exception.
+		 *
+		 *	@param proxyOverride	Flag to determine if the proxy can override this 404 page request.
+		 *
+		 *	@param systemError		Flag to determine if the system is generating this error.
+		 */
+		raise404: function (proxyOverride, systemError)
+		{
+			if (proxyOverride)
+			{
+				var proxyRoute = route_proxies[explicitRoute];
+			
+				if (proxyRoute !== undefined)
+				{
+					setCurrentTitle(proxyRoute);
+					return;
+				}
+			}
+			
+			routingError = false;
+			
+			if (systemError)
+			{
+				routingError = true;
+				_.trigger("routing-error");	
+			}
+			
+			$(SELECTOR_ALL).hide();
+			$('.koi-deeplink-active-child').removeClass('koi-deeplink-active-child');
+			setCurrentChild($('.koi-deeplink-error'));
 		}
 		
 	});
@@ -553,7 +825,7 @@
 				{
 					var fragment = identifier.shift(),
 						target = this.data('koi-deeplink-map')[fragment];
-	
+
 					if (target)
 					{
 						setCurrentChild(target);
@@ -564,13 +836,11 @@
 					}
 				}
 			}
-		
+			
 			//	If we make it to this point with an identifier, and we have an error handler, utilize it.
 			if ($('.koi-deeplink-error').length > 0 && identifier !== undefined)
-			{
-				$(SELECTOR_ALL).hide();
-				$('.koi-deeplink-active-child').removeClass('koi-deeplink-active-child');
-				setCurrentChild($('.koi-deeplink-error'));
+			{	
+				_.raise404(true, true);
 			}
 
 			return this;
@@ -589,6 +859,12 @@
 	//	Startup Code
 	//
 	//------------------------------
+	
+	//------------------------------
+	//  Destory config
+	//------------------------------
+	
+	config();
 	
 	//------------------------------
 	//  Setup

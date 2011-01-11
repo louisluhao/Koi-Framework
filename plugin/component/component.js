@@ -71,7 +71,9 @@
 		 *
 		 *			target: <jQueryObject>,
 		 *
-		 *			processor: <null|processorMethod>
+		 *			processor: <null|processorMethod>,
+		 *
+		 *			loaded: <loadStatus>
 		 *		},
 		 *
 		 *		...
@@ -194,6 +196,8 @@
 		{
 			definition.processor(definition.target);	
 		}
+		
+		definition.loaded = true;
 		
 		KOI.trigger("component-loaded", [id]);
 		KOI.trigger("component-loaded-" + id);
@@ -346,6 +350,21 @@
 		{
 			$('.koi-component').trigger('load-component');
 		},
+		
+		/**
+		 *	Check the component id to determine if it has loaded.
+		 *
+		 *	@param id	The component id.
+		 */
+		loaded: function (id)
+		{
+			if (components[id] === undefined)
+			{
+				return false;
+			}
+			
+			return components[id].loaded;
+		},
 	
 		/**
 		 *	Register a component instance.
@@ -398,7 +417,9 @@
 					
 					version: specification.version,
 					
-					target: target
+					target: target,
+					
+					loaded: false
 				},
 				
 				/**
