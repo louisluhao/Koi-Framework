@@ -33,7 +33,7 @@
 		 *	modules to display a content area with a number of data sources that changes
 		 *	based on a timekeeper.
 		 */
-	var _ = KOI.plugin("contentdeck", "development"),
+	var _ = KOI.plugin("contentdeck"),
 	
 		//------------------------------
 		//  Resources

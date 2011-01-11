@@ -14,7 +14,7 @@
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
 (function ($) 
-{	
+{
 	//------------------------------
 	//
 	//	Constants
@@ -22,14 +22,9 @@
 	//------------------------------
 	
 		/**
-		 *	The current version of the KOI core.
-		 */
-	var VERSION_NUMBER = '0.2.0',
-	
-		/**
 		 *	Regular Expression to parse flags out of a text set.
 		 */
-		RX_TMPL_FLAGS = /([a-z0-9_]+)\b/gi,
+	var RX_TMPL_FLAGS = /([a-z0-9_]+)\b/gi,
 		
 		/**
 		 *	Regular expression to match against the text.
@@ -310,11 +305,6 @@
 		//------------------------------
 		//	Properties
 		//------------------------------
-		
-		/**
-		 *	The framework version.
-		 */
-		version: VERSION_NUMBER,
 		
 		/**
 		 *	Application settings.
@@ -885,13 +875,11 @@
 		 *
 		 *	@param namespace	The namespace of the plugin.
 		 *
-		 *	@param version		The version of the plugin.
-		 *
 		 *	@param PluginClass	A class which extends from the base plugin class.
 		 *
 		 *	@return The created plugin instance.
 		 */
-		plugin: function (namespace, version, PluginClass)
+		plugin: function (namespace, PluginClass)
 		{
 			if (_[namespace] !== undefined)
 			{
@@ -908,7 +896,7 @@
 				throw new Exception("KOI", "plugin", "PluginClass", undefined, "Must extend from KOI.module.plugin");
 			}
 			
-			var plugin = this[namespace] = new PluginClass(namespace, version);
+			var plugin = this[namespace] = new PluginClass(namespace);
 			
 			plugins.push(plugin);
 			
@@ -1337,11 +1325,6 @@
 		//------------------------------
 		//	Properties
 		//------------------------------
-		
-		/**
-		 *	The version of the plugin.
-		 */
-		version: undefined,
 	
 		/**
 		 *	The namespace of the plugin. Used to provide internal typing to the plugin so it can
@@ -1357,13 +1340,10 @@
 		 *	Initialize the plugin.
 		 *
 		 *	@param name The name of the plugin. This plugin will be accessible via KOI.<name>
-		 *
-		 *	@param version The version of the plugin.
 		 */
-		init: function (name, version)
+		init: function (name)
 		{
 			this.name = name;
-			this.version = version;
 			this._super();
 		},
 		
@@ -1401,7 +1381,7 @@
 			
 			this._super();
 			
-			_.trigger('koi-plugin-created', [this.name, this.version]);
+			_.trigger('koi-plugin-created', [this.name]);
 			_.trigger('koi-plugin-created-' + this.name);
 		}
 	});

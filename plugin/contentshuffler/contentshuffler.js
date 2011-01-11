@@ -38,7 +38,7 @@
 		 *	a collection of content providers using a timeout as the primary transition
 		 *	logic for swapping content panes.
 		 */
-		_ = KOI.plugin("contentshuffler", "development"),
+		_ = KOI.plugin("contentshuffler"),
 	
 		//------------------------------
 		//  Resources

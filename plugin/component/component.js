@@ -14,7 +14,7 @@
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
 (function ($) 
-{	
+{
 
 	//------------------------------
 	//
@@ -42,7 +42,7 @@
 		 *	The component plugin allows stub placeholders in the document to be defined
 		 *	replaced by "components" containing html and javascript and/or styles.
 		 */
-		_ = KOI.plugin("component", "development"),
+		_ = KOI.plugin("component"),
 		
 		//------------------------------
 		//  Components
@@ -364,6 +364,26 @@
 			}
 			
 			return components[id].loaded;
+		},
+		
+		/**
+		 *	Return a list of the component specifications.
+		 *
+		 *	@return	The component specifications object.
+		 */
+		instances: function ()
+		{
+			return $.extend(true, {}, instances);
+		},
+		
+		/**
+		 *	Return a list of the component specifications.
+		 *
+		 *	@return	The component specifications object.
+		 */
+		specifications: function ()
+		{
+			return $.extend(true, {}, specifications);
 		},
 	
 		/**

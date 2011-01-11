@@ -35,7 +35,7 @@
 		/**
 		 *	Plugin stub.
 		 */
-		_ = KOI.plugin("styleloader", "development"),
+		_ = KOI.plugin("styleloader"),
 	
 		/**
 		 *	Grab our configuration object

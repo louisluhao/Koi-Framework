@@ -68,7 +68,7 @@
 		 *	The omniwidget is a multipurpose display object, which can be made any combination
 		 *	of draggable, resizable, and inheritable.
 		 */
-		_ = KOI.plugin("omniwidget", "development"),
+		_ = KOI.plugin("omniwidget"),
 	
 		//------------------------------
 		//  Resources

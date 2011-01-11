@@ -51,7 +51,7 @@
 		/**
 		 *	Create the plugin namespace.
 		 */
-		_ = KOI.plugin('deeplink', 'development'),
+		_ = KOI.plugin('deeplink'),
 	
 		/**
 		 *	A collection of paths with listeners.
