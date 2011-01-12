@@ -27,9 +27,14 @@
 	var RX_TMPL_FLAGS = /([a-z0-9_]+)\b/gi,
 		
 		/**
-		 *	Regular expression to match against the text.
+		 *	Regular expression to match against templating text.
 		 */
-		RX_TMPL = /koi\-template\-/,
+		RX_TMPL = /tpl\-/,
+		
+		/**
+		 *	Regular expression to match against localization text.
+		 */
+		RX_LOCALIZATION = /loc\-/,
 		
 		/**
 		 *	Regular expression to test a string for flags.
@@ -39,7 +44,7 @@
 		/**
 		 *	Regular expression to detect replicant override declarations.
 		 */
-		RX_REPLICANT_DECLARATION = /koi\-replicant\-selector\-/,
+		RX_REPLICANT_DECLARATION = /replicant\-selector\-/,
 		
 		/**
 		 *	Digit selector.
@@ -160,7 +165,7 @@
 	 */
 	function extractReplicant(element)
 	{
-		if (element.hasClass("koi-replicant-container"))
+		if (element.hasClass("replicant-container"))
 		{
 			var replicant = element.data("replicant-selector");
 			
@@ -342,6 +347,11 @@
 		applicationReady: false,
 		
 		/**
+		 *	A localization script.
+		 */
+		localization: {},
+		
+		/**
 		 *	Automatically ready the application on framework ready.
 		 */
 		autoReadyApplication: application('autoReadyApplication', true),
@@ -479,13 +489,13 @@
 		
 			parent = $(parent);
 			
-			if (parent.hasClass("koi-replicant-container"))
+			if (parent.hasClass("replicant-container"))
 			{
 				return;
 			}
 			
 			parent
-				.addClass("koi-replicant-container")
+				.addClass("replicant-container")
 				.data("replicant-selector", name);
 				
 			_.storeReplicant(name, content);
@@ -511,7 +521,7 @@
 					replicant = content.addClass("replicant-target");
 				}
 				
-				replicant.addClass("koi-replicant-" + name)
+				replicant.addClass("replicant-" + name)
 				
 				replicants[name] = content;
 			}
@@ -533,14 +543,14 @@
 		
 			$.each(names, function (index, name)
 			{
-				$(".koi-replicant-" + name, selector).hide();
+				$(".replicant-" + name, selector).hide();
 			});
 		},
 		
 		/**
 		 *	Update elements based on classes in the HTML. The general syntax should
 		 *	follow:
-		 *		koi-template-<key_name>[--<flags>]
+		 *		tpl-<key_name>[--<flags>]
 		 *
 		 *	This will call .html() on the element and inject the "value_content" from
 		 *	the provided object for a matching key.
@@ -566,6 +576,10 @@
 		 *
 		 *	@param instance	An identifier to further filter the selector.
 		 *
+		 *	@param prefix	Switches the prefix used to target elements.
+		 *
+		 *	@param regexp	Regex to test prefix.
+		 *
 		 *	@return The context of the element which was updated.
 		 *
 		 *	object Signature:
@@ -583,8 +597,11 @@
 		 *		({my_target: "value"}, ".some-class", 1)
 		 *		- Will update all instances of <key_name> within the second matched "some-class" element.
 		 */
-		template: function (object, selector, instance)
+		template: function (object, selector, instance, prefix, regexp)
 		{
+			prefix = prefix || "tpl";
+			regexp = regexp || RX_TMPL;
+		
 				/**
 				 *	The context for scoping the update.
 				 */
@@ -612,10 +629,10 @@
 			
 			if (instance !== undefined && context !== undefined)
 			{
-				if (context.hasClass("koi-replicant-container"))
+				if (context.hasClass("replicant-container"))
 				{
 					replicantSelector = extractReplicant(context);
-					replicant = $(".koi-replicant-" + replicantSelector, context);
+					replicant = $(".replicant-" + replicantSelector, context);
 					
 					//	Increment the instance to simply the logic for checking replicant instances
 					instance += 1;
@@ -624,15 +641,15 @@
 					{
 						for (; index < instance - replicant.length; index++)
 						{
-							replicants[replicantSelector].clone().appendTo(context).hide().addClass("koi-replicant-instance-" + (index + replicant.length));
+							replicants[replicantSelector].clone().appendTo(context).hide().addClass("replicant-instance-" + (index + replicant.length));
 						}
 					}
 					
 					//	Decrement the instance to properly identify the target.
 					instance -= 1;
 					
-					$(".koi-replicant-instance-" + instance, context).show();
-					context = $(".koi-replicant-" + replicantSelector + ".koi-replicant-instance-" + instance, context);
+					$(".replicant-instance-" + instance, context).show();
+					context = $(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context);
 				}
 				else
 				{
@@ -642,7 +659,7 @@
 
 			$.each(object, function (key, value)
 			{
-				$("[class*='koi-template-" + key + "']", context).each(function ()
+				$("[class*='" + prefix + "-" + key + "']", context).each(function ()
 				{
 						/**
 						 *	This element.
@@ -656,18 +673,17 @@
 					
 					$.each(element.attr("class").split(" "), function (index, className)
 					{
-						if (className.replace("koi-template-", "").split("-")[0] !== key)
+						if (className.replace(prefix + "-", "").split("-")[0] !== key)
 						{
 							return;
 						}
-						
 						
 							/**
 							 *	The set flags for the element.
 							 */
 						var flags;
 					
-						if (className.match(RX_TMPL) === null)
+						if (className.match(regexp) === null)
 						{
 							return;
 						}
@@ -723,15 +739,15 @@
 									break;
 									
 								case "c":
-									if (element.data("koi-template-added-class" + key))
+									if (element.data("tpl-added-class" + key))
 									{
-										element.removeClass(element.data("koi-template-added-class-" + key));
-										element.removeData("koi-template-added-class-" + key);
+										element.removeClass(element.data("tpl-added-class-" + key));
+										element.removeData("tpl-added-class-" + key);
 									}
 									
 									if (value !== undefined && value !== null)
 									{
-										element.data("koi-template-added-class-" + key, value);
+										element.data("tpl-added-class-" + key, value);
 										element.addClass(value);
 									}
 									setValue = false;
@@ -769,6 +785,24 @@
 			});
 			
 			return context === undefined ? window.document : context;
+		},
+		
+		/**
+		 *	Use the localization object to localize the application.
+		 */
+		localize: function ()
+		{
+			var localization = {};
+		
+			$.each(KOI.localization, function (name, values)
+			{
+				$.each(values, function (key, value)
+				{
+					localization[name + "_" + key] = value;
+				});
+			});
+		
+			KOI.template(localization, undefined, undefined, "loc", RX_LOCALIZATION);
 		},
 		
 		/**

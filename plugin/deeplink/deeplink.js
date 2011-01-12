@@ -470,13 +470,33 @@
 		},
 		
 		/**
+		 *	The explicit path.
+		 *
+		 *	@return	The explicit path.
+		 */
+		explicitPath: function ()
+		{
+			return explicitPath;
+		},
+		
+		/**
 		 *	Returns the current route.
 		 *
 		 *	@param Array containing route elements.
 		 */
 		route: function ()
 		{
-			return $.extend([], currentRoute);
+			return $.extend([], routedPath);
+		},
+		
+		/**
+		 *	The explicit route.
+		 *
+		 *	@return	The explicit route.
+		 */
+		explicitRoute: function ()
+		{
+			return explicitRoute;
 		},
 
 		/**
@@ -617,6 +637,18 @@
 		},
 		
 		/**
+		 *	Add a route proxy.
+		 *
+		 *	@param route	The explicit route.
+		 *
+		 *	@param title	The title of the route.
+		 */
+		addRouteProxy: function (route, title)
+		{
+			route_proxies[correctPath(route)] = title;
+		},
+		
+		/**
 		 *	Register a listener to be notified when the provided explicit path is routed to.
 		 *
 		 *	@param path		The explicit path.
@@ -644,7 +676,7 @@
 			
 			_.bind(event, listener);
 			
-			if (explicitPath === path)
+			if (explicitRoute === path)
 			{
 				_.trigger(event, [_.parameters(), _.routeParameters()]);
 			}
@@ -702,6 +734,7 @@
 			
 				if (proxyRoute !== undefined)
 				{
+					triggerPathSet();
 					setCurrentTitle(proxyRoute);
 					return;
 				}
