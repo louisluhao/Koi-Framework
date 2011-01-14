@@ -89,13 +89,13 @@
 		 *		bar: 12345
 		 *
 		 *	Signature:
-		 *	[
-		 *		<routeVariable>,
+		 *	{
+		 *		<routeVariable>: <variableName>,
 		 *
 		 *		...
-		 *	]
+		 *	}
 		 */
-		route_variables = config("route_variables", []),
+		route_variables = config("route_variables", {}),
 	
 		/**
 		 *	A route map will reappend extracted route variables to the path.
@@ -233,11 +233,6 @@
 		pathArgs.pop();
 		pathArgs.shift();
 		
-		/**
-		 *	Reset the route parameters.
-		 */
-		routeParameters = {};
-		
 		$.each(pathArgs, function (index, route)
 		{
 			if (extractNextArgument)
@@ -247,9 +242,9 @@
 				argumentKey = undefined;
 				return;
 			}
-			else if ($.inArray(route, route_variables) !== -1)
+			else if (route_variables[route] !== undefined)
 			{
-				argumentKey = route;
+				argumentKey = route_variables[route];
 				extractNextArgument = true;
 				
 				if ($.inArray(route, route_map) === -1)
@@ -270,12 +265,15 @@
 	/**
 	 *	Whenever the map is generated and firstChildAutomation is enabled, show the first
 	 *	valid identifiers until no more stacks remain.
+	 *
+	 *	@return	False if automation closed non-standardly (consumed 404).
 	 */
 	function processAutomation()
 	{
 		if (mapGenerated && firstChildAutomation)
 		{
 			$('#koi-deeplink-root').showDeeplinkChild();
+			
 			
 			ignoreProcessing = true;
 
@@ -291,7 +289,10 @@
 			path.shift();
 			path.pop();
 			
-			$('#koi-deeplink-root').showDeeplinkChild(path);
+			if ($('#koi-deeplink-root').showDeeplinkChild(path) === false)
+			{
+				return false;
+			}
 		}
 	}
 	
@@ -324,7 +325,7 @@
 		$('#koi-deeplink-root').extractDeeplinkIdentifiers();
 
 		mapGenerated = true;
-		
+
 		$.address.init(function (event)
 		{
 			$.address.change(function (event)
@@ -442,6 +443,15 @@
 	_.build(
 	{
 		//------------------------------
+		//  Internal Properties
+		//------------------------------
+	
+		/**
+		 *	Disable autoready from configuration.
+		 */
+		__disableAutoReady: !config("autoready", true),
+	
+		//------------------------------
 		//	Properties
 		//------------------------------
 	
@@ -558,7 +568,10 @@
 		recover: function (path, parameters)
 		{
 			routingError = false;
+			routeParameters = {};
 			path = correctPath(path);
+			
+			var process = true;
 			
 			if (path === explicitPath)
 			{
@@ -586,7 +599,10 @@
 					if (enableFirstChildAutomation)
 					{
 						firstChildAutomation = true;
-						processAutomation();
+						if (processAutomation() === false)
+						{
+							process = false;
+						}
 						firstChildAutomation = false;
 					}
 				}
@@ -601,14 +617,20 @@
 					
 					//	Set the current path
 					currentPath = path;
-					
+
 					//	Process the deeplinking automation
-					processAutomation();
+					if (processAutomation() === false)
+					{
+						process = false;
+					}
 				}
 
 				activateCurrentComponents();
 				
-				triggerPathSet();
+				if (process)
+				{
+					triggerPathSet();
+				}
 			}
 
 			if (correctPath(currentPath.join('/')) !== explicitPath)
@@ -649,6 +671,33 @@
 		},
 		
 		/**
+		 *	Add a route map.
+		 *
+		 *	@param map	An array of items to add. Can be a single item as a string.
+		 */
+		addRouteMap: function (map)
+		{
+			if (!$.isArray(map))
+			{
+				map = [map];
+			}
+			
+			route_map = route_map.concat(map);
+		},
+		
+		/**
+		 *	Add a route variable.
+		 *
+		 *	@param variable	The route variable to add.
+		 *
+		 *	@param key		The key to identify this variable.
+		 */
+		addRouteVariable: function (variable, key)
+		{
+			route_variables[variable] = key;
+		},
+		
+		/**
 		 *	Register a listener to be notified when the provided explicit path is routed to.
 		 *
 		 *	@param path		The explicit path.
@@ -676,7 +725,7 @@
 			
 			_.bind(event, listener);
 			
-			if (explicitRoute === path)
+			if (_.isReady && explicitRoute === path)
 			{
 				_.trigger(event, [_.parameters(), _.routeParameters()]);
 			}
@@ -693,9 +742,13 @@
 				 *	Namespace the event for dispatching.
 				 */
 			var event = "path-set." + (new Date()).valueOf();
-			
+
 			_.bind(event, listener);
-			_.trigger(event, [routedPath, _.parameters(), _.routeParameters()]);
+			
+			if (_.isReady)
+			{
+				_.trigger(event, [routedPath, _.parameters(), _.routeParameters()]);
+			}
 		},
 		
 		/**
@@ -712,11 +765,10 @@
 			
 			_.bind(event, listener);
 			
-			if (routingError)
+			if (_.isReady && routingError)
 			{
 				_.trigger(event);
 			}
-			
 		},
 		
 		/**
@@ -725,6 +777,8 @@
 		 *	@param proxyOverride	Flag to determine if the proxy can override this 404 page request.
 		 *
 		 *	@param systemError		Flag to determine if the system is generating this error.
+		 *
+		 *	@return False if the 404 was consumed by a proxy.
 		 */
 		raise404: function (proxyOverride, systemError)
 		{
@@ -736,13 +790,13 @@
 				{
 					triggerPathSet();
 					setCurrentTitle(proxyRoute);
-					return;
+					return false;
 				}
 			}
 			
 			routingError = false;
 			
-			if (systemError)
+			if (_.isReady && systemError)
 			{
 				routingError = true;
 				_.trigger("routing-error");	
@@ -873,7 +927,10 @@
 			//	If we make it to this point with an identifier, and we have an error handler, utilize it.
 			if ($('.koi-deeplink-error').length > 0 && identifier !== undefined)
 			{	
-				_.raise404(true, true);
+				if (!_.raise404(true, true))
+				{
+					return false;
+				}
 			}
 
 			return this;
@@ -903,10 +960,13 @@
 	//  Setup
 	//------------------------------
 	
-	_.ready(function ()
+	$(function ()
 	{
 		_.baseTitle = document.title;
+	});
 	
+	_.ready(function ()
+	{
 		generateMap();
 	});
 	

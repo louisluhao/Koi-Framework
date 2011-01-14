@@ -789,13 +789,26 @@
 		
 		/**
 		 *	Use the localization object to localize the application.
+		 *
+		 *	@param keys	An array used to whitelist keys of the localization object.
+		 *				If no keys are provided, all keys are considered whitelisted.
 		 */
-		localize: function ()
+		localize: function (keys)
 		{
 			var localization = {};
+			
+			if (keys !== undefined && !$.isArray(keys))
+			{
+				keys = [keys];
+			}
 		
 			$.each(KOI.localization, function (name, values)
 			{
+				if (keys !== undefined && $.inArray(name, keys) === -1)
+				{
+					return;
+				}
+			
 				$.each(values, function (key, value)
 				{
 					localization[name + "_" + key] = value;
