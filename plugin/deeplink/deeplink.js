@@ -410,6 +410,19 @@
 				title.unshift(currentChild.children('.koi-deeplink-title').text());
 			}		
 		}
+		
+		//	Filter the title
+		title = $.map(title, function (item)
+		{
+			if (item === undefined ||
+				item === null ||
+				$.trim(item).length === 0)
+			{
+				return null;
+			}
+			
+			return item;
+		});
 				
 		document.title = title.join(_.titleSeparator);
 	}
@@ -805,6 +818,16 @@
 			$(SELECTOR_ALL).hide();
 			$('.koi-deeplink-active-child').removeClass('koi-deeplink-active-child');
 			setCurrentChild($('.koi-deeplink-error'));
+		},
+		
+		/**
+		 *	Set the current page title.
+		 *
+		 *	@param title	A string or array of strings representing a page title.
+		 */
+		title: function (title)
+		{
+			setCurrentTitle(title);
 		}
 		
 	});

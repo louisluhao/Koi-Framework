@@ -739,7 +739,7 @@
 									break;
 									
 								case "c":
-									if (element.data("tpl-added-class" + key))
+									if (element.data("tpl-added-class-" + key))
 									{
 										element.removeClass(element.data("tpl-added-class-" + key));
 										element.removeData("tpl-added-class-" + key);
