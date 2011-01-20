@@ -121,7 +121,19 @@
 		 *		...
 		 *	}
 		 */
-		specifications = config("specifications", {});
+		specifications = config("specifications", {}),
+		
+		/**
+		 *	A set of components to consider required before the application can ready.
+		 *
+		 *	Signature:
+		 *	[
+		 *		<componentId>,
+		 *
+		 *		...
+		 *	]
+		 */
+		required = config("required", []);
 	
 	//------------------------------
 	//
@@ -183,7 +195,9 @@
 	 */
 	function process(id)
 	{
-		var definition = components[id];
+		var definition = components[id],
+		
+			required_index = $.inArray(id, required);
 
 		if (!definition.html || 
 			(definition.javascript !== null && !definition.javascript) ||
@@ -199,8 +213,18 @@
 		
 		definition.loaded = true;
 		
-		KOI.trigger("component-loaded", [id]);
-		KOI.trigger("component-loaded-" + id);
+		if (required_index !== -1)
+		{
+			required.splice(required_index, 1);
+		}
+		
+		if (required.length === 0)
+		{
+			KOI.readyQueue.components = true;
+			KOI.makeReady();
+		}		
+		KOI.trigger("component-loaded", [id, definition]);
+		KOI.trigger("component-loaded-" + id, [definition]);
 	}
 	
 	//------------------------------
@@ -244,6 +268,12 @@
 		
 		//	Load new components which may have been included.
 		_.load();
+		
+		if (KOI.localization.components !== undefined &&
+			KOI.localization.components[definition.instance] !== undefined)
+		{
+			KOI.localize(["components", definition.instance], element);
+		}
 		
 		//	Process the component
 		//	JSLint complains about strict violation here. It's not.
@@ -607,10 +637,19 @@
 	//------------------------------
 	
 	//------------------------------
+	//  Ready interruption
+	//------------------------------
+
+	if (required.length > 0)
+	{
+		KOI.readyQueue.components = false;
+	}
+	
+	//------------------------------
 	//	 On Ready
 	//------------------------------
 		
-	_.ready(function ()
+	KOI.bind("platform-initialized", function ()
 	{
 		//	Load the components on ready.
 		_.load();

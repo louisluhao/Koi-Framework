@@ -50,6 +50,11 @@
 		 *	Digit selector.
 		 */
 		RX_DIGIT = /\d+/,
+		
+		/**
+		 *	Path for loading typekit.
+		 */
+		TYPEKIT_PATH = "https://use.typekit.com/",
 	
 	//------------------------------
 	//
@@ -81,6 +86,11 @@
 		 *	Application configuration.
 		 */
 		application,
+		
+		/**
+		 *	Localization configuration.
+		 */
+		localization_config,
 		
 		/**
 		 *	A collection of replicant elements.
@@ -295,6 +305,9 @@
 	//	Fetch application configuration.
 	application = getConfiguration('application');
 	
+	//	Store localization configuration
+	localization_config = application("localization", null);
+
 	//	Clear the config object out of the window namespace.
 	window.__CONFIG = undefined;
 	window.__SDK = undefined;
@@ -347,7 +360,7 @@
 		applicationReady: false,
 		
 		/**
-		 *	A localization script.
+		 *	Localization document.
 		 */
 		localization: {},
 		
@@ -790,32 +803,64 @@
 		/**
 		 *	Use the localization object to localize the application.
 		 *
-		 *	@param keys	An array used to whitelist keys of the localization object.
-		 *				If no keys are provided, all keys are considered whitelisted.
+		 *	@param keys		A key (or array of keys) to traverse into the localization document.
+		 *
+		 *	@param context	The html scope to work from. Default is document.
 		 */
-		localize: function (keys)
+		localize: function (keys, context)
 		{
-			var localization = {};
-			
-			if (keys !== undefined && !$.isArray(keys))
+			if ($.isEmptyObject(_.localization))
 			{
-				keys = [keys];
+				throw new Exception("KOI", "localize", "KOI.localization", "undefined", "No localization document loaded");
 			}
 		
-			$.each(KOI.localization, function (name, values)
-			{
-				if (keys !== undefined && $.inArray(name, keys) === -1)
-				{
-					return;
-				}
+				/**
+				 *	The localization document fragment.
+				 */
+			var localization = {},
 			
-				$.each(values, function (key, value)
-				{
-					localization[name + "_" + key] = value;
-				});
-			});
+				/**
+				 *	The scope into the localization document.
+				 */
+				scope = KOI.localization,
+				
+				/**
+				 *	The chain of keys
+				 */
+				chain = ["KOI", "localization"];
 		
-			KOI.template(localization, undefined, undefined, "loc", RX_LOCALIZATION);
+			/**
+			 *	Scope into the document if keys are provided.
+			 */
+			if (keys !== undefined)
+			{
+				if (!$.isArray(keys))
+				{
+					keys = [keys];
+				}
+				
+				$.each(keys, function (index, key)
+				{
+					chain.push(key);
+					
+					if (scope[key] === undefined)
+					{
+						throw new Exception("KOI", "localize", "scope", chain.join("."), "Scope not defined in localization document");
+					}
+					
+					scope = scope[key];
+				});
+			}
+			
+			/**
+			 *	Generate the localization fragment.
+			 */
+			$.each(scope, function (name, value)
+			{
+				localization[name] = value;
+			});
+			
+			_.template(localization, context, undefined, "loc", RX_LOCALIZATION);
 		},
 		
 		/**
@@ -1177,6 +1222,19 @@
 		},
 		
 		/**
+		 *	Embed a typekit font.
+		 *
+		 *	@param kit_id	The ID of the kit to embed.
+		 */
+		embedTypekit: function (kit_id)
+		{
+			$.getScript(TYPEKIT_PATH + kit_id + ".js", function ()
+			{
+				try{Typekit.load();}catch(e){}
+			});
+		},
+		
+		/**
 		 *	Similar to the jQuery $(document).ready() method, only plugins can override this
 		 *	method to provide enhanced checks for platform readyness.
 		 *
@@ -1218,6 +1276,11 @@
 		 */
 		makeReady: function ()
 		{
+			if (this.isReady)
+			{
+				return;
+			}
+		
 			var canReady = true;
 		
 			$.each(_.readyQueue, function (type, status)
@@ -1249,8 +1312,58 @@
 					plugin.makeReady();
 				}
 			});
+		},
+		
+		/**
+		 *	Localize the application. Parameters can either be provided, or extracted from the application's localization configuration.
+		 *
+		 *	@param language	The language document to load.
+		 *
+		 *	@param path		The path to load documents from.
+		 *
+		 *	Localization configuration Signature:
+		 *	{
+		 *		defaultLanguage: <deocumentLanguage>,
+		 *
+		 *		path: <pathToDocuments>
+		 *	}
+		 */
+		localizeApplication: function (language, path)
+		{
+			if (localization_config !== null)
+			{
+				language = language || localization_config.defaultLanguage;
+				path = path || localization_config.path;
+			}
 			
-			delete this.makeReady;
+			if (language === undefined)
+			{
+				throw new Exception("KOI", "localizeApplication", "language", "undefined", "Must declare a localization path.");
+			}
+			
+			if (path === undefined)
+			{
+				throw new Exception("KOI", "localizeApplication", "path", "undefined", "Must declare a localization path.");
+			}
+			
+			$.ajax(
+			{
+				url: path + "/" + language + ".json",
+				type: "GET",
+				dataType: "json",
+				success: function (data)
+				{
+					$.extend(_.localization, data);
+					_.readyQueue.localization = true;
+					_.trigger("localization-loaded");
+					_.makeReady();
+				},
+				error: function ()
+				{
+					throw new Exception("KOI", "localizeApplication", "document", "invalid", "The localization document could not be loaded");
+				},
+				cache: false
+			});
 		}
 			
 	});
@@ -1339,11 +1452,14 @@
 		 */
 		makeReady: function ()
 		{
+			if (this.isReady)
+			{
+				return;
+			}
+			
 			this.isReady = true;
 			
 			this.trigger('ready', [this]);
-			
-			delete this.makeReady;
 		}
 	});
 	
@@ -1432,6 +1548,22 @@
 			_.trigger('koi-plugin-created-' + this.name);
 		}
 	});
+	
+	//------------------------------
+	//  Utility Function
+	//------------------------------
+
+	/**
+	 *	Check the data to ensure it's neither undefined or null.
+	 *
+	 *	@param data	The data to check.
+	 *
+	 *	@return	True if the item is valid, false otherwise.
+	 */
+	window.isValid = function (data)
+	{
+		return data !== undefined && data !== null;
+	};
 	
 	//------------------------------
 	//  Exception
@@ -1762,6 +1894,15 @@
 	//------------------------------
 	
 	//------------------------------
+	//  Localization Hook
+	//------------------------------
+	
+	if (localization_config !== null)
+	{
+		_.readyQueue.localization = false;
+	}
+	
+	//------------------------------
 	//  Hook jQuery
 	//------------------------------
 	
@@ -1773,7 +1914,7 @@
 	 *	wrapping, which is binding to either the jQuery ready or any 
 	 *	system/koi events.
 	 */
-	if (!application("allowExceptions", false))
+	if (!application("allowExceptions", true))
 	{
 		jQuery.prototype.ready = _.hook(jQuery.prototype.ready, exceptionConsumer);
 		jQuery.ready = _.hook(jQuery.ready, exceptionConsumer);
@@ -1817,6 +1958,14 @@
 		
 			_.metadata[tag.attr('name')] = tag.attr('content');
 		});
+		
+		if (_.metadata.typekit !== undefined)
+		{
+			$.each(_.metadata.typekit.split(","), function (index, kit)
+			{
+				_.embedTypekit(kit);
+			});
+		}
 
 		_.readyQueue.documentReady = true;
 		

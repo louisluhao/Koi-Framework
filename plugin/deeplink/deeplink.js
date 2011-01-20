@@ -52,6 +52,11 @@
 		 *	Create the plugin namespace.
 		 */
 		_ = KOI.plugin('deeplink'),
+		
+		/**
+		 *	A loading screen, if set.
+		 */
+		loading_screen,
 	
 		/**
 		 *	A collection of paths with listeners.
@@ -308,7 +313,12 @@
 	 *	Notify external plugins that the path has been set.
 	 */
 	function triggerPathSet()
-	{
+	{			
+		if (routingError)
+		{
+			return false;
+		}
+	
 		_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
 
 		if ($.inArray(explicitRoute, listeners) !== -1)
@@ -438,7 +448,8 @@
 
 		if (child.attr('id') !== 'koi-deeplink-root')
 		{
-			currentChild = child.addClass('koi-deeplink-active-child').show();
+			currentChild = child.addClass('koi-deeplink-active-child');
+			_.loading(true);
 
 			if ($('.koi-deeplink-title', currentChild).length)
 			{
@@ -828,8 +839,36 @@
 		title: function (title)
 		{
 			setCurrentTitle(title);
-		}
+		},
 		
+		/**
+		 *	Set the loading state of the container.
+		 *
+		 *	@param isLoading	True if loading has started, false if it has ended. Default true.
+		 */
+		loading: function (isLoading)
+		{
+			if (isLoading ||
+				isLoading === undefined)
+			{
+				loading_screen.show();
+				$(".koi-deeplink-state-element").hide();
+				currentChild.hide();
+			}
+			else
+			{
+				loading_screen.hide();
+				currentChild.show();
+			}
+		},
+		
+		/**
+		 *	Alias for simple load handling from components.
+		 */
+		loaded: function ()
+		{
+			_.loading(false);
+		}
 	});
 	
 	//------------------------------
@@ -986,6 +1025,8 @@
 	$(function ()
 	{
 		_.baseTitle = document.title;
+		
+		loading_screen = $("#koi-deeplink-loading");
 	});
 	
 	_.ready(function ()

@@ -9,9 +9,9 @@
 	
 	"version": "development",
 	
-	"themegroup": "koi-application",
+	"themegroup": "whitelabel-application",
 	
-	"theme": "application",
+	"theme": ["typography", "buttons"],
 	
 	"dependencies":
 	{
