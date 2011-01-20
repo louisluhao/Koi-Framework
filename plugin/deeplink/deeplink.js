@@ -440,16 +440,23 @@
 	/**
 	 *	Sets the current child.
 	 *
-	 *	@param child	The child to set as the current visible.
+	 *	@param child			The child to set as the current visible.
+	 *
+	 *	@param change_loading	Flag to determine if loading should be activated. Default true.
 	 */
-	function setCurrentChild(child)
+	function setCurrentChild(child, change_loading)
 	{	 
 		child.show();
 
 		if (child.attr('id') !== 'koi-deeplink-root')
 		{
 			currentChild = child.addClass('koi-deeplink-active-child');
-			_.loading(true);
+			
+			if (change_loading ||
+				change_loading === undefined)
+			{
+				_.loading(true);
+			}
 
 			if ($('.koi-deeplink-title', currentChild).length)
 			{
@@ -823,12 +830,13 @@
 			if (_.isReady && systemError)
 			{
 				routingError = true;
-				_.trigger("routing-error");	
+				_.trigger("routing-error");
 			}
 			
 			$(SELECTOR_ALL).hide();
 			$('.koi-deeplink-active-child').removeClass('koi-deeplink-active-child');
-			setCurrentChild($('.koi-deeplink-error'));
+			setCurrentChild($('.koi-deeplink-error'), false);
+			_.loaded();
 		},
 		
 		/**
@@ -854,11 +862,13 @@
 				loading_screen.show();
 				$(".koi-deeplink-state-element").hide();
 				currentChild.hide();
+				_.trigger("loading");
 			}
 			else
 			{
 				loading_screen.hide();
 				currentChild.show();
+				_.trigger("loaded");
 			}
 		},
 		

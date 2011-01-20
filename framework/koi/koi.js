@@ -355,6 +355,11 @@
 		isReady: false,
 		
 		/**
+		 *	If the platform has initialized.
+		 */
+		initialized: false,
+		
+		/**
 		 *	Flag to test if the application has readied.
 		 */
 		applicationReady: false,
@@ -1266,6 +1271,7 @@
 				return;
 			}
 
+			_.initialized = true;
 			_.trigger("platform-initialized");
 			_.readyQueue.initialized = true;
 			_.makeReady();
@@ -1431,6 +1437,22 @@
 		},
 		
 		/**
+		 *	Plugin specific alias of jQuery.one
+		 */
+		one: function ()
+		{
+			this.__delegate.one.apply(this.__delegate, arguments);
+		},
+		
+		/**
+		 *	Plugin specific alias of jQuery.unbind
+		 */
+		unbind: function ()
+		{
+			this.__delegate.update.apply(this.__delegate, arguments);
+		},
+		
+		/**
 		 *	Bind a listener for this module's ready event.
 		 *
 		 *	@param listener The listener to notify when the module is ready.
@@ -1524,9 +1546,7 @@
 		{
 			$.extend(this, definition);
 			
-			delete this.build;
-			
-			if (!this.__disableAutoReady)
+			if (!this.__disableAutoReady && !this.isReady)
 			{
 				this.makeReady();
 			}
