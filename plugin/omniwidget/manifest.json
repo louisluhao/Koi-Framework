@@ -17,7 +17,7 @@
 			{
 				"ui.draggable": "1.8.5",
 				"ui.resizable": "1.8.5",
-				"opener": "development"
+				"opener": "0.1.x"
 			}
 		},
 			
@@ -25,13 +25,13 @@
 		{
 			"framework":
 			{
-				"koi": "development",
-				"inherit": "development"
+				"koi": "0.2.x",
+				"inherit": "0.1.x"
 			},
 			
 			"module":
 			{
-				"jset": "development"
+				"jset": "0.1.x"
 			}
 		}
 	}

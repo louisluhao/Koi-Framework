@@ -15,7 +15,7 @@
 		{			
 			"framework":
 			{
-				"koi": "development"
+				"koi": "0.2.x"
 			}
 		}
 	}

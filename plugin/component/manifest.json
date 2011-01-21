@@ -15,12 +15,12 @@
 		{			
 			"framework":
 			{
-				"koi": "development"
+				"koi": "0.2.x"
 			},
 			
 			"plugin":
 			{
-				"styleloader": "development"
+				"styleloader": "current"
 			}
 		}
 	}

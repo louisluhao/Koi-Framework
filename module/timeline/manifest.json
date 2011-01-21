@@ -15,12 +15,12 @@
 		{
 			"framework":
 			{
-				"koi": "development"
+				"koi": "0.2.x"
 			},
 			
 			"module":
 			{
-				"timekeeper": "development"
+				"timekeeper": "0.1.x"
 			}
 		}
 	}

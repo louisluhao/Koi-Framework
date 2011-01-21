@@ -114,8 +114,6 @@
 		 *				{
 		 *					manifest: <manifestDocument>,
 		 *
-		 *					loadVersion: <versionForLoading>,
-		 *
 		 *					uid: <UID>,
 		 *
 		 *					included: <true|false>,
@@ -504,8 +502,12 @@
 	 *	@param type			The type of resource.
 	 *
 	 *	@param name			The name of the resource.
+	 *
+	 *	@param version		The version of the resource.
+	 *
+	 *	@param adding		If the resource is getting a tree entry to set it's included version.
 	 */
-	function createResourceTree(framework, type, name)
+	function createResourceTree(framework, type, name, version, adding)
 	{
 		if (resources[framework] === undefined)
 		{
@@ -519,7 +521,12 @@
 		
 		if (resources[framework][type][name] === undefined)
 		{
-			resourceCache[uid] = resources[framework][type][name] = {included: false, uid: uid++, holding: {}, heldby: {}};
+			resourceCache[uid] = resources[framework][type][name] = {included: false, uid: uid++, holding: {}, heldby: {}, version: version};
+		}
+		
+		if (!adding && version !== resources[framework][type][name].version)
+		{
+			throw new Error("Version collision: " + [framework, type, name].join(" ") + " impored as " + resources[framework][type][name].version + " but now requires " + version);
 		}
 		
 		return resources[framework][type][name];
@@ -592,7 +599,7 @@
 				{
 					each(definition.sheets, function (index, style)
 					{
-						embedStylesheet([metadata.sdk, "koi", "theme", themes[group], definition.version, (style + ".css")].join('/'));
+						embedStylesheet([metadata.sdk, "koi", "theme", themes[group].resource, themes[group].version, (style + ".css")].join('/'));
 					});
 				}
 			});
@@ -646,10 +653,17 @@
 			/**
 			 *	The path for doing includes.
 			 */
-			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, resource.loadVersion || manifest.version];
+			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, manifest.version];
+	
+		//	Don't import themes
+		if (manifest["class"] === "theme")
+		{
+			updateResourceInclusion(resource);
+			return;
+		}
 		
 		if (manifest.themegroup !== undefined && manifest.theme !== undefined)
-		{		
+		{
 			if (themes[manifest.themegroup] !== undefined)
 			{
 				if (!typecheck(manifest.theme, "Array"))
@@ -659,7 +673,7 @@
 				
 				each(manifest.theme, function (index, style)
 				{
-					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'));
+					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
 				});
 			}
 		}
@@ -710,7 +724,7 @@
 	 */
 	function processResourceManifest(manifest)
 	{
-		var item = createResourceTree(manifest.framework, manifest["class"], manifest.name);
+		var item = createResourceTree(manifest.framework, manifest["class"], manifest.name, manifest.version, true);
 	
 		item.manifest = manifest;
 		pendingManifests -= 1;
@@ -723,7 +737,7 @@
 				{
 					each(resources, function (resource, version)
 					{
-						var dependency = createResourceTree(framework, type, resource);
+						var dependency = createResourceTree(framework, type, resource, version);
 						
 						if (!dependency.included)
 						{
@@ -781,7 +795,7 @@
 				{
 					each(resources, function (resource, version)
 					{
-						var dependency = createResourceTree(framework, type, resource);
+						var dependency = createResourceTree(framework, type, resource, version);
 						
 						pendingManifests += 1;
 						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
@@ -804,7 +818,7 @@
 				
 				each(manifest.theme, function (index, style)
 				{
-					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup], manifest.version, (style + ".css")].join('/'));
+					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
 				});
 			}
 		}
@@ -880,12 +894,31 @@
 		//	Add our theme definitions
 		if (manifest.themes !== undefined)
 		{
-			each(manifest.themes, function (group, theme)
+			each(manifest.includes, function (framework, types)
 			{
-				themes[group] = theme;
+				if (types.theme !== undefined)
+				{
+					each(types.theme, function (resource, version)
+					{
+						each(manifest.themes, function (group, theme)
+						{
+							if (theme === resource)
+							{
+								themes[group] = 
+								{
+									resource: theme,
+									
+									version: version
+								};
+								
+								return false;
+							}
+						});
+					});
+				}
 			});
-		}
-		
+		}	
+
 		//	Handle functional includes.
 		each(manifest.includes, function (framework, types)
 		{
@@ -921,9 +954,7 @@
 				{
 					each(resources, function (resource, version)
 					{
-						var item = createResourceTree(framework, type, resource);
-						
-						item.loadVersion = version;
+						var item = createResourceTree(framework, type, resource, version);
 						
 						pendingManifests += 1;
 						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))

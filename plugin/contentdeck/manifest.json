@@ -15,13 +15,13 @@
 		{
 			"framework":
 			{
-				"koi": "development"
+				"koi": "0.2.x"
 			},
 			
 			"module":
 			{
-				"contentprovider": "development",
-				"timeline": "development"
+				"contentprovider": "0.1.x",
+				"timeline": "0.1.x"
 			}
 		}
 	}
