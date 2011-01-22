@@ -910,8 +910,6 @@
 									
 									version: version
 								};
-								
-								return false;
 							}
 						});
 					});

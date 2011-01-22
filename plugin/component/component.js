@@ -649,10 +649,12 @@
 	//	 On Ready
 	//------------------------------
 		
-	KOI.bind("platform-initialized", function ()
+	KOI.bind("platform-initialized", function () 
 	{
-		//	Load the components on ready.
-		_.load();
+		$(function ()
+		{
+			_.load();
+		});
 	});
 		
 	//------------------------------
