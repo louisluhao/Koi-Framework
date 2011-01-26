@@ -17,9 +17,3 @@
 .koi-deeplink-state-element,
 #koi-deeplink-loading
     { display: none; }
-
-.koi-deeplink-item-stack.koi-deeplink-active-child, 
-.koi-deeplink-item.koi-deeplink-active-child, 
-.koi-deeplink-stack.koi-deeplink-active-child, 
-.koi-deeplink-active-child
-    { display: block; }

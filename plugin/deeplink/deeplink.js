@@ -57,18 +57,6 @@
 		 *	A loading screen, if set.
 		 */
 		loading_screen,
-	
-		/**
-		 *	A collection of paths with listeners.
-		 *
-		 *	Signature:
-		 *	[
-		 *		<path>,
-		 *
-		 *		...
-		 *	]
-		 */
-		listeners = [],
 		
 		/**
 		 *	Should first child automation be enabled?
@@ -306,7 +294,9 @@
 	 */
 	function activateCurrentComponents()
 	{
-		$('.koi-component', currentChild).removeClass('koi-deeplink-component-disabled').trigger('load-component');
+		currentChild.children('.koi-component')
+			.removeClass('deeplink-component-disabled')
+			.trigger('load-component');
 	}
 	
 	/**
@@ -318,13 +308,15 @@
 		{
 			return false;
 		}
-	
+		
 		_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
 
-		if ($.inArray(explicitRoute, listeners) !== -1)
+		_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
+		
+		$.each(routedPath, function (index, route)
 		{
-			_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
-		}
+			_.trigger("route-set-" + route, [_.parameters(), _.routeParameters()]);
+		});
 	}
 	
 	/**
@@ -351,8 +343,6 @@
 					processAutomation();
 					firstChildAutomation = false;
 				}
-				
-				activateCurrentComponents();
 				
 				triggerPathSet();
 			}
@@ -451,6 +441,7 @@
 		if (child.attr('id') !== 'koi-deeplink-root')
 		{
 			currentChild = child.addClass('koi-deeplink-active-child');
+			activateCurrentComponents();
 			
 			if (change_loading ||
 				change_loading === undefined)
@@ -507,7 +498,7 @@
 		 */
 		path: function ()
 		{
-			return $.extend([], currentPath);
+			return currentPath;
 		},
 		
 		/**
@@ -527,7 +518,7 @@
 		 */
 		route: function ()
 		{
-			return $.extend([], routedPath);
+			return routedPath;
 		},
 		
 		/**
@@ -547,7 +538,7 @@
 		 */
 		parameters: function ()
 		{
-			return $.extend({}, currentParameters);
+			return currentParameters;
 		},
 		
 		/**
@@ -557,7 +548,7 @@
 		 */
 		routeParameters: function ()
 		{
-			return $.extend({}, routeParameters);
+			return routeParameters;
 		},
 
 		/**
@@ -655,8 +646,6 @@
 						process = false;
 					}
 				}
-
-				activateCurrentComponents();
 				
 				if (process)
 				{
@@ -739,11 +728,6 @@
 		{
 			path = correctPath(path);
 			
-			if ($.inArray(path, listeners) === -1)
-			{
-				listeners.push(path);
-			}
-			
 				/**
 				 *	Create a namespace incase we need to auto trigger the event.
 				 */
@@ -757,6 +741,33 @@
 			_.bind(event, listener);
 			
 			if (_.isReady && explicitRoute === path)
+			{
+				_.trigger(event, [_.parameters(), _.routeParameters()]);
+			}
+		},
+		
+		/**
+		 *	Register a listener to be notified when a piece of the URL matches the route.
+		 *
+		 *	@param route	The route.
+		 *
+		 *	@param listener The listener to notify.
+		 */
+		registerRouteHandler: function (route, listener)
+		{
+				/**
+				 *	Create a namespace incase we need to auto trigger the event.
+				 */
+			var namespace = (new Date()).valueOf(),
+			
+				/**
+				 *	The event to bind against.
+				 */
+				event = "route-set-" + route + "." + namespace;
+			
+			_.bind(event, listener);
+			
+			if (_.isReady && $.inArray(route, routedPath) !== -1)
 			{
 				_.trigger(event, [_.parameters(), _.routeParameters()]);
 			}
@@ -860,14 +871,13 @@
 				isLoading === undefined)
 			{
 				loading_screen.show();
-				$(".koi-deeplink-state-element").hide();
-				currentChild.hide();
+				$(".koi-deeplink-state-element, .koi-deeplink-active-child").hide();
 				_.trigger("loading");
 			}
 			else
 			{
 				loading_screen.hide();
-				currentChild.show();
+				$(".koi-deeplink-active-child").show();
 				_.trigger("loaded");
 			}
 		},
@@ -989,7 +999,7 @@
 					{
 						setCurrentChild(target);
 						
-						target.show().showDeeplinkChild(identifier.length ? identifier : undefined);
+						target.showDeeplinkChild(identifier.length ? identifier : undefined);
 						
 						return this;
 					}
@@ -1037,6 +1047,9 @@
 		_.baseTitle = document.title;
 		
 		loading_screen = $("#koi-deeplink-loading");
+
+		$(".koi-deeplink-item-stack, .koi-deeplink-item")
+			.children(".koi-component").addClass("deeplink-component-disabled")
 	});
 	
 	_.ready(function ()
@@ -1045,18 +1058,22 @@
 	});
 	
 	//------------------------------
-	//  Component Integration
+	//  Extend component
 	//------------------------------
 	
-	KOI.bind("platform-initialized", function ()
-	{	
-		/**
-		 *	Add a custom disabled class for components.
-		 */
-		if (KOI.component !== undefined)
+	if (KOI.component === undefined)
+	{
+		KOI.bind("platform-initialized", function ()
 		{
-			KOI.component.disabledClasses.push('koi-deeplink-component-disabled');
-		}
-	});
-
+			if (KOI.component !== undefined)
+			{
+				KOI.component.disabledClasses.push("deeplink-component-disabled");
+			}
+		});
+	}
+	else
+	{
+		KOI.component.disabledClasses.push("deeplink-component-disabled");
+	}
+	
 }(jQuery));
