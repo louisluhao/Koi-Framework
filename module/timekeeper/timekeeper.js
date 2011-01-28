@@ -1,4 +1,4 @@
-/*!
+/**
  *	Module - TimeKeeper
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global InterfaceException, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
+	
 	//------------------------------
 	//
 	//	Class Definition
@@ -25,14 +25,13 @@
 	 *	The timekeeper module extends from the base plugin module, to define
 	 *	an interface for doing timing.
 	 */
-	KOI.module.timekeeper = KOI.module.plugin.extend(
-	{
+	KOI.module.timekeeper = KOI.module.plugin.extend({
+	
 		//------------------------------
 		//  Methods
 		//------------------------------
 		
-		currentTime: function ()
-		{
+		currentTime: function () {
 			throw new InterfaceException("timekeeper", "currentTime");
 		}
 	});

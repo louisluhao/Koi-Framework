@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global ModuleException, KOI, Class, window, jQuery */
 
 /*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
+	
 	//------------------------------
 	//
 	//  Properties
@@ -24,8 +24,7 @@
 		/**
 		 *	Sort numbers.
 		 */
-	var SORT_NUMBER = function (a, b)
-		{
+	var SORT_NUMBER = function (a, b) {
 			return a - b;
 		};
 
@@ -42,8 +41,8 @@
 	 *	The timeline module itself provides no timing, and must infact register for a
 	 *	timekeeper which notifies the timeline whenever the time changes.
 	 */
-	KOI.module.timeline = Class.extend(
-	{
+	KOI.module.timeline = Class.extend({
+	
 		//------------------------------
 		//	 Internal Properties
 		//------------------------------
@@ -132,10 +131,8 @@
 		 *
 		 *	@param precision	The precision to use for this timeline.
 		 */
-		init: function (timekeeper, precision)
-		{
-			if (!(timekeeper instanceof KOI.module.timekeeper))
-			{
+		init: function (timekeeper, precision) {
+			if (!(timekeeper instanceof KOI.module.timekeeper)) {
 				throw new ModuleException("timeline", "init", "timekeeper", timekeeper, "Must be instanceof KOI.module.timekeeper");
 			}
 		
@@ -147,13 +144,11 @@
 			
 			var self = this;
 			
-			timekeeper.bind("time-change", function (event, time)
-			{
+			timekeeper.bind("time-change", function (event, time) {
 				self.__timeChange(parseInt(time, 10));
 			});
 			
-			timekeeper.bind("seek", function (event, time)
-			{
+			timekeeper.bind("seek", function (event, time) {
 				self.__dispatchEvents(self.closestPreviousEventTime(time));
 			});
 		},
@@ -169,10 +164,8 @@
 		 *
 		 *	@return	The dispatcher's UID.
 		 */
-		registerDispatcher: function (dispatcher)
-		{
-			if (!KOI.typecheck(dispatcher, 'Function'))
-			{
+		registerDispatcher: function (dispatcher) {
+			if (!KOI.typecheck(dispatcher, 'Function')) {
 				throw new ModuleException("timeline", "registerDispatcher", "dispatcher", typeof dispatcher, "Must be typeof Function");
 			}
 		
@@ -194,29 +187,24 @@
 		 *
 		 *	@param suppressSort	Internal use. Allows the suppression of the event sort.
 		 */
-		registerEvent: function (dispatcher, time, params, suppressSort)
-		{
-			if (this.__dispatchers[dispatcher] === undefined)
-			{
+		registerEvent: function (dispatcher, time, params, suppressSort) {
+			if (this.__dispatchers[dispatcher] === undefined) {
 				throw new ModuleException("timeline", "registerEvent", "dispatcher", dispatcher, "Must be index of dispatcher; use return from `registerDispatcher`");
 			}
 			
-			if (params !== undefined && !KOI.typecheck(params, "Array"))
-			{
+			if (params !== undefined && !KOI.typecheck(params, "Array")) {
 				params = [params];
 			}
 			
 			time = this.__toTime(time);
 		
-			if (this.__events[time] === undefined)
-			{
+			if (this.__events[time] === undefined) {
 				this.__events[time] = [];
 			}
 			
 			this.__events[time].push({dispatcher: this.__dispatchers[dispatcher], params: params});
 			
-			if (!suppressSort)
-			{
+			if (!suppressSort) {
 				this.__sortEvents();
 			}
 		},
@@ -235,17 +223,14 @@
 		 *		...
 		 *	}
 		 */
-		registerEvents: function (dispatcher, timing)
-		{
-			if (this.__dispatchers[dispatcher] === undefined)
-			{
+		registerEvents: function (dispatcher, timing) {
+			if (this.__dispatchers[dispatcher] === undefined) {
 				throw new ModuleException("timeline", "registerEvents", "dispatcher", dispatcher, "Must be index of dispatcher; use return from `registerDispatcher`");
 			}
 		
 			var self = this;
 		
-			$.each(timing, function (time, params)
-			{
+			$.each(timing, function (time, params) {
 				self.registerEvent(dispatcher, time, params, true);
 			});
 			
@@ -260,8 +245,7 @@
 		 *
 		 *	@return	The time corresponding with the matching event.
 		 */
-		previousEventTime: function (time)
-		{
+		previousEventTime: function (time) {
 			return this.__eventSearch(time, false, false);
 		},
 		
@@ -273,8 +257,7 @@
 		 *
 		 *	@return	The time corresponding with the matching event.
 		 */
-		closestPreviousEventTime: function (time)
-		{
+		closestPreviousEventTime: function (time) {
 			return this.__eventSearch(time, false, true);
 		},
 		
@@ -286,8 +269,7 @@
 		 *
 		 *	@return	The time corresponding with the matching event.
 		 */
-		nextEventTime: function (time)
-		{
+		nextEventTime: function (time) {
 			return this.__eventSearch(time, true, false);
 		},
 		
@@ -299,8 +281,7 @@
 		 *
 		 *	@return	The time corresponding with the matching event.
 		 */
-		closestNextEventTime: function (time)
-		{
+		closestNextEventTime: function (time) {
 			return this.__eventSearch(time, true, true);
 		},
 		
@@ -311,8 +292,7 @@
 		/**
 		 *	Sort the events for this timeline, and order them properly.
 		 */
-		__sortEvents: function ()
-		{	
+		__sortEvents: function () {	
 				/**
 				 *	Buffer for sorting the time codes
 				 */
@@ -328,15 +308,13 @@
 				 */
 				self = this;
 			
-			$.each(this.__events, function (time, event)
-			{
+			$.each(this.__events, function (time, event) {
 				sortBuffer.push(parseInt(time, 10));
 			});
 			
 			sortBuffer.sort(SORT_NUMBER);
 			
-			$.each(sortBuffer, function (index, time)
-			{
+			$.each(sortBuffer, function (index, time) {
 				buffer[time] = self.__events[time];
 			});
 			
@@ -355,41 +333,29 @@
 		 *
 		 *	@return	The time corresponding with the matching event.
 		 */
-		__eventSearch: function (time, forward, atTime)
-		{
-			if (time === undefined)
-			{
+		__eventSearch: function (time, forward, atTime) {
+			if (time === undefined) {
 				time = this.currentTime;
-			}
-			else
-			{
+			} else {
 				time = this.__toTime(time);
 			}
 			
 			var eventTime;
 			
-			$.each(this.__events, function (timecode, event)
-			{
-				//	Events occurring after the given time.
-				if (forward)
-				{
-					if ((atTime && timecode >= time) || (!atTime && timecode > time))
-					{
+			$.each(this.__events, function (timecode, event) {
+				if (forward) {
+					//	Events occurring after the given time.
+					if ((atTime && timecode >= time) || (!atTime && timecode > time)) {
 						eventTime = timecode;
 						return false;
 					}
-				}
-				
-				//	Events occuring before the given time.
-				else
-				{
-					if ((atTime && timecode <= time) || (!atTime && timecode < time))
-					{
+				} else {
+					//	Events occuring before the given time.
+					if ((atTime && timecode <= time) || (!atTime && timecode < time)) {
 						eventTime = timecode;
 					}
 					
-					if (timecode >= time)
-					{
+					if (timecode >= time) {
 						return false;
 					}
 				}
@@ -403,23 +369,17 @@
 		 *
 		 *	@param time	The time to use instead of currrent time.
 		 */
-		__dispatchEvents: function (time)
-		{
-			if (time === undefined)
-			{
+		__dispatchEvents: function (time) {
+			if (time === undefined) {
 				time = this.currentTime;
-			}
-			else
-			{
+			} else {
 				time = this.__toTime(time);
 			}
 					
 			var self = this;
 		
-			if (this.__events[time] !== undefined)
-			{
-				$.each(this.__events[time], function (index, event)
-				{
+			if (this.__events[time] !== undefined) {
+				$.each(this.__events[time], function (index, event) {
 					event.dispatcher.apply(self, event.params);
 				});
 			}
@@ -430,12 +390,10 @@
 		 *
 		 *	@param time	The current raw time from the timekeeper.
 		 */
-		__timeChange: function (time)
-		{
+		__timeChange: function (time) {
 			time = this.__toTime(time);
 			
-			if (this.currentTime === time)
-			{
+			if (this.currentTime === time) {
 				return;
 			}
 			
@@ -451,8 +409,7 @@
 		 *
 		 *	@return	A timecode prepared for this timeline.
 		 */
-		__toTime: function (time)
-		{
+		__toTime: function (time) {
 			return Math.floor(parseInt(time, 10) * this.__precisionFactor) / this.__precisionFactor;
 		}
 	});

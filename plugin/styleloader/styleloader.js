@@ -1,4 +1,4 @@
-/*!
+/**
  *	Plugin - StyleLoader
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global PluginException, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{	
+(function ($) {	
+
+	"use strict";
+
 	//------------------------------
 	//
 	//	Constants
@@ -79,10 +79,8 @@
 	 *
 	 *	@param style	The style to set.
 	 */
-	function setData(name, source, style)
-	{
-		if (source !== "manual" && KOI.development)
-		{
+	function setData(name, source, style) {
+		if (source !== "manual" && KOI.development) {
 			source = source.split('/');
 			source.pop();
 			source = source.join('/');
@@ -90,8 +88,7 @@
 			style = style.replace(RX_IMAGES, "url(" + source + "/$1)");
 		}
 		
-		styles[name] = 
-		{
+		styles[name] = {
 			source: source,
 			
 			style: style
@@ -106,8 +103,7 @@
 	 *
 	 *	@param data	The sheet data.
 	 */
-	function handleLoad(data)
-	{
+	function handleLoad(data) {
 		//	JSLint complains about a strict violation here. It's not.
 		setData(this.name, this.source, data);
 	}
@@ -123,17 +119,14 @@
 	 *
 	 *	@param source	The source of the file to load.
 	 */
-	function loadSheet(name, source)
-	{
-		$.ajax(
-		{
+	function loadSheet(name, source) {
+		$.ajax({
 			type: "GET",
 			dataType: "text",
 			url: source,
 			success: handleLoad,
 			cache: false,
-			context: 
-			{
+			context: {
 				name: name,
 				source: source
 			}
@@ -146,8 +139,8 @@
 	//
 	//------------------------------
 	
-	_.build(
-	{
+	_.build({
+	
 		//------------------------------
 		//  Methods
 		//------------------------------
@@ -161,12 +154,10 @@
 		 *
 		 *	@param listener	The listener to notify when the file finishes.
 		 */
-		load: function (name, source, listener)
-		{
+		load: function (name, source, listener) {
 			_.get(name, listener);
 		
-			if (styles[name] === undefined)
-			{
+			if (styles[name] === undefined) {
 				loadSheet(name, source);
 			}
 		},
@@ -176,19 +167,14 @@
 		 *
 		 *	@param name	The name of the sheet.
 		 */
-		get: function (name, listener)
-		{
-			if (listener === undefined)
-			{
+		get: function (name, listener) {
+			if (listener === undefined) {
 				return;
 			}
 			
-			if (styles[name] === undefined)
-			{
+			if (styles[name] === undefined) {
 				_.__delegate.bind("style-loaded-" + name, listener);
-			}
-			else
-			{
+			} else {
 				KOI.notify("style-loaded-" + name, listener, _.__delegate, [styles[name].style]);
 			}
 		},
@@ -200,10 +186,8 @@
 		 *
 		 *	@param style	The style to set.
 		 */
-		set: function (name, style)
-		{
-			if (styles[name] !== undefined)
-			{
+		set: function (name, style) {
+			if (styles[name] !== undefined) {
 				throw new PluginException("styleloader", "set", "name", name, "Namespace collision");
 			}
 			
@@ -227,10 +211,8 @@
 	//  Load includes
 	//------------------------------
 	
-	_.ready(function ()
-	{
-		$.each(include, function (name, sheet)
-		{
+	_.ready(function () {
+		$.each(include, function (name, sheet) {
 			_.load(name, sheet);
 		});
 	});

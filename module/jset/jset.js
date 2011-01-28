@@ -1,4 +1,4 @@
-/*!
+/**
  *	Module - jSet
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global ModuleException, Exception, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
+	
 	//------------------------------
 	//
 	//  Property Declaration
@@ -48,22 +48,16 @@
 	 *
 	 *	@return	Null to indicate a return of the proxy, or the actual response value.
 	 */
-	function callProxy(method, objects, args)
-	{
+	function callProxy(method, objects, args) {
 		var response;
 	
-		$.each(objects, function (index, object)
-		{
+		$.each(objects, function (index, object) {
 			var fnReturn = object[method].apply(object, args);
 
-			if (response === undefined)
-			{
-				if (fnReturn instanceof jQuery)
-				{
+			if (response === undefined) {
+				if (fnReturn instanceof jQuery) {
 					response = null;
-				}
-				else
-				{
+				} else {
 					response = fnReturn;
 				}
 			}
@@ -77,10 +71,8 @@
 	 *
 	 *	@param method	The method to create a call proxy for.
 	 */
-	function createCallProxy(method)
-	{
-		methods[method] = function ()
-		{
+	function createCallProxy(method) {
+		methods[method] = function () {
 			var response = callProxy(method, this.__setObjects, Array.prototype.slice.call(arguments));
 			
 			/**
@@ -103,16 +95,13 @@
 	 *
 	 *	@param object	The jQuery object to test.
 	 */
-	$.fn.equalTo = function (object)
-	{
-		if (!(object instanceof jQuery))
-		{
+	$.fn.equalTo = function (object) {
+		if (!(object instanceof jQuery)) {
 			throw new Exception("jQuery", "fn.equalTo", "object", undefined, "Must be instanceof jQuery");
 		}
 		
 		//	If the objects do not have the same length, they can't be equal.
-		if (this.length !== object.length)
-		{
+		if (this.length !== object.length) {
 			return false;
 		}
 		
@@ -120,10 +109,8 @@
 		var same = true;
 		
 		//	Deep inspection of elements
-		this.each(function (index, element)
-		{
-			if (element !== object[index])
-			{
+		this.each(function (index, element) {
+			if (element !== object[index]) {
 				same = false;
 				return false;
 			}
@@ -144,8 +131,8 @@
 	 *	of a standard jQuery object. This is utilized with the inheritance framework to
 	 *	provide an interface to manage multiple DOM's version of the same item.
 	 */
-	_ =
-	{
+	_ = {
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -196,8 +183,7 @@
 		 *
 		 *	@param children	If asArray is true, this is an array of children.
 		 */
-		init: function (asArray, children)
-		{
+		init: function (asArray, children) {
 			this.__setObjects = [];
 			this.__childrenCache = {};
 			
@@ -218,8 +204,7 @@
 		 *
 		 *	@return	jSet containing the selected children.
 		 */
-		find: function (selector, refresh)
-		{
+		find: function (selector, refresh) {
 			return this.__traversal("find", selector, "__find_" + selector, refresh);
 		},
 		
@@ -232,8 +217,7 @@
 		 *
 		 *	@return	jSet containing the selected children.
 		 */
-		eq: function (index, refresh)
-		{
+		eq: function (index, refresh) {
 			return this.__traversal("eq", index, "__eq_" + index, refresh);
 		},
 		
@@ -247,8 +231,7 @@
 		 *
 		 *	@return	jSet containing the selected children.
 		 */
-		parents: function (selector, refresh)
-		{
+		parents: function (selector, refresh) {
 			return this.__traversal("parents", selector, "__parents_" + selector, refresh);
 		},
 		
@@ -265,8 +248,7 @@
 		 *
 		 *	@param children	If asArray is true, this is an array of children.
 		 */
-		_set_add: function (asArray, children)
-		{
+		_set_add: function (asArray, children) {
 				/**
 				 *	The objects to add.
 				 */
@@ -277,14 +259,10 @@
 			/**
 			 *	Ensure that we're only adding jQuery objects to the set.
 			 */
-			$.each(objects, function (index, object)
-			{
-				if (object instanceof jQuery)
-				{
+			$.each(objects, function (index, object) {
+				if (object instanceof jQuery) {
 					self.__setObjects.push(object);
-				}
-				else
-				{
+				} else {
 					throw new ModuleException("jset", "_set_add", "objectAtIndex", index, "Must be instanceof jQuery");
 				}
 			});
@@ -302,8 +280,7 @@
 		 *
 		 *	@param children	If asArray is true, this is an array of children.
 		 */
-		_set_remove: function (asArray, children)
-		{
+		_set_remove: function (asArray, children) {
 				/**
 				 *	The objects to remove.
 				 */
@@ -314,21 +291,15 @@
 			/**
 			 *	Ensure that we're only adding jQuery objects to the set.
 			 */
-			$.each(objects, function (index, object)
-			{
-				if (object instanceof jQuery)
-				{
-					$.each(self.__setObjects, function (setIndex, setObject)
-					{
-						if (setObject.equalTo(object))
-						{
+			$.each(objects, function (index, object) {
+				if (object instanceof jQuery) {
+					$.each(self.__setObjects, function (setIndex, setObject) {
+						if (setObject.equalTo(object)) {
 							self.__setObjects.splice(setIndex, 1);
 							return false;
 						}
 					});
-				}
-				else
-				{
+				} else {
 					throw new ModuleException("jset", "_set_remove", "objectAtIndex", index, "Must be instanceof jQuery");
 				}
 			});
@@ -342,8 +313,7 @@
 		 *
 		 *	@return	The set before removal.
 		 */
-		_set_empty: function ()
-		{
+		_set_empty: function () {
 			var buffer = this.__setObjects;
 			
 			this.__purge_childrenCache();
@@ -360,8 +330,7 @@
 		/**
 		 *	Purge the cache of children selections.
 		 */
-		__purge_childrenCache: function ()
-		{
+		__purge_childrenCache: function () {
 			this.__childrenCache = {};
 		},
 		
@@ -376,14 +345,11 @@
 		 *
 		 *	@param refresh		Flag to determine if we should refresh, regardless of cache status.
 		 */
-		__traversal: function (method, selector, cacheName, refresh)
-		{
-			if (this.__childrenCache[cacheName] === undefined || refresh === true)
-			{
+		__traversal: function (method, selector, cacheName, refresh) {
+			if (this.__childrenCache[cacheName] === undefined || refresh === true) {
 				var children = [];
 			
-				$.each(this.__setObjects, function (index, object)
-				{
+				$.each(this.__setObjects, function (index, object) {
 					children.push(object[method](selector));
 				});
 				
@@ -393,12 +359,10 @@
 			return this.__childrenCache[cacheName];
 		},
 		
-		__generate_length: function ()
-		{
+		__generate_length: function () {
 			var length = 0;
 			
-			$.each(this.__setObjects, function (index, item)
-			{
+			$.each(this.__setObjects, function (index, item) {
 				length += item.length;
 			});
 			
@@ -417,15 +381,12 @@
 	//
 	//------------------------------
 		
-	KOI.bind("platform-initialized", function ()
-	{	
+	KOI.bind("platform-initialized", function () {	
 		var fnMethod;
 	
 		//	Loop through the jQuery.fn object and set all available methods.
-		for (fnMethod in jQuery.prototype)
-		{
-			if (jQuery.prototype.hasOwnProperty(fnMethod) && !(fnMethod in _))
-			{
+		for (fnMethod in jQuery.prototype) {
+			if (jQuery.prototype.hasOwnProperty(fnMethod) && !(fnMethod in _)) {
 				createCallProxy(fnMethod);
 			}
 		}

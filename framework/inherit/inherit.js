@@ -1,4 +1,4 @@
-/*!
+/**
  *	Framework - Inherit
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
+
 	//------------------------------
 	//
 	//  Constants
@@ -70,10 +70,8 @@
 	 *
 	 *	@param child	Unload proxy.
 	 */
-	KOI.bind("framework-inherited", function (event, proxy, id, child, unloadProxy)
-	{
-		KOI.inherited[id] = 
-		{
+	KOI.bind("framework-inherited", function (event, proxy, id, child, unloadProxy) {
+		KOI.inherited[id] = {
 			$: proxy,
 			
 			unloadProxy: unloadProxy,
@@ -85,12 +83,9 @@
 			watcher: undefined
 		};
 		
-		if (KOI.inherited[id].watcher === undefined)
-		{
-			KOI.inherited[id].watcher = setInterval(function ()
-			{
-				if (!!KOI.inherited[id].window && KOI.inherited[id].window.closed)
-				{
+		if (KOI.inherited[id].watcher === undefined) {
+			KOI.inherited[id].watcher = setInterval(function () {
+				if (!!KOI.inherited[id].window && KOI.inherited[id].window.closed) {
 					KOI.trigger("inherited-child-closed-by-watcher", [id]);
 					KOI.trigger("inherited-child-closed-by-watcher-" + id, [id]);
 					KOI.inherited[id].unloadProxy();
@@ -108,14 +103,11 @@
 	 *
 	 *	@param id		The ID of the child window.
 	 */
-	KOI.bind("inherited-child-close", function (event, id)
-	{
-		if (KOI.inherited[id] !== undefined)
-		{
+	KOI.bind("inherited-child-close", function (event, id) {
+		if (KOI.inherited[id] !== undefined) {
 			KOI.inherited[id].active = false;
 			
-			if (KOI.inherited[id].watcher !== undefined)
-			{
+			if (KOI.inherited[id].watcher !== undefined) {
 				clearInterval(KOI.inherited[id].watcher);
 				KOI.inherited[id].watcher = undefined;
 			}
@@ -125,14 +117,10 @@
 	/**
 	 *	Close all the inherited windows when the parent unloads.
 	 */
-	window.onunload = function ()
-	{
-		$.each(KOI.inherited, function (id, state)
-		{
-			if (state.active)
-			{	
-				if (state.window.__inheritUnload !== undefined)
-				{
+	window.onunload = function () {
+		$.each(KOI.inherited, function (id, state) {
+			if (state.active) {	
+				if (state.window.__inheritUnload !== undefined) {
 					state.window.__inheritUnload();
 				}
 			}
@@ -155,8 +143,7 @@
 	 *
 	 *	@return	An object containing an unloadProxy and a jQueryProxy object.
 	 */
-	window.inherit = function (child, id)
-	{
+	window.inherit = function (child, id) {
 			/**
 			 *	A callback function for testing DomReady.
 			 */
@@ -186,20 +173,15 @@
 		 *
 		 *	@param fn	The function to notify when the document is ready.
 		 */
-		child.jQueryInherit.fn.ready = function (fn)
-		{
+		child.jQueryInherit.fn.ready = function (fn) {
 			//	Attach the listeners
 			child.jQueryInherit.hooks.bindReady();
 			
-			//	If the child's DOM is ready
-			if (child.jQueryInherit.hooks.isReady)
-			{
+			if (child.jQueryInherit.hooks.isReady) {
+				//	If the child's DOM is ready
 				fn.call(child.document, child.jQueryInherit);
-			}
-			
-			//	Otherwise, remember it so we can trigger it later
-			else
-			{
+			} else {
+				//	Otherwise, remember it so we can trigger it later
 				child.jQueryInherit.hooks.readyList.push(fn);
 			}
 			
@@ -216,20 +198,14 @@
 		/**
 		 *	Bind a DOMContentLoaded function for the child.
 		 */
-		if (child.document.addEventListener)
-		{
-			DOMContentLoaded = function ()
-			{
+		if (child.document.addEventListener) {
+			DOMContentLoaded = function () {
 				child.document.removeEventListener("DOMContentLoaded", DOMContentLoaded, false);
 				child.jQueryInherit.hooks.ready();
 			};
-		}
-		else if (child.document.attachEvent)
-		{
-			DOMContentLoaded = function ()
-			{
-				if (child.document.readyState === "complete") 
-				{
+		} else if (child.document.attachEvent) {
+			DOMContentLoaded = function () {
+				if (child.document.readyState === "complete") {
 					child.document.detachEvent("onreadystatechange", DOMContentLoaded);
 					child.jQueryInherit.hooks.ready();
 				}
@@ -239,21 +215,16 @@
 		/**
 		 *	Create a function for checking IE readyness.
 		 */
-		function doScrollCheck() 
-		{
-			if (child.jQueryInherit.hooks.isReady) 
-			{
+		function doScrollCheck() {
+			if (child.jQueryInherit.hooks.isReady) {
 				return;
 			}
 		
-			try 
-			{
+			try {
 				// If IE is used, use the trick by Diego Perini
 				// http://javascript.nwbox.com/IEContentLoaded/
 				child.document.documentElement.doScroll("left");
-			} 
-			catch (error) 
-			{
+			} catch (error) {
 				setTimeout(doScrollCheck, 1);
 				return;
 			}
@@ -266,8 +237,7 @@
 		 *	Create a namespace for hooking some functionality into the iFrame, like document.ready
 		 *	detection and handling.
 		 */
-		child.jQueryInherit.hooks =
-		{
+		child.jQueryInherit.hooks = {
 			//------------------------------
 			//	Properties
 			//------------------------------
@@ -286,10 +256,8 @@
 			 *	Mimic the readyBind() function in the child, so it can properly set up the listeners
 			 *	for its down document.ready event.
 			 */
-			bindReady: function ()
-			{
-				if (child.jQueryInherit.hooks.readyBound)
-				{
+			bindReady: function () {
+				if (child.jQueryInherit.hooks.readyBound) {
 					return;
 				}
 				
@@ -297,23 +265,21 @@
 				
 				// Catch cases where $(document).ready() is called after the
 				// browser event has already occurred.
-				if (child.document.readyState === "complete") 
-				{
+				if (child.document.readyState === "complete") {
 					return child.jQueryInherit.hooks.ready();
 				}
 		
-				// Mozilla, Opera and webkit nightlies currently support this event
-				if (child.document.addEventListener) 
-				{
+				if (child.document.addEventListener) {
+					// Mozilla, Opera and webkit nightlies currently support this event
+					
 					// Use the handy event callback
 					child.document.addEventListener("DOMContentLoaded", DOMContentLoaded, false);
 					
 					// A fallback to window.onload, that will always work
 					child.addEventListener("load", child.jQueryInherit.hooks.ready, false);
-				} 
-				// If IE event model is used
-				else if (child.document.attachEvent) 
-				{
+				} else if (child.document.attachEvent) {
+					// If IE event model is used
+				
 					// ensure firing before onload,
 					// maybe late but safe also for iframes
 					child.document.attachEvent("onreadystatechange", DOMContentLoaded);
@@ -325,14 +291,13 @@
 					// continually check to see if the document is ready
 					var toplevel = false;
 		
-					try 
-					{
+					try {
 						toplevel = child.frameElement === null;
-					} 
-					catch (e) {}
+					} catch (e) {
+						// Noop
+					}
 		
-					if (child.document.documentElement.doScroll && toplevel) 
-					{
+					if (child.document.documentElement.doScroll && toplevel) {
 						doScrollCheck();
 					}
 				}
@@ -341,25 +306,20 @@
 			/**
 			 *	Hook the ready trigger to fire off the hook bindings.
 			 */
-			ready: function ()
-			{
+			ready: function () {
 				//	Make sure the DOM is not already loaded
-				if (!child.jQueryInherit.hooks.isReady)
-				{
+				if (!child.jQueryInherit.hooks.isReady) {
 					// Make sure body exists, at least, in case IE gets a little overzealous (ticket #5443).
-					if (!child.document.body)
-					{
+					if (!child.document.body) {
 						return setTimeout(child.jQueryInherit.hooks.ready, 13);
 					}
 				
 					child.jQueryInherit.hooks.isReady = true;
 					
 					//	If there are functions bound...
-					if (child.jQueryInherit.hooks.readyList)
-					{
+					if (child.jQueryInherit.hooks.readyList) {
 						//	Execute them all
-						$.each(child.jQueryInherit.hooks.readyList, function ()
-						{
+						$.each(child.jQueryInherit.hooks.readyList, function () {
 							this.call(child.document, child.jQueryInherit);
 						});
 						
@@ -368,8 +328,7 @@
 					}
 				}
 				
-				if (jQuery.fn.triggerHandler)
-				{
+				if (jQuery.fn.triggerHandler) {
 					jQuery(child.document).triggerHandler('ready');
 				}
 			}
@@ -378,26 +337,21 @@
 		/**
 		 *	Create the jQuery Proxy Object.
 		 */
-		proxy = function (selector, context)
-		{
-			/**
-			 *	 Test and see if we're handling a shortcut bind
-			 *	 for the document.ready function. This occurs when
-			 *	 the selector is a function. Because firefox throws
-			 *	 xpconnect objects around in iFrames, the standard
-			 *	 jQuery.isFunction test returns false negatives.
-			 */
-			if (selector.constructor.toString().match(/Function/) !== null)
-			{
+		proxy = function (selector, context) {
+			if (selector.constructor.toString().match(/Function/) !== null) {
+				/**
+				 *	 Test and see if we're handling a shortcut bind
+				 *	 for the document.ready function. This occurs when
+				 *	 the selector is a function. Because firefox throws
+				 *	 xpconnect objects around in iFrames, the standard
+				 *	 jQuery.isFunction test returns false negatives.
+				 */
 				return child.jQueryInherit.fn.ready(selector);
-			}
-			
-			/**
-			 *	Otherwise, just let the jQuery init function handle the rest. Be sure we pass in proper
-			 *	context of the child document, or we'll never select anything useful.
-			 */
-			else
-			{
+			} else {
+				/**
+				 *	Otherwise, just let the jQuery init function handle the rest. Be sure we pass in proper
+				 *	context of the child document, or we'll never select anything useful.
+				 */
 				return child.jQueryInherit.fn.init(selector || child.document, context || child.document);
 			}
 		};
@@ -405,10 +359,8 @@
 		/**
 		 *	Create the unload proxy function.
 		 */
-		unloadProxy = function ()
-		{
-			if (!(id in KOI.inherited && KOI.inherited[id].active))
-			{
+		unloadProxy = function () {
+			if (!(id in KOI.inherited && KOI.inherited[id].active)) {
 				return;
 			}
 			

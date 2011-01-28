@@ -1,4 +1,4 @@
-/*!
+/**
  *	Plugin - Deeplink
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,13 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{	
+(function ($) {	
+
+	"use strict";
 
 	//------------------------------
 	//
@@ -194,14 +193,34 @@
 	//------------------------------
 	
 	/**
+	 *	Make sure the provided path has trailing and leading slashes.
+	 *
+	 *	@param path The path to correct.
+	 *
+	 *	@return A path with leading and trailing slashes.
+	 */
+	function correctPath(path) {
+		path = path.split('?')[0];
+		
+		if (path.substr(path.length - 1) !== '/') {
+			path += '/';
+		}
+		
+		if (path.substr(0, 1) !== '/') {
+			path = '/' + path;
+		}
+			
+		return path;
+	}
+	
+	/**
 	 *	Correct a route.
 	 *
 	 *	@param path	The path to correct as a route.
 	 *
 	 *	@return	The path corrected for routing.
 	 */
-	function correctRoute(path)
-	{
+	function correctRoute(path) {
 			/**
 			 *	A rerouted URL.
 			 */
@@ -226,22 +245,17 @@
 		pathArgs.pop();
 		pathArgs.shift();
 		
-		$.each(pathArgs, function (index, route)
-		{
-			if (extractNextArgument)
-			{
+		$.each(pathArgs, function (index, route) {
+			if (extractNextArgument) {
 				routeParameters[argumentKey] = route;
 				extractNextArgument = false;
 				argumentKey = undefined;
 				return;
-			}
-			else if (route_variables[route] !== undefined)
-			{
+			} else if (route_variables[route] !== undefined) {
 				argumentKey = route_variables[route];
 				extractNextArgument = true;
 				
-				if ($.inArray(route, route_map) === -1)
-				{
+				if ($.inArray(route, route_map) === -1) {
 					return;
 				}
 			}
@@ -261,29 +275,23 @@
 	 *
 	 *	@return	False if automation closed non-standardly (consumed 404).
 	 */
-	function processAutomation()
-	{
-		if (mapGenerated && firstChildAutomation)
-		{
+	function processAutomation() {
+		if (mapGenerated && firstChildAutomation) {
 			$('#koi-deeplink-root').showDeeplinkChild();
-			
 			
 			ignoreProcessing = true;
 
 			_.set('/' + currentPath.join('/') + '/');
 			
 			ignoreProcessing = false;
-		}
-		else if (mapGenerated && currentPath)
-		{
+		} else if (mapGenerated && currentPath) {
 			var path = correctRoute(correctPath([].concat(currentPath).join("/"))).split("/");
 			
 			//	Handle the trailing and leading slashes
 			path.shift();
 			path.pop();
 			
-			if ($('#koi-deeplink-root').showDeeplinkChild(path) === false)
-			{
+			if ($('#koi-deeplink-root').showDeeplinkChild(path) === false) {
 				return false;
 			}
 		}
@@ -292,8 +300,7 @@
 	/**
 	 *	Activate components in the current child.
 	 */
-	function activateCurrentComponents()
-	{
+	function activateCurrentComponents() {
 		currentChild.children('.koi-component')
 			.removeClass('deeplink-component-disabled')
 			.trigger('load-component');
@@ -302,10 +309,8 @@
 	/**
 	 *	Notify external plugins that the path has been set.
 	 */
-	function triggerPathSet()
-	{			
-		if (routingError)
-		{
+	function triggerPathSet() {			
+		if (routingError) {
 			return false;
 		}
 		
@@ -313,8 +318,7 @@
 
 		_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
 		
-		$.each(routedPath, function (index, route)
-		{
+		$.each(routedPath, function (index, route) {
 			_.trigger("route-set-" + route, [_.parameters(), _.routeParameters()]);
 		});
 	}
@@ -322,59 +326,28 @@
 	/**
 	 *	Generates a deeplinking map from the HTML snippets in the deeplinking container.
 	 */
-	function generateMap()
-	{
+	function generateMap() {
 		$('#koi-deeplink-root').extractDeeplinkIdentifiers();
 
 		mapGenerated = true;
 
-		$.address.init(function (event)
-		{
-			$.address.change(function (event)
-			{
+		$.address.init(function (event) {
+			$.address.change(function (event) {
 				_.recover(event.value, event.parameters);
 			});
 	
-			if ($.address.value() === '/')
-			{
-				if (enableFirstChildAutomation)
-				{
+			if ($.address.value() === '/') {
+				if (enableFirstChildAutomation) {
 					firstChildAutomation = true;
 					processAutomation();
 					firstChildAutomation = false;
 				}
 				
 				triggerPathSet();
-			}
-			else
-			{
+			} else {
 				_.recover(event.value, event.parameters);
 			}
 		});
-	}
-	
-	/**
-	 *	Make sure the provided path has trailing and leading slashes.
-	 *
-	 *	@param path The path to correct.
-	 *
-	 *	@return A path with leading and trailing slashes.
-	 */
-	function correctPath(path)
-	{
-		path = path.split('?')[0];
-		
-		if (path.substr(path.length - 1) !== '/')
-		{
-			path += '/';
-		}
-		
-		if (path.substr(0, 1) !== '/')
-		{
-			path = '/' + path;
-		}
-			
-		return path;
 	}
 	
 	/**
@@ -382,42 +355,32 @@
 	 *
 	 *	@param titleOverride	The title to set. If undefined, will use current children.
 	 */
-	function setCurrentTitle(titleOverride)
-	{
+	function setCurrentTitle(titleOverride) {
 		var title = [_.baseTitle];
 		
-		if (titleOverride !== undefined)
-		{
-			if (!$.isArray(titleOverride))
-			{
+		if (titleOverride !== undefined) {
+			if (!$.isArray(titleOverride)) {
 				titleOverride = [titleOverride];
 			}
 		
 			title = title.concat(titleOverride).reverse();
-		}
-		else
-		{
-			currentChild.parentsUntil('#koi-deeplink-root').each(function ()
-			{
-				if ($(this).children('.koi-deeplink-title').length)
-				{
+		} else {
+			currentChild.parentsUntil('#koi-deeplink-root').each(function () {
+				if ($(this).children('.koi-deeplink-title').length) {
 					title.unshift($(this).children('.koi-deeplink-title').text());
 				}
 			});
 			
-			if (currentChild.children('.koi-deeplink-title').length)
-			{
+			if (currentChild.children('.koi-deeplink-title').length) {
 				title.unshift(currentChild.children('.koi-deeplink-title').text());
 			}		
 		}
 		
 		//	Filter the title
-		title = $.map(title, function (item)
-		{
+		title = $.map(title, function (item) {
 			if (item === undefined ||
-				item === null ||
-				$.trim(item).length === 0)
-			{
+					item === null ||
+					$.trim(item).length === 0) {
 				return null;
 			}
 			
@@ -434,23 +397,19 @@
 	 *
 	 *	@param change_loading	Flag to determine if loading should be activated. Default true.
 	 */
-	function setCurrentChild(child, change_loading)
-	{	 
+	function setCurrentChild(child, change_loading) {	 
 		child.show();
 
-		if (child.attr('id') !== 'koi-deeplink-root')
-		{
+		if (child.attr('id') !== 'koi-deeplink-root') {
 			currentChild = child.addClass('koi-deeplink-active-child');
 			activateCurrentComponents();
 			
 			if (change_loading ||
-				change_loading === undefined)
-			{
+					change_loading === undefined) {
 				_.loading(true);
 			}
 
-			if ($('.koi-deeplink-title', currentChild).length)
-			{
+			if ($('.koi-deeplink-title', currentChild).length) {
 				setCurrentTitle();
 			}
 		}
@@ -462,8 +421,8 @@
 	//
 	//------------------------------
 	
-	_.build(
-	{
+	_.build({
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -496,8 +455,7 @@
 		 *
 		 *	@return Array containing path elements.
 		 */
-		path: function ()
-		{
+		path: function () {
 			return currentPath;
 		},
 		
@@ -506,8 +464,7 @@
 		 *
 		 *	@return	The explicit path.
 		 */
-		explicitPath: function ()
-		{
+		explicitPath: function () {
 			return explicitPath;
 		},
 		
@@ -516,8 +473,7 @@
 		 *
 		 *	@param Array containing route elements.
 		 */
-		route: function ()
-		{
+		route: function () {
 			return routedPath;
 		},
 		
@@ -526,8 +482,7 @@
 		 *
 		 *	@return	The explicit route.
 		 */
-		explicitRoute: function ()
-		{
+		explicitRoute: function () {
 			return explicitRoute;
 		},
 
@@ -536,8 +491,7 @@
 		 *
 		 *	@return Object containing the parameters.
 		 */
-		parameters: function ()
-		{
+		parameters: function () {
 			return currentParameters;
 		},
 		
@@ -546,8 +500,7 @@
 		 *
 		 *	@return Object containing named route parameters.
 		 */
-		routeParameters: function ()
-		{
+		routeParameters: function () {
 			return routeParameters;
 		},
 
@@ -558,8 +511,7 @@
 		 *
 		 *	@return The new parameters.
 		 */
-		extendParameters: function (params)
-		{
+		extendParameters: function (params) {
 			return $.extend({}, currentParameters, params);
 		},
 	
@@ -570,10 +522,8 @@
 		 *
 		 *	@param parameters	Optional parameters to set along with the path.
 		 */
-		set: function (path, parameters)
-		{
-			if (!$.isEmptyObject(parameters) || !$.isEmptyObject(currentParameters))
-			{
+		set: function (path, parameters) {
+			if (!$.isEmptyObject(parameters) || !$.isEmptyObject(currentParameters)) {
 				path += '?' + $.param(parameters || currentParameters);
 			}
 
@@ -587,27 +537,14 @@
 		 *
 		 *	@param parameters	Optional parameters to read along with the path.
 		 */
-		recover: function (path, parameters)
-		{
+		recover: function (path, parameters) {
 			routingError = false;
 			routeParameters = {};
 			path = correctPath(path);
 			
 			var process = true;
 			
-			if (path === explicitPath)
-			{
-				if ($.param(currentParameters) !== $.param(parameters))
-				{
-					currentParameters = parameters;
-					triggerPathSet();
-				}				 
-				
-				return;
-			}
-			
-			if (!ignoreProcessing)
-			{
+			if (!ignoreProcessing) {
 				$(SELECTOR_ALL).hide();
 				$('.koi-deeplink-active-child').removeClass('koi-deeplink-active-child');
 				
@@ -615,21 +552,16 @@
 				currentParameters = parameters;
  
 				//	In the case we simply get a path element, load the first element in the container.
-				if (path === '/')
-				{
+				if (path === '/') {
 					currentPath = [];
-					if (enableFirstChildAutomation)
-					{
+					if (enableFirstChildAutomation) {
 						firstChildAutomation = true;
-						if (processAutomation() === false)
-						{
+						if (processAutomation() === false) {
 							process = false;
 						}
 						firstChildAutomation = false;
 					}
-				}
-				else
-				{
+				} else {
 					//	Split the path fragments into an array.
 					path = path.split('/');
 					
@@ -641,39 +573,33 @@
 					currentPath = path;
 
 					//	Process the deeplinking automation
-					if (processAutomation() === false)
-					{
+					if (processAutomation() === false) {
 						process = false;
 					}
 				}
 				
-				if (process)
-				{
+				if (process) {
 					triggerPathSet();
 				}
 			}
+			
+			correctRoute(correctPath([].concat(currentPath).join("/"))).split("/");
 
-			if (correctPath(currentPath.join('/')) !== explicitPath)
-			{
+			if (correctPath(currentPath.join('/')) !== explicitPath) {
 				ignoreProcessing = true;
- 				
- 				if (currentPath.length === 0)
- 				{
- 					explicitPath = "/";
- 				}
- 				else
- 				{
- 					explicitPath = correctPath(currentPath.join('/'));
- 				}
-				
+
+				if (currentPath.length === 0) {
+					explicitPath = "/";
+				} else {
+					explicitPath = correctPath(currentPath.join('/'));
+				}
+
 				triggerPathSet();
 				
 				_.set(explicitPath, currentParameters);
 				
 				ignoreProcessing = false;
-			}
-			else if (ignoreProcessing)
-			{
+			} else if (ignoreProcessing) {
 				triggerPathSet();
 			}
 		},
@@ -685,8 +611,7 @@
 		 *
 		 *	@param title	The title of the route.
 		 */
-		addRouteProxy: function (route, title)
-		{
+		addRouteProxy: function (route, title) {
 			route_proxies[correctPath(route)] = title;
 		},
 		
@@ -695,10 +620,8 @@
 		 *
 		 *	@param map	An array of items to add. Can be a single item as a string.
 		 */
-		addRouteMap: function (map)
-		{
-			if (!$.isArray(map))
-			{
+		addRouteMap: function (map) {
+			if (!$.isArray(map)) {
 				map = [map];
 			}
 			
@@ -712,8 +635,7 @@
 		 *
 		 *	@param key		The key to identify this variable.
 		 */
-		addRouteVariable: function (variable, key)
-		{
+		addRouteVariable: function (variable, key) {
 			route_variables[variable] = key;
 		},
 		
@@ -724,8 +646,7 @@
 		 *
 		 *	@param listener The listener to notify.
 		 */
-		registerPathHandler: function (path, listener)
-		{
+		registerPathHandler: function (path, listener) {
 			path = correctPath(path);
 			
 				/**
@@ -740,8 +661,7 @@
 			
 			_.bind(event, listener);
 			
-			if (_.isReady && explicitRoute === path)
-			{
+			if (_.isReady && explicitRoute === path) {
 				_.trigger(event, [_.parameters(), _.routeParameters()]);
 			}
 		},
@@ -753,8 +673,7 @@
 		 *
 		 *	@param listener The listener to notify.
 		 */
-		registerRouteHandler: function (route, listener)
-		{
+		registerRouteHandler: function (route, listener) {
 				/**
 				 *	Create a namespace incase we need to auto trigger the event.
 				 */
@@ -767,8 +686,7 @@
 			
 			_.bind(event, listener);
 			
-			if (_.isReady && $.inArray(route, routedPath) !== -1)
-			{
+			if (_.isReady && $.inArray(route, routedPath) !== -1) {
 				_.trigger(event, [_.parameters(), _.routeParameters()]);
 			}
 		},
@@ -778,8 +696,7 @@
 		 *
 		 *	@param listener	The listener function.
 		 */
-		registerHandler: function (listener)
-		{
+		registerHandler: function (listener) {
 				/**
 				 *	Namespace the event for dispatching.
 				 */
@@ -787,8 +704,7 @@
 
 			_.bind(event, listener);
 			
-			if (_.isReady)
-			{
+			if (_.isReady) {
 				_.trigger(event, [routedPath, _.parameters(), _.routeParameters()]);
 			}
 		},
@@ -798,8 +714,7 @@
 		 *
 		 *	@param listener	The listener function.
 		 */
-		routingError: function (listener)
-		{
+		routingError: function (listener) {
 			/**
 				 *	Namespace the event for dispatching.
 				 */
@@ -807,8 +722,7 @@
 			
 			_.bind(event, listener);
 			
-			if (_.isReady && routingError)
-			{
+			if (_.isReady && routingError) {
 				_.trigger(event);
 			}
 		},
@@ -822,14 +736,11 @@
 		 *
 		 *	@return False if the 404 was consumed by a proxy.
 		 */
-		raise404: function (proxyOverride, systemError)
-		{
-			if (proxyOverride)
-			{
+		raise404: function (proxyOverride, systemError) {
+			if (proxyOverride) {
 				var proxyRoute = route_proxies[explicitRoute];
 			
-				if (proxyRoute !== undefined)
-				{
+				if (proxyRoute !== undefined) {
 					triggerPathSet();
 					setCurrentTitle(proxyRoute);
 					return false;
@@ -838,8 +749,7 @@
 			
 			routingError = false;
 			
-			if (_.isReady && systemError)
-			{
+			if (_.isReady && systemError) {
 				routingError = true;
 				_.trigger("routing-error");
 			}
@@ -855,8 +765,7 @@
 		 *
 		 *	@param title	A string or array of strings representing a page title.
 		 */
-		title: function (title)
-		{
+		title: function (title) {
 			setCurrentTitle(title);
 		},
 		
@@ -865,17 +774,13 @@
 		 *
 		 *	@param isLoading	True if loading has started, false if it has ended. Default true.
 		 */
-		loading: function (isLoading)
-		{
+		loading: function (isLoading) {
 			if (isLoading ||
-				isLoading === undefined)
-			{
+					isLoading === undefined) {
 				loading_screen.show();
 				$(".koi-deeplink-state-element, .koi-deeplink-active-child").hide();
 				_.trigger("loading");
-			}
-			else
-			{
+			} else {
 				loading_screen.hide();
 				$(".koi-deeplink-active-child").show();
 				_.trigger("loaded");
@@ -885,23 +790,22 @@
 		/**
 		 *	Alias for simple load handling from components.
 		 */
-		loaded: function ()
-		{
+		loaded: function () {
 			_.loading(false);
 		}
 	});
 	
 	//------------------------------
 	//
-	//  jQuery Extension
+	//	 jQuery Extension
 	//
 	//------------------------------
 	
 	/**
 	 *	Generate a deeplinking map from the given root.
 	 */
-	$.extend($.fn, 
-	{
+	$.extend($.fn, {
+	
 		//------------------------------
 		//	Methods
 		//------------------------------
@@ -911,42 +815,31 @@
 		 *
 		 *	@return For the root, an object indexed by the non-prefixed deeplinking identifier, which contains the relevant element.
 		 */
-		extractDeeplinkIdentifiers: function ()
-		{	
+		extractDeeplinkIdentifiers: function () {	
 			var response = {};
 			
-			if (this.attr('id') === 'koi-deeplink-root')
-			{
+			if (this.attr('id') === 'koi-deeplink-root') {
 				this.data('koi-deeplink-map', this.children(SELECTOR_ALL).extractDeeplinkIdentifiers());
 				return this.data('koi-deeplink-map');
-			}
-			else
-			{
-				this.each(function ()
-				{
+			} else {
+				this.each(function () {
 					var element = $(this),
 						classes = element.attr('class').split(RX_SPLIT),
 						identifier;
 						
-					$.each(classes, function ()
-					{
-						if (this.match(RX_IDENTIFIER) === null)
-						{
+					$.each(classes, function () {
+						if (this.match(RX_IDENTIFIER) === null) {
 							return;
-						}
-						else
-						{
+						} else {
 							identifier = this.replace(RX_IDENTIFIER, '');
 						
-							if (!element.hasClass('koi-deeplink-error'))
-							{
+							if (!element.hasClass('koi-deeplink-error')) {
 								response[identifier] = element;
 							} 
 							
 							element.data('koi-deeplink-identifier', identifier);
 						
-							if (element.hasClass('koi-deeplink-item-stack') || element.hasClass('koi-deeplink-stack'))
-							{
+							if (element.hasClass('koi-deeplink-item-stack') || element.hasClass('koi-deeplink-stack')) {
 								element.data('koi-deeplink-map', element.children(SELECTOR_ALL).extractDeeplinkIdentifiers());
 							}
 							
@@ -966,19 +859,15 @@
 		 *
 		 *	@return jQuery
 		 */
-		showDeeplinkChild: function (identifier)
-		{
-			if (ignoreProcessing)
-			{
+		showDeeplinkChild: function (identifier) {
+			if (ignoreProcessing) {
 				return this;
 			}
 			
-			if (this.data('koi-deeplink-map') !== undefined)
-			{
-				if (identifier === undefined && !this.hasClass('koi-deeplink-stop-automation'))
-				{
-					$.each(this.data('koi-deeplink-map'), function (path)
-					{
+			if (this.data('koi-deeplink-map') !== undefined) {
+				if (identifier === undefined && 
+						!this.hasClass('koi-deeplink-stop-automation')) {
+					$.each(this.data('koi-deeplink-map'), function (path) {
 						currentPath.push(path);
 					
 						setCurrentChild(this);
@@ -989,14 +878,12 @@
 					});
 					
 					return this;
-				}
-				else if (KOI.typecheck(identifier, 'Array') && identifier.length > 0)
-				{
+				} else if (KOI.typecheck(identifier, 'Array') && 
+						identifier.length > 0) {
 					var fragment = identifier.shift(),
 						target = this.data('koi-deeplink-map')[fragment];
 
-					if (target)
-					{
+					if (target) {
 						setCurrentChild(target);
 						
 						target.showDeeplinkChild(identifier.length ? identifier : undefined);
@@ -1007,10 +894,9 @@
 			}
 			
 			//	If we make it to this point with an identifier, and we have an error handler, utilize it.
-			if ($('.koi-deeplink-error').length > 0 && identifier !== undefined)
-			{	
-				if (!_.raise404(true, true))
-				{
+			if ($('.koi-deeplink-error').length > 0 && 
+					identifier !== undefined) {	
+				if (!_.raise404(true, true)) {
 					return false;
 				}
 			}
@@ -1033,46 +919,39 @@
 	//------------------------------
 	
 	//------------------------------
-	//  Destory config
+	//	 Destory config
 	//------------------------------
 	
 	config();
 	
 	//------------------------------
-	//  Setup
+	//	 Setup
 	//------------------------------
 	
-	$(function ()
-	{
+	$(function () {
 		_.baseTitle = document.title;
 		
 		loading_screen = $("#koi-deeplink-loading");
 
 		$(".koi-deeplink-item-stack, .koi-deeplink-item")
-			.children(".koi-component").addClass("deeplink-component-disabled")
+			.children(".koi-component").addClass("deeplink-component-disabled");
 	});
 	
-	_.ready(function ()
-	{
+	_.ready(function () {
 		generateMap();
 	});
 	
 	//------------------------------
-	//  Extend component
+	//	 Extend component
 	//------------------------------
 	
-	if (KOI.component === undefined)
-	{
-		KOI.bind("platform-initialized", function ()
-		{
-			if (KOI.component !== undefined)
-			{
+	if (KOI.component === undefined) {
+		KOI.bind("platform-initialized", function () {
+			if (KOI.component !== undefined) {
 				KOI.component.disabledClasses.push("deeplink-component-disabled");
 			}
 		});
-	}
-	else
-	{
+	} else {
 		KOI.component.disabledClasses.push("deeplink-component-disabled");
 	}
 	

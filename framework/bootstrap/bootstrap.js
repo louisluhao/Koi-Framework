@@ -1,4 +1,4 @@
-/*!
+/**
  *	Framework - Bootstrap
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
-/*global window, ActiveXObject, document */
+/*global attemptResourceLoad, window, ActiveXObject, document */
 
 /*jslint evil: true, white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ()
-{
+(function () {
+
+	"use strict";
+
 	//------------------------------
 	//
 	//  Constants
@@ -206,8 +206,7 @@
 	 *
 	 *	@param compare	The Object constructor to check.
 	 */
-	function typecheck(type, compare)
-	{
+	function typecheck(type, compare) {
 		return !type ? false : !type.constructor ? false : type.constructor.toString().match(new RegExp(compare + '\\(\\)', 'i')) !== null;	 
 	}
 	
@@ -216,8 +215,7 @@
 	 *
 	 *	@param A cachebuster string.
 	 */
-	function cachebust()
-	{
+	function cachebust() {
 		return '?_=' + (new Date()).valueOf();
 	}
 	
@@ -228,10 +226,8 @@
 	 *
 	 *	@param callback	The callback to notify when the style is included.
 	 */
-	function embedStylesheet(item)
-	{
-		if (document.createStyleSheet !== undefined)
-		{
+	function embedStylesheet(item) {
+		if (document.createStyleSheet !== undefined) {
 			document.createStyleSheet(item + cachebust());
 			return;
 		}
@@ -252,12 +248,9 @@
 	 *
 	 *	@param callback	The callback to notify when the script is included.
 	 */
-	function embedScript(item, callback)
-	{
-		if (pendingLoad)
-		{
-			scripts.push(
-			[
+	function embedScript(item, callback) {
+		if (pendingLoad) {
+			scripts.push([
 				item,
 				callback
 			]);
@@ -277,28 +270,23 @@
 			done = false;
 
 		// Attach handlers for all browsers
-		script.onload = script.onreadystatechange = function () 
-		{
-			if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete"))
-			{
+		script.onload = script.onreadystatechange = function () {
+			if (!done && (!this.readyState || this.readyState === "loaded" || this.readyState === "complete")) {
 				done = true;
 				
 				// Handle memory leak in IE
 				script.onload = script.onreadystatechange = null;
-				if (script.parentNode)
-				{
+				if (script.parentNode) {
 					head.removeChild(script);
 				}
 				
 				pendingLoad = false;
 
-				if (callback !== undefined)
-				{
+				if (callback !== undefined) {
 					callback.call(callback);
 				}
 				
-				if (scripts.length > 0)
-				{
+				if (scripts.length > 0) {
 					embedScript.apply(embedScript, scripts.shift());
 				}
 			}
@@ -315,8 +303,7 @@
 	 *
 	 *	@param script	The script to evaluate.
 	 */
-	function evalScript(data)
-	{
+	function evalScript(data) {
 		// Inspired by code by Andrea Giammarchi
 		// http://webreflection.blogspot.com/2007/08/global-scope-evaluation-and-dom.html
 		var head = document.getElementsByTagName("head")[0] || document.documentElement,
@@ -324,12 +311,9 @@
 
 		script.type = "text/javascript";
 		
-		if (canEvalScripts)
-		{
+		if (canEvalScripts) {
 			script.appendChild(document.createTextNode(data));
-		}
-		else
-		{
+		} else {
 			script.text = data;
 		}
 		
@@ -345,27 +329,19 @@
 	 *
 	 *	@param data	The data to parse.
 	 */
-	function parseJSON(data)
-	{
+	function parseJSON(data) {
 		//	Confirm the data is JSON.
 		if (/^[\],:{}\s]*$/.test(data.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
-			.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
-			.replace(/(?:^|:|,)(?:\s*\[)+/g, ""))) 
-		{
-			//	Use the native JSON parser if it exists.
-			if (window.JSON !== undefined && window.JSON.parse !== undefined)
-			{
+				.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
+				.replace(/(?:^|:|,)(?:\s*\[)+/g, ""))) {
+			if (window.JSON !== undefined && window.JSON.parse !== undefined) {
+				//	Use the native JSON parser if it exists.
 				return window.JSON.parse(data);
-			}
-			
-			//	Use this evaluation method
-			else
-			{
+			} else {
+				//	Use this evaluation method
 				return (new Function("return " + data))();
 			}
-		}
-		else
-		{
+		} else {
 			throw new SyntaxError("Bootstrap.parseJSON");
 		}
 	}
@@ -379,10 +355,8 @@
 	 *
 	 *	@param asText	Flag to determine if the text should be parsed as JSON or not. Pass false for text.
 	 */
-	function handleResponse(xhr, listener, asText)
-	{
-		if (xhr.readyState === 4)
-		{
+	function handleResponse(xhr, listener, asText) {
+		if (xhr.readyState === 4) {
 			listener.call(xhr, asText ? xhr.responseText : parseJSON(xhr.responseText));
 		}
 	}
@@ -396,10 +370,8 @@
 	 *
 	 *	@param asText	Flag to determine if the text should be parsed as JSON or not. Pass false for text.
 	 */
-	function simpleRequest(file, listener, asText)
-	{
-		if (included[file] !== undefined)
-		{
+	function simpleRequest(file, listener, asText) {
+		if (included[file] !== undefined) {
 			return false;
 		}
 		
@@ -413,28 +385,21 @@
 			/**
 			 *	The processor for handling the request.
 			 */
-			processor = function ()
-			{
+			processor = function () {
 				handleResponse(xhr, listener, asText);
 			};
 		
-		try
-		{
+		try {
 			xhr = new XMLHttpRequest();
-		}
-		catch (e) 
-		{
+		} catch (e) {
 			xhr = new ActiveXObject("Microsoft.XMLHTTP");
 		}
 		
 		xhr.open("GET", file, true);
 		
-		try
-		{
+		try {
 			xhr.onreadystatechange = processor;
-		}
-		catch (ex)
-		{
+		} catch (ex) {
 			xhr.onload = processor;
 		}
 		
@@ -450,10 +415,8 @@
 	 *
 	 *	@param callback	The callback to trigger.
 	 */
-	function each(source, callback)
-	{
-		if (source === undefined || source === null)
-		{
+	function each(source, callback) {
+		if (source === undefined || source === null) {
 			return;
 		}
 	
@@ -468,26 +431,18 @@
 			length = source.length;
 
 		//	For objects
-		if (length === undefined)
-		{
-			for (key in source)
-			{
-				if (callback.call(source[key], key, source[key]) === false)
-				{
+		if (length === undefined) {
+			for (key in source) {
+				if (callback.call(source[key], key, source[key]) === false) {
 					break;
 				}
 			}
-		}
-		
-		//	For arrays
-		else
-		{
+		} else {
+			//	For arrays
 			key = 0;
 			
-			for (; key < length; key++)
-			{
-				if (callback.call(source[key], key, source[key]) === false)
-				{
+			for (; key < length; key++) {
+				if (callback.call(source[key], key, source[key]) === false) {
 					break;
 				}
 			}	
@@ -507,25 +462,20 @@
 	 *
 	 *	@param adding		If the resource is getting a tree entry to set it's included version.
 	 */
-	function createResourceTree(framework, type, name, version, adding)
-	{
-		if (resources[framework] === undefined)
-		{
+	function createResourceTree(framework, type, name, version, adding) {
+		if (resources[framework] === undefined) {
 			resources[framework] = {};
 		}
 		
-		if (resources[framework][type] === undefined)
-		{
+		if (resources[framework][type] === undefined) {
 			resources[framework][type] = {};
 		}
 		
-		if (resources[framework][type][name] === undefined)
-		{
+		if (resources[framework][type][name] === undefined) {
 			resourceCache[uid] = resources[framework][type][name] = {included: false, uid: uid++, holding: {}, heldby: {}, version: version};
 		}
 		
-		if (!adding && version !== resources[framework][type][name].version)
-		{
+		if (!adding && version !== resources[framework][type][name].version) {
 			throw new Error("Version collision: " + [framework, type, name].join(" ") + " impored as " + resources[framework][type][name].version + " but now requires " + version);
 		}
 		
@@ -537,14 +487,11 @@
 	 *
 	 *	@param resource	The resource to check.
 	 */
-	function isHeld(resource)
-	{
+	function isHeld(resource) {
 		var held = false;
 		
-		each(resource.heldby, function (id, status)
-		{
-			if (status === true)
-			{
+		each(resource.heldby, function (id, status) {
+			if (status === true) {
 				held = true;
 				return false;
 			}
@@ -556,49 +503,38 @@
 	/**
 	 *	Once the bootstrapping process has finished, load any application resources.
 	 */
-	function loadApplicationResources()
-	{
-		if (applicationResourcesLoaded || !projectProcessed || pendingManifests > 0)
-		{
+	function loadApplicationResources() {
+		if (applicationResourcesLoaded || !projectProcessed || pendingManifests > 0) {
 			return;
 		}
 	
 		var ready = true;
 		
-		each(resourceCache, function (key, resource)
-		{
-			if (!resource.included)
-			{
+		each(resourceCache, function (key, resource) {
+			if (!resource.included) {
 				ready = false;
 				return false;
 			}
 		});
 		
-		if (!ready)
-		{
+		if (!ready) {
 			return;
 		}
 		
 		applicationResourcesLoaded = true;
 		
-		if (applicationManifest.application !== undefined)
-		{
-			each(applicationManifest.application.scripts, function (index, file)
-			{
+		if (applicationManifest.application !== undefined) {
+			each(applicationManifest.application.scripts, function (index, file) {
 				embedScript(file + '.js');
 			});
 			
-			each(applicationManifest.application.styles, function (index, file)
-			{
+			each(applicationManifest.application.styles, function (index, file) {
 				embedStylesheet(file + '.css');
 			});
 			
-			each(applicationManifest.application.themes, function (group, definition)
-			{
-				if (themes[group] !== undefined)
-				{
-					each(definition.sheets, function (index, style)
-					{
+			each(applicationManifest.application.themes, function (group, definition) {
+				if (themes[group] !== undefined) {
+					each(definition.sheets, function (index, style) {
 						embedStylesheet([metadata.sdk, "koi", "theme", themes[group].resource, themes[group].version, (style + ".css")].join('/'));
 					});
 				}
@@ -611,17 +547,14 @@
 	 *
 	 *	@param resource	The resource to update.
 	 */
-	function updateResourceInclusion(resource)
-	{
-		if (resource.hasJS && !resource.includedJS)
-		{
+	function updateResourceInclusion(resource) {
+		if (resource.hasJS && !resource.includedJS) {
 			return;
 		}
 	
 		resource.included = true;
 
-		each(resource.holding, function (id, status)
-		{
+		each(resource.holding, function (id, status) {
 			var item = resourceCache[id];
 			
 			item.heldby[resource.uid] = false;
@@ -638,10 +571,8 @@
 	 *
 	 *	@param resource	The resource item to load.
 	 */
-	function attemptResourceLoad(resource)
-	{
-		if (isHeld(resource) || resource.included)
-		{
+	function attemptResourceLoad(resource) {
+		if (isHeld(resource) || resource.included) {
 			return;
 		}
 		
@@ -656,32 +587,25 @@
 			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, manifest.version];
 	
 		//	Don't import themes
-		if (manifest["class"] === "theme")
-		{
+		if (manifest["class"] === "theme") {
 			updateResourceInclusion(resource);
 			return;
 		}
 		
-		if (manifest.themegroup !== undefined && manifest.theme !== undefined)
-		{
-			if (themes[manifest.themegroup] !== undefined)
-			{
-				if (!typecheck(manifest.theme, "Array"))
-				{
+		if (manifest.themegroup !== undefined && manifest.theme !== undefined) {
+			if (themes[manifest.themegroup] !== undefined) {
+				if (!typecheck(manifest.theme, "Array")) {
 					manifest.theme = [manifest.theme];
 				}
 				
-				each(manifest.theme, function (index, style)
-				{
+				each(manifest.theme, function (index, style) {
 					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
 				});
 			}
 		}
 		
-		each(resource.manifest.composition, function (index, type)
-		{
-			switch (type)
-			{
+		each(resource.manifest.composition, function (index, type) {
+			switch (type) {
 			
 			case 'js':
 				resource.hasJS = true;
@@ -695,17 +619,14 @@
 			}
 		});
 		
-		if (resource.hasJS)
-		{
-			embedScript(path.concat([manifest.name + '.js']).join('/'), function ()
-			{
+		if (resource.hasJS) {
+			embedScript(path.concat([manifest.name + '.js']).join('/'), function () {
 				resource.includedJS = true;
 				updateResourceInclusion(resource);
 			});
 		}
 		
-		if (resource.hasCSS)
-		{
+		if (resource.hasCSS) {
 			embedStylesheet(path.concat([manifest.name + '.css']).join('/'));
 			updateResourceInclusion(resource);
 		}
@@ -722,32 +643,25 @@
 	 *
 	 *	@param manifest	The project manifest.
 	 */
-	function processResourceManifest(manifest)
-	{
+	function processResourceManifest(manifest) {
 		var item = createResourceTree(manifest.framework, manifest["class"], manifest.name, manifest.version, true);
 	
 		item.manifest = manifest;
 		pendingManifests -= 1;
 		
-		if (manifest.dependencies !== undefined)
-		{
-			each(manifest.dependencies, function (framework, types)
-			{
-				each(types, function (type, resources)
-				{
-					each(resources, function (resource, version)
-					{
+		if (manifest.dependencies !== undefined) {
+			each(manifest.dependencies, function (framework, types) {
+				each(types, function (type, resources) {
+					each(resources, function (resource, version) {
 						var dependency = createResourceTree(framework, type, resource, version);
 						
-						if (!dependency.included)
-						{
+						if (!dependency.included) {
 							dependency.holding[item.uid] = true;
 							item.heldby[dependency.uid] = true;
 						}
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
-						{
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}
 					});
@@ -763,16 +677,13 @@
 	 *
 	 *	@param manifest	The component manifest.
 	 */
-	function processComponentManifest(manifest)
-	{
+	function processComponentManifest(manifest) {
 		var composition = [];
 		
 		pendingManifests -= 1;
 	
-		each(manifest.composition, function (index, type)
-		{
-			switch (type)
-			{
+		each(manifest.composition, function (index, type) {
+			switch (type) {
 			
 			case "css":
 				composition.push("stylesheet");
@@ -787,19 +698,14 @@
 		
 		SDK.component.specifications[manifest.name].composition = composition;
 		
-		if (manifest.dependencies !== undefined)
-		{
-			each(manifest.dependencies, function (framework, types)
-			{
-				each(types, function (type, resources)
-				{
-					each(resources, function (resource, version)
-					{
-						var dependency = createResourceTree(framework, type, resource, version);
+		if (manifest.dependencies !== undefined) {
+			each(manifest.dependencies, function (framework, types) {
+				each(types, function (type, resources) {
+					each(resources, function (resource, version) {
+						createResourceTree(framework, type, resource, version);
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
-						{
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}
 					});
@@ -807,17 +713,13 @@
 			});
 		}
 		
-		if (manifest.themegroup !== undefined && manifest.theme !== undefined)
-		{		
-			if (themes[manifest.themegroup] !== undefined)
-			{
-				if (!typecheck(manifest.theme, "Array"))
-				{
+		if (manifest.themegroup !== undefined && manifest.theme !== undefined) {		
+			if (themes[manifest.themegroup] !== undefined) {
+				if (!typecheck(manifest.theme, "Array")) {
 					manifest.theme = [manifest.theme];
 				}
 				
-				each(manifest.theme, function (index, style)
-				{
+				each(manifest.theme, function (index, style) {
 					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
 				});
 			}
@@ -829,10 +731,8 @@
 	 *
 	 *	@param config	The configuration file.
 	 */
-	function processConfigurationFile(config)
-	{
-		each(config.match(RX_ASSET), function (index, token)
-		{
+	function processConfigurationFile(config) {
+		each(config.match(RX_ASSET), function (index, token) {
 				/**
 				 *	Resource information about the asset.
 				 */
@@ -848,20 +748,16 @@
 				 */
 				version;
 				
-			try
-			{
+			try {
 				version = applicationManifest.application.assets[details[0]][details[1]][details[2]];
-			}
-			catch (e)
-			{
+			} catch (e) {
 				throw new Error("Bootstrap.processConfigurationFile:asset");
 			}
 			
 			config = config.replace(token, [metadata.sdk].concat(details, [version, asset]).join('/'));
 		});
 		
-		each(config.match(RX_STATIC), function (index, token)
-		{
+		each(config.match(RX_STATIC), function (index, token) {
 			config = config.replace(token, token.replace(RX_CLEAN_STATIC, ''));
 		});
 		
@@ -873,39 +769,28 @@
 	 *
 	 *	@param manifest	The project manifest.
 	 */
-	function processProjectManifest(manifest)
-	{		
-		if (manifest.includes === undefined)
-		{
+	function processProjectManifest(manifest) {		
+		if (manifest.includes === undefined) {
 			throw new SyntaxError("ProjectManifest.includes");
 		}
 		
 		applicationManifest = manifest;
 		
 		//	Handle configurations
-		if (manifest.configuration !== undefined)
-		{
-			each(manifest.configuration, function (index, file)
-			{
+		if (manifest.configuration !== undefined) {
+			each(manifest.configuration, function (index, file) {
 				simpleRequest(file + '.js', processConfigurationFile, true);
 			});
 		}
 		
 		//	Add our theme definitions
-		if (manifest.themes !== undefined)
-		{
-			each(manifest.includes, function (framework, types)
-			{
-				if (types.theme !== undefined)
-				{
-					each(types.theme, function (resource, version)
-					{
-						each(manifest.themes, function (group, theme)
-						{
-							if (theme === resource)
-							{
-								themes[group] = 
-								{
+		if (manifest.themes !== undefined) {
+			each(manifest.includes, function (framework, types) {
+				if (types.theme !== undefined) {
+					each(types.theme, function (resource, version) {
+						each(manifest.themes, function (group, theme) {
+							if (theme === resource) {
+								themes[group] = {
 									resource: theme,
 									
 									version: version
@@ -918,45 +803,33 @@
 		}	
 
 		//	Handle functional includes.
-		each(manifest.includes, function (framework, types)
-		{
-			each(types, function (type, resources)
-			{
-				if (type === "component")
-				{
-					if (SDK.component === undefined)
-					{
-						SDK.component = 
-						{
+		each(manifest.includes, function (framework, types) {
+			each(types, function (type, resources) {
+				if (type === "component") {
+					if (SDK.component === undefined) {
+						SDK.component = {
 							path: [metadata.sdk, "koi", "component"].join('/'),
 							
 							specifications: {}
 						};
 					}
 
-					each(resources, function (resource, version)
-					{
-						SDK.component.specifications[resource] = 
-						{
+					each(resources, function (resource, version) {
+						SDK.component.specifications[resource] = {
 							version: version
 						};
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processComponentManifest))
-						{
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processComponentManifest)) {
 							pendingManifests -= 1;
 						}					
 					});
-				}
-				else
-				{
-					each(resources, function (resource, version)
-					{
-						var item = createResourceTree(framework, type, resource, version);
+				} else {
+					each(resources, function (resource, version) {
+						createResourceTree(framework, type, resource, version);
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest))
-						{
+						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}				
 					});
@@ -985,8 +858,7 @@
 	/**
 	 *	Test script execution. Copied from jQuery's support test.
 	 */
-	(function ()
-	{
+	(function () {
 			/**
 			 *	The script tag to use for testing.
 			 */
@@ -1004,17 +876,15 @@
 		
 		script.type = "text/javascript";
 		
-		try
-		{
+		try {
 			script.appendChild(document.createTextNode("window." + id + "=1;"));
+		} catch (e) {
+			//	Noop
 		}
-		catch (e)
-		{}
 		
 		root.insertBefore(script, root.firstChild);
 		
-		if (window[id])
-		{
+		if (window[id]) {
 			canEvalScripts = true;
 		}
 		
@@ -1024,12 +894,9 @@
 	/**
 	 *	Load the metadata for this bootstrap.
 	 */
-	(function ()
-	{
-		each(metatags, function (index, tag)
-		{
-			if (tag.getAttribute("scheme") === "koi-bootstrap")
-			{
+	(function () {
+		each(metatags, function (index, tag) {
+			if (tag.getAttribute("scheme") === "koi-bootstrap") {
 				metadata[tag.getAttribute("name")] = tag.getAttribute("content");
 			}
 		});
@@ -1041,20 +908,16 @@
 	/**
 	 *	Ensure the metadata exists for the SDK root.
 	 */
-	if (metadata.sdk === undefined)
-	{
+	if (metadata.sdk === undefined) {
 		throw new Error("Bootstrap.sdk");
 	}
 	
 	/**
 	 *	Parse the project manifest document.
 	 */
-	if (metadata.manifest === undefined)
-	{
+	if (metadata.manifest === undefined) {
 		throw new Error("Bootstrap.manifest");
-	}
-	else
-	{
+	} else {
 		simpleRequest(metadata.manifest + cachebust(), processProjectManifest);
 	}
 

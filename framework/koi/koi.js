@@ -1,4 +1,4 @@
-/*!
+/**
  *	Framework - Koi
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
+/*global Typekit, Exception, Class, window, jQuery */
 
-/*global Exception, Class, window, jQuery */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+(function ($) {
 
-(function ($) 
-{
+	"use strict";
+	
 	//------------------------------
 	//
 	//	Constants
@@ -116,8 +116,7 @@
 	 *
 	 *	@param namespace	The namespace for the configurations to pull.
 	 */
-	function Configuration(namespace)
-	{
+	function Configuration(namespace) {
 		this.values = $.extend({}, configurations[namespace]);
 			
 		delete configurations[namespace];
@@ -129,10 +128,8 @@
 		 *
 		 *	@param value	The default value to use, should no setting be provided.
 		 */
-		this.get = function (property, value)
-		{
-			if (this.values[property] === undefined)
-			{
+		this.get = function (property, value) {
+			if (this.values[property] === undefined) {
 				this.values[property] = value;
 			}
 	
@@ -145,22 +142,17 @@
 	 *
 	 *	@param namespace	The namespace to fetch configurations for.
 	 */
-	function getConfiguration(namespace)
-	{
+	function getConfiguration(namespace) {
 		var reference = new Configuration(namespace);
 
 		/**
 		 *	Returns a lamda function which can retrieve properties, set default values, and destroy itself
 		 *	onces it's finished being used. To destroy a configuration object, simply call config().
 		 */
-		return function (property, value)
-		{
-			if (property !== undefined)
-			{
+		return function (property, value) {
+			if (property !== undefined) {
 				return reference.get(property, value);
-			}
-			else
-			{
+			} else {
 				reference = undefined;
 			}
 		};
@@ -173,18 +165,13 @@
 	 *
 	 *	@return	The replicant identifier, or null if not-applicable.
 	 */
-	function extractReplicant(element)
-	{
-		if (element.hasClass("replicant-container"))
-		{
-			var replicant = element.data("replicant-selector");
+	function extractReplicant(element) {
+		if (element.hasClass("replicant-container")) {
+			var replicant = element.data("replicant-selector") || null;
 			
-			if (replicant === null)
-			{
-				$.each(element.attr("className").split(" "), function (index, className)
-				{
-					if (className.match(RX_REPLICANT_DECLARATION) !== null)
-					{
+			if (replicant === null) {
+				$.each(element.attr("className").split(" "), function (index, className) {
+					if (className.match(RX_REPLICANT_DECLARATION) !== null) {
 						replicant = className.replace(RX_REPLICANT_DECLARATION, "");
 						return false;
 					}
@@ -203,12 +190,10 @@
 	 *
 	 *	@param exception	The exception object thrown.
 	 */
-	function processException(exception)
-	{
+	function processException(exception) {
 		var exit = false;
 	
-		$.each(_.errorHandlers, function (index, metrics)
-		{
+		$.each(_.errorHandlers, function (index, metrics) {
 				/**
 				 *	Flag to determine if this handler can consume the error.
 				 */
@@ -219,35 +204,24 @@
 				 */
 				consumed;
 		
-			if (metrics.instance !== undefined)
-			{
-				if (exception instanceof metrics.instance)
-				{
+			if (metrics.instance !== undefined) {
+				if (exception instanceof metrics.instance) {
 					canHandle = true;
 				}
 			}
 			
-			if (!canHandle && metrics.properties !== undefined)
-			{
-				$.each(metrics.properties, function (key, value)
-				{
-					if (exception[key] === undefined && value === undefined)
-					{
+			if (!canHandle && metrics.properties !== undefined) {
+				$.each(metrics.properties, function (key, value) {
+					if (exception[key] === undefined && value === undefined) {
 						canHandle = true;
 						return false;
-					}
-					else if (exception[key] !== undefined)
-					{
-						if (_.typecheck(value, "RegExp"))
-						{
-							if (value.test(exception[key]))
-							{
+					} else if (exception[key] !== undefined) {
+						if (_.typecheck(value, "RegExp")) {
+							if (value.test(exception[key])) {
 								canHandle = true;
 								return false;
 							}
-						}
-						else if (value === exception[key])
-						{
+						} else if (value === exception[key]) {
 							canHandle = true;
 							return false;
 						}
@@ -255,17 +229,13 @@
 				});
 			}
 			
-			if (canHandle)
-			{
+			if (canHandle) {
 				consumed = metrics.handler(exception);
 				
-				if (consumed === true)
-				{
+				if (consumed === true) {
 					exit = true;
 					return false;
-				}
-				else if (consumed === false)
-				{
+				} else if (consumed === false) {
 					return false;
 				}
 			}
@@ -275,8 +245,7 @@
 		 *	If we reach this point in processing, rethrow the excpetion, as the
 		 *	framework did not handle it.
 		 */
-		if (!exit)
-		{
+		if (!exit) {
 			throw exception;
 		}
 	}
@@ -284,14 +253,10 @@
 	/**
 	 *	A generic function to consume exceptions.
 	 */
-	function exceptionConsumer()
-	{
-		try
-		{
+	function exceptionConsumer() {
+		try {
 			this.original.apply(this.scope, arguments);
-		}
-		catch (e)
-		{
+		} catch (e) {
 			processException(e);
 		}
 	}
@@ -318,8 +283,7 @@
 	//
 	//------------------------------
 	
-	$.extend(_, 
-	{
+	$.extend(_, {
 		//------------------------------
 		//	Properties
 		//------------------------------
@@ -386,8 +350,7 @@
 		 *		...
 		 *	}
 		 */
-		readyQueue: $.extend(application('readyQueue', {}),
-		{
+		readyQueue: $.extend(application('readyQueue', {}), {
 			/**
 			 *	Require the document ready before we ready the framework.
 			 */
@@ -448,15 +411,12 @@
 		 *		...
 		 *	}
 		 */
-		handleError: function (handler, type, properties)
-		{
-			if (!_.typecheck(handler, "Function"))
-			{
+		handleError: function (handler, type, properties) {
+			if (!_.typecheck(handler, "Function")) {
 				throw new Exception("KOI", "handleError", "handler", typeof handler, "Must be a function");
 			}
 		
-			_.errorHandlers.push(
-			{
+			_.errorHandlers.push({
 				instance: type,
 				
 				properties: properties,
@@ -470,8 +430,7 @@
 		 *
 		 *	@param exception	The exception to raise.
 		 */
-		raise: function (exception)
-		{
+		raise: function (exception) {
 			processException(exception);
 		},
 		
@@ -482,8 +441,7 @@
 		 *
 		 *	@return The plugin configuration for the provided namespace.
 		 */
-		configuration: function (namespace)
-		{
+		configuration: function (namespace) {
 			return getConfiguration(namespace);
 		},
 		
@@ -501,14 +459,10 @@
 		 *
 		 *	@param parent	The container for the content.
 		 */
-		createReplicant: function (name, content, parent)
-		{
-			var replicant;
-		
+		createReplicant: function (name, content, parent) {
 			parent = $(parent);
 			
-			if (parent.hasClass("replicant-container"))
-			{
+			if (parent.hasClass("replicant-container")) {
 				return;
 			}
 			
@@ -526,20 +480,17 @@
 		 *
 		 *	@param content	The content to store.
 		 */
-		storeReplicant: function (name, content)
-		{
-			if (replicants[name] === undefined)
-			{
+		storeReplicant: function (name, content) {
+			if (replicants[name] === undefined) {
 				content = $(content);
 				
-				replicant = content.filter(".replicant-target");
+				var replicant = content.filter(".replicant-target");
 
-				if (replicant.length === 0)
-				{
+				if (replicant.length === 0) {
 					replicant = content.addClass("replicant-target");
 				}
 				
-				replicant.addClass("replicant-" + name)
+				replicant.addClass("replicant-" + name);
 				
 				replicants[name] = content;
 			}
@@ -552,15 +503,12 @@
 		 *
 		 *	@param selector	The selector to filter the replicants.
 		 */
-		hideReplicants: function (names, selector)
-		{
-			if (!$.isArray(names))
-			{
+		hideReplicants: function (names, selector) {
+			if (!$.isArray(names)) {
 				names = [names];
 			}
 		
-			$.each(names, function (index, name)
-			{
+			$.each(names, function (index, name) {
 				$(".replicant-" + name, selector).hide();
 			});
 		},
@@ -615,8 +563,7 @@
 		 *		({my_target: "value"}, ".some-class", 1)
 		 *		- Will update all instances of <key_name> within the second matched "some-class" element.
 		 */
-		template: function (object, selector, instance, prefix, regexp)
-		{
+		template: function (object, selector, instance, prefix, regexp) {
 			prefix = prefix || "tpl";
 			regexp = regexp || RX_TMPL;
 		
@@ -638,27 +585,27 @@
 				/**
 				 *	Key for producing new replicants.
 				 */
-				index = 0;
+				index = 0,
+				
+				/**
+				 *	The target for updating
+				 */
+				target;
 			
-			if (selector !== undefined)
-			{
+			if (selector !== undefined) {
 				context = $(selector);
 			}
 			
-			if (instance !== undefined && context !== undefined)
-			{
-				if (context.hasClass("replicant-container"))
-				{
+			if (instance !== undefined && context !== undefined) {
+				if (context.hasClass("replicant-container")) {
 					replicantSelector = extractReplicant(context);
 					replicant = $(".replicant-" + replicantSelector, context);
 					
 					//	Increment the instance to simply the logic for checking replicant instances
 					instance += 1;
 					
-					if (replicant.length < instance)
-					{
-						for (; index < instance - replicant.length; index++)
-						{
+					if (replicant.length < instance) {
+						for (; index < instance - replicant.length; index++) {
 							replicants[replicantSelector].clone().appendTo(context).hide().addClass("replicant-instance-" + (index + replicant.length));
 						}
 					}
@@ -668,17 +615,25 @@
 					
 					$(".replicant-instance-" + instance, context).show();
 					context = $(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context);
-				}
-				else
-				{
+				} else {
 					context = context.eq(instance);
 				}
 			}
 
-			$.each(object, function (key, value)
-			{
-				$("[class*='" + prefix + "-" + key + "']", context).each(function ()
-				{
+			$.each(object, function (key, value) {
+				var class_target = "[class*='" + prefix + "-" + key + "']";
+				
+				target = $(class_target, context);
+
+				if (isValid(context)) {
+					if (context.length == 1 && context.has(class_target)) {
+						target = target.add(context);
+					} else {
+						target = target.add(context.find(class_target));
+					}
+				}
+
+				target.each(function () {
 						/**
 						 *	This element.
 						 */
@@ -689,10 +644,8 @@
 						 */
 						setValue = true;
 					
-					$.each(element.attr("class").split(" "), function (index, className)
-					{
-						if (className.replace(prefix + "-", "").split("-")[0] !== key)
-						{
+					$.each(element.attr("class").split(" "), function (index, className) {
+						if (className.replace(prefix + "-", "").split("-")[0] !== key) {
 							return;
 						}
 						
@@ -701,20 +654,16 @@
 							 */
 						var flags;
 					
-						if (className.match(regexp) === null)
-						{
+						if (className.match(regexp) === null) {
 							return;
 						}
 						
-						if (className.match(RX_TMPL_HAS_FLAGS) !== null)
-						{
+						if (className.match(RX_TMPL_HAS_FLAGS) !== null) {
 							flags = className.split("--")[1].match(RX_TMPL_FLAGS);
 						}
 						
-						if (flags !== undefined)
-						{
-							$.each(flags, function (index, rawFlag)
-							{
+						if (flags !== undefined) {
+							$.each(flags, function (index, rawFlag) {
 									/**
 									 *	Grab the flag.
 									 */
@@ -725,13 +674,11 @@
 									 */
 									size = rawFlag.match(RX_DIGIT);
 									
-								if (size !== null)
-								{
+								if (size !== null) {
 									size = parseInt(size[0], 10);
 								}
 									
-								switch (flag)
-								{
+								switch (flag) {
 								
 								case "a":
 									element.attr(value);
@@ -757,14 +704,12 @@
 									break;
 									
 								case "c":
-									if (element.data("tpl-added-class-" + key))
-									{
+									if (element.data("tpl-added-class-" + key)) {
 										element.removeClass(element.data("tpl-added-class-" + key));
 										element.removeData("tpl-added-class-" + key);
 									}
 									
-									if (value !== undefined && value !== null)
-									{
+									if (value !== undefined && value !== null) {
 										element.data("tpl-added-class-" + key, value);
 										element.addClass(value);
 									}
@@ -772,19 +717,15 @@
 									return false;
 									
 								case "t":
-									if (!isNaN(size) && value.length > size)
-									{
+									if (!isNaN(size) && value.length > size) {
 										value = value.substr(0, size) + "&hellip;";
 									}
 									break;
 									
 								case "d":
-									if (value === true)
-									{
+									if (value === true) {
 										element.show();
-									}
-									else
-									{
+									} else {
 										element.hide();
 									}
 									setValue = false;
@@ -794,8 +735,7 @@
 							});
 						}
 						
-						if (setValue)
-						{
+						if (setValue) {
 							element.html(value);
 						}
 					});
@@ -812,10 +752,8 @@
 		 *
 		 *	@param context	The html scope to work from. Default is document.
 		 */
-		localize: function (keys, context)
-		{
-			if ($.isEmptyObject(_.localization))
-			{
+		localize: function (keys, context) {
+			if ($.isEmptyObject(_.localization)) {
 				throw new Exception("KOI", "localize", "KOI.localization", "undefined", "No localization document loaded");
 			}
 		
@@ -827,7 +765,7 @@
 				/**
 				 *	The scope into the localization document.
 				 */
-				scope = KOI.localization,
+				scope = _.localization,
 				
 				/**
 				 *	The chain of keys
@@ -837,19 +775,15 @@
 			/**
 			 *	Scope into the document if keys are provided.
 			 */
-			if (keys !== undefined)
-			{
-				if (!$.isArray(keys))
-				{
+			if (keys !== undefined) {
+				if (!$.isArray(keys)) {
 					keys = [keys];
 				}
 				
-				$.each(keys, function (index, key)
-				{
+				$.each(keys, function (index, key) {
 					chain.push(key);
 					
-					if (scope[key] === undefined)
-					{
+					if (scope[key] === undefined) {
 						throw new Exception("KOI", "localize", "scope", chain.join("."), "Scope not defined in localization document");
 					}
 					
@@ -860,8 +794,7 @@
 			/**
 			 *	Generate the localization fragment.
 			 */
-			$.each(scope, function (name, value)
-			{
+			$.each(scope, function (name, value) {
 				localization[name] = value;
 			});
 			
@@ -877,8 +810,7 @@
 		 *
 		 *	@return	self
 		 */
-		createStylesheet: function (styles, context)
-		{
+		createStylesheet: function (styles, context) {
 			styles = _.typecheck(styles, "Array") ? styles : [styles];
 			
 			(context || $("head")).append('<style type="text/css">' + styles.join('') + '</style>');
@@ -895,17 +827,14 @@
 		 *
 		 *	@return The value of the meta tag.
 		 */
-		meta: function (name, value)
-		{
-			if (value !== undefined)
-			{
+		meta: function (name, value) {
+			if (value !== undefined) {
 				_.metadata[name] = value;
 				
 				return value;
 			}
 		
-			if (_.metadata[name] === undefined)
-			{
+			if (_.metadata[name] === undefined) {
 				_.metadata[name] = $('meta[name="' + name + '"]').attr('content') || null;
 			}
 			
@@ -921,12 +850,9 @@
 		 *
 		 *	@return The hook proxy.
 		 */
-		hook: function (original, hook)
-		{
-			return (function (original, hook)
-			{
-				return function ()
-				{
+		hook: function (original, hook) {
+			return (function (original, hook) {
+				return function () {
 					return hook.apply({scope: this, original: original}, arguments);
 				};
 			}(original, hook));
@@ -938,17 +864,14 @@
 		 *
 		 *	@param object	The object to swap.
 		 */
-		invertObject: function (object)
-		{
+		invertObject: function (object) {
 			var buffer = {};
 		
-			if (object === undefined)
-			{
+			if (object === undefined) {
 				throw new Exception("KOI", "invertObject", "object", "undefined", "Must be an object");
 			}
 		
-			$.each(object, function (key, value)
-			{
+			$.each(object, function (key, value) {
 				buffer[value] = key;
 			});
 			
@@ -962,8 +885,7 @@
 		 *
 		 *	@param compare	The class to compare against.
 		 */
-		extendsFrom: function (classObj, compare)
-		{
+		extendsFrom: function (classObj, compare) {
 			return classObj.prototype instanceof compare || classObj.prototype === compare.prototype;
 		},
 		
@@ -976,20 +898,16 @@
 		 *
 		 *	@return The created plugin instance.
 		 */
-		plugin: function (namespace, PluginClass)
-		{
-			if (_[namespace] !== undefined)
-			{
+		plugin: function (namespace, PluginClass) {
+			if (_[namespace] !== undefined) {
 				throw new Exception("KOI", "plugin", "namespace", namespace, "Namespace collision");
 			}
 			
-			if (PluginClass === undefined)
-			{
+			if (PluginClass === undefined) {
 				PluginClass = _.module.plugin;
 			}
 			
-			if (!_.extendsFrom(PluginClass, _.module.plugin))
-			{
+			if (!_.extendsFrom(PluginClass, _.module.plugin)) {
 				throw new Exception("KOI", "plugin", "PluginClass", undefined, "Must extend from KOI.module.plugin");
 			}
 			
@@ -1017,24 +935,21 @@
 		 *
 		 *	@return True if the variable "type" matches the compare literal.
 		 */
-		typecheck: function (type, compare)
-		{
+		typecheck: function (type, compare) {
 			return !type ? false : !type.constructor ? false : type.constructor.toString().match(new RegExp(compare + '\\(\\)', 'i')) !== null;	 
 		},
 		
 		/**
 		 *	Bind an event. Passes all arguments to jQuery.bind
 		 */
-		bind: function ()
-		{
+		bind: function () {
 			delegate.bind.apply(delegate, arguments);
 		},
 		
 		/**
 		 *	Bind an event. Passes all arguments to jQuery.triggerHandler
 		 */
-		trigger: function ()
-		{
+		trigger: function () {
 			delegate.triggerHandler.apply(delegate, arguments);
 		},
 		
@@ -1052,10 +967,8 @@
 		 *
 		 *	@return The response of the notified listener.
 		 */
-		notify: function (type, listener, context, parameters)
-		{
-			if (_.typecheck(listener, 'Function'))
-			{
+		notify: function (type, listener, context, parameters) {
+			if (_.typecheck(listener, 'Function')) {
 				var event = $.Event(type);
 				event.preventDefault();
 				event.stopPropagation();
@@ -1072,8 +985,7 @@
 		 *
 		 *	@return Milliseconds since the epoch
 		 */
-		now: function ()
-		{
+		now: function () {
 			return new Date().valueOf();
 		},
 		
@@ -1084,8 +996,7 @@
 		 *
 		 *	@return The value of the param, or null.
 		 */
-		urlParam: function (name)
-		{
+		urlParam: function (name) {
 			var match = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href.toString());
 		
 			return _.typecheck(match, 'Array') ? match[1] : null;
@@ -1100,16 +1011,12 @@
 		 *
 		 *	@return The value of the session data, or null. Returns only if no value is passed.
 		 */
-		flash: function (name, value)
-		{
+		flash: function (name, value) {
 			name = 'koi-flash-' + name;
 		
-			if (value !== undefined)
-			{
+			if (value !== undefined) {
 				_.cookie(name, value, {path: '/'});
-			}
-			else
-			{
+			} else {
 				var response = _.cookie(name);
 				
 				//	Purge session storage
@@ -1161,8 +1068,7 @@
 		 *
 		 *	@return The value of the cookie, or null. Returns only if no value is passed.
 		 */
-		cookie: function (name, value, options)
-		{
+		cookie: function (name, value, options) {
 			var date,
 				expires = '',
 				path,
@@ -1173,8 +1079,7 @@
 				cookies,
 				cookie;
 			
-			if (value !== undefined)
-			{
+			if (value !== undefined) {
 			
 				options = options || {};
 				
@@ -1183,15 +1088,11 @@
 					options.expires = -1;
 				}
 	
-				if (options.expires && (_.typecheck(options.expires, 'Number') || options.expires.toUTCString))
-				{
-					if (_.typecheck(options.expires, 'Number'))
-					{
+				if (options.expires && (_.typecheck(options.expires, 'Number') || options.expires.toUTCString)) {
+					if (_.typecheck(options.expires, 'Number')) {
 						date = new Date();
 						date.setTime(date.getTime() + (options.expires * 864e5));
-					} 
-					else
-					{
+					} else {
 						date = options.expires;
 					}
 					
@@ -1202,20 +1103,15 @@
 				domain = options.domain ? '; domain=' + (options.domain) : '';
 				secure = options.secure ? '; secure' : '';
 				document.cookie = [name, '=', encodeURIComponent(value), expires, path, domain, secure].join('');
-			} 
-			else 
-			{
-				if (document.cookie && document.cookie !== '')
-				{
+			} else {
+				if (document.cookie && document.cookie !== '') {
 					cookies = document.cookie.split(';');
 					
-					for (; index < cookies.length; index += 1)
-					{
+					for (; index < cookies.length; index += 1) {
 						cookie = $.trim(cookies[index]);
 						
 						// Does this cookie string begin with the name we want?
-						if (cookie.substring(0, name.length + 1) === (name + '='))
-						{
+						if (cookie.substring(0, name.length + 1) === (name + '=')) {
 							cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
 							break;
 						}
@@ -1231,11 +1127,13 @@
 		 *
 		 *	@param kit_id	The ID of the kit to embed.
 		 */
-		embedTypekit: function (kit_id)
-		{
-			$.getScript(TYPEKIT_PATH + kit_id + ".js", function ()
-			{
-				try{Typekit.load();}catch(e){}
+		embedTypekit: function (kit_id) {
+			$.getScript(TYPEKIT_PATH + kit_id + ".js", function () {
+				try {
+					Typekit.load();
+				} catch (e) {
+					//	Noop
+				}
 			});
 		},
 		
@@ -1247,14 +1145,10 @@
 		 *	
 		 *	@return The KOI framework.
 		 */
-		ready: function (listener)
-		{
-			if (_.isReady)
-			{
+		ready: function (listener) {
+			if (_.isReady) {
 				_.notify("platform-ready", listener);
-			}
-			else
-			{
+			} else {
 				_.bind('platform-ready', listener);
 			}
 	
@@ -1264,10 +1158,8 @@
 		/**
 		 *	Initialize the framework.
 		 */
-		initialize: function ()
-		{
-			if (_.isReady)
-			{
+		initialize: function () {
+			if (_.isReady) {
 				return;
 			}
 
@@ -1280,41 +1172,33 @@
 		/**
 		 *	Makes the koi platform ready.
 		 */
-		makeReady: function ()
-		{
-			if (this.isReady)
-			{
+		makeReady: function () {
+			if (this.isReady) {
 				return;
 			}
 		
 			var canReady = true;
 		
-			$.each(_.readyQueue, function (type, status)
-			{
-				if (!status)
-				{
+			$.each(_.readyQueue, function (type, status) {
+				if (!status) {
 					canReady = false;
 					return false;
 				}
 			});
 			
-			if (!canReady)
-			{
+			if (!canReady) {
 				return;
 			}
 		
 			_.isReady = true;
 			_.trigger('platform-ready');
 			
-			if (_.autoReadyApplication)
-			{
+			if (_.autoReadyApplication) {
 				_.trigger('application-ready');
 			}
 			
-			$.each(plugins, function (index, plugin)
-			{
-				if (!plugin.__disableAutoReady)
-				{
+			$.each(plugins, function (index, plugin) {
+				if (!plugin.__disableAutoReady) {
 					plugin.makeReady();
 				}
 			});
@@ -1334,38 +1218,31 @@
 		 *		path: <pathToDocuments>
 		 *	}
 		 */
-		localizeApplication: function (language, path)
-		{
-			if (localization_config !== null)
-			{
+		localizeApplication: function (language, path) {
+			if (localization_config !== null) {
 				language = language || localization_config.defaultLanguage;
 				path = path || localization_config.path;
 			}
 			
-			if (language === undefined)
-			{
+			if (language === undefined) {
 				throw new Exception("KOI", "localizeApplication", "language", "undefined", "Must declare a localization path.");
 			}
 			
-			if (path === undefined)
-			{
+			if (path === undefined) {
 				throw new Exception("KOI", "localizeApplication", "path", "undefined", "Must declare a localization path.");
 			}
 			
-			$.ajax(
-			{
+			$.ajax({
 				url: path + "/" + language + ".json",
 				type: "GET",
 				dataType: "json",
-				success: function (data)
-				{
+				success: function (data) {
 					$.extend(_.localization, data);
 					_.readyQueue.localization = true;
 					_.trigger("localization-loaded");
 					_.makeReady();
 				},
-				error: function ()
-				{
+				error: function () {
 					throw new Exception("KOI", "localizeApplication", "document", "invalid", "The localization document could not be loaded");
 				},
 				cache: false
@@ -1410,8 +1287,7 @@
 		/**
 		 *	Constructor.
 		 */
-		init: function ()
-		{
+		init: function () {
 			this.__delegate = $({});
 			this.isReady = false;
 		},
@@ -1423,32 +1299,28 @@
 		/**
 		 *	Plugin specific alias of jQuery.bind
 		 */
-		bind: function ()
-		{
+		bind: function () {
 			this.__delegate.bind.apply(this.__delegate, arguments);
 		},
 		
 		/**
 		 *	Plugin specific alias of jQuery.triggerHandler
 		 */
-		trigger: function ()
-		{
+		trigger: function () {
 			this.__delegate.triggerHandler.apply(this.__delegate, arguments);
 		},
 		
 		/**
 		 *	Plugin specific alias of jQuery.one
 		 */
-		one: function ()
-		{
+		one: function () {
 			this.__delegate.one.apply(this.__delegate, arguments);
 		},
 		
 		/**
 		 *	Plugin specific alias of jQuery.unbind
 		 */
-		unbind: function ()
-		{
+		unbind: function () {
 			this.__delegate.update.apply(this.__delegate, arguments);
 		},
 		
@@ -1457,14 +1329,10 @@
 		 *
 		 *	@param listener The listener to notify when the module is ready.
 		 */
-		ready: function (listener)
-		{
-			if (this.isReady)
-			{
+		ready: function (listener) {
+			if (this.isReady) {
 				_.notify("ready", listener, this);
-			}
-			else
-			{
+			} else {
 				this.bind('ready', listener);
 			}
 		},
@@ -1472,10 +1340,8 @@
 		/**
 		 *	Mark this module as ready.
 		 */
-		makeReady: function ()
-		{
-			if (this.isReady)
-			{
+		makeReady: function () {
+			if (this.isReady) {
 				return;
 			}
 			
@@ -1496,8 +1362,8 @@
 	 *	The base plugin class only contains some very basic reference accessors to the KOI framework,
 	 *	as well as some extensibility methods.
 	 */
-	_.module.plugin = _.module.eventdispatcher.extend(
-	{
+	_.module.plugin = _.module.eventdispatcher.extend({
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -1526,8 +1392,7 @@
 		 *
 		 *	@param name The name of the plugin. This plugin will be accessible via KOI.<name>
 		 */
-		init: function (name)
-		{
+		init: function (name) {
 			this.name = name;
 			this._super();
 		},
@@ -1542,12 +1407,10 @@
 		 *	@param definition	An object containing the methods and properties to add to this 
 		 *						plugin instance
 		 */
-		build: function (definition)
-		{
+		build: function (definition) {
 			$.extend(this, definition);
 			
-			if (!this.__disableAutoReady && !this.isReady)
-			{
+			if (!this.__disableAutoReady && !this.isReady) {
 				this.makeReady();
 			}
 		},
@@ -1555,10 +1418,8 @@
 		/**
 		 *	Make this plugin ready if it's internal requirements are met.
 		 */
-		makeReady: function ()
-		{
-			if (!_.isReady)
-			{
+		makeReady: function () {
+			if (!_.isReady) {
 				return;
 			}
 			
@@ -1580,8 +1441,7 @@
 	 *
 	 *	@return	True if the item is valid, false otherwise.
 	 */
-	window.isValid = function (data)
-	{
+	window.isValid = function (data) {
 		return data !== undefined && data !== null;
 	};
 	
@@ -1600,8 +1460,8 @@
 	 *	By extending the Error class, the cross browser property "message" is defined
 	 *	for this class.
 	 */
-	window.Exception = Class.extend.call(Error,
-	{
+	window.Exception = Class.extend.call(Error, {
+	
 		//------------------------------
 		//  Properties
 		//------------------------------
@@ -1652,8 +1512,7 @@
 		 *
 		 *	@param description	The description of the error.
 		 */
-		init: function (closure, method, property, value, description)
-		{
+		init: function (closure, method, property, value, description) {
 			this.closure = closure;
 			this.method = method;
 			this.property = property;
@@ -1670,39 +1529,32 @@
 		/**
 		 *	Override the toString method to return a properly formatted excpetion.
 		 */
-		toString: function ()
-		{
+		toString: function () {
 			var buffer = [];
 
-			if (this.closure)
-			{
+			if (this.closure) {
 				buffer.push(this.closure);
 			}
 			
-			if (this.method)
-			{
+			if (this.method) {
 				buffer.push(this.method);
 			}
 			
 			buffer = buffer.join(".");
 			
-			if (this.property)
-			{
-				if (buffer.length > 0)
-				{
+			if (this.property) {
+				if (buffer.length > 0) {
 					buffer += ":";
 				}
 				
 				buffer += this.property;
 			}
 			
-			if (this.value)
-			{
+			if (this.value) {
 				buffer += '{' + this.value + '}';
 			}
 			
-			if (this.description)
-			{
+			if (this.description) {
 				buffer += '[' + this.description + ']';
 			}
 		
@@ -1717,8 +1569,8 @@
 	/**
 	 *	Exceptions specific to modules.
 	 */
-	window.ModuleException = window.Exception.extend(
-	{
+	window.ModuleException = window.Exception.extend({
+	
 		//------------------------------
 		//  Properties
 		//------------------------------
@@ -1745,8 +1597,7 @@
 		 *
 		 *	@param description	The description of the error.
 		 */
-		init: function (module, method, property, value, description)
-		{
+		init: function (module, method, property, value, description) {
 			this.module = module;
 			
 			this._super("KOI.module." + module, method, property, value, description);
@@ -1760,8 +1611,8 @@
 	/**
 	 *	Exceptions specific to interfaces.
 	 */
-	window.InterfaceException = window.ModuleException.extend(
-	{	
+	window.InterfaceException = window.ModuleException.extend({
+		
 		//------------------------------
 		//  Constructor
 		//------------------------------
@@ -1773,8 +1624,7 @@
 		 *
 		 *	@param method		The method which raised the error.
 		 */
-		init: function (module, method)
-		{
+		init: function (module, method) {
 			this._super(module, method, undefined, undefined, "Interface improperly implemented");
 		}
 	});
@@ -1786,8 +1636,8 @@
 	/**
 	 *	Exceptions specific to plugins.
 	 */
-	window.PluginException = window.Exception.extend(
-	{
+	window.PluginException = window.Exception.extend({
+	
 		//------------------------------
 		//  Properties
 		//------------------------------
@@ -1814,8 +1664,7 @@
 		 *
 		 *	@param description	The description of the error.
 		 */
-		init: function (plugin, method, property, value, description)
-		{
+		init: function (plugin, method, property, value, description) {
 			this.plugin = plugin;
 			
 			this._super("KOI." + plugin, method, property, value, description);
@@ -1833,12 +1682,10 @@
 	 *
 	 *	@param event	The event object.
 	 */
-	$(".pathing-link").live("click", function (event)
-	{
+	$(".pathing-link").live("click", function (event) {
 		event.preventDefault();
 		
-		if ($(this).hasClass("disabled-link"))
-		{
+		if ($(this).hasClass("disabled-link")) {
 			return;
 		}
 		
@@ -1848,14 +1695,10 @@
 			
 			target = element.attr("target");
 		
-		if (_.pathing[to] !== undefined)
-		{
-			if (target.length === 0)
-			{
+		if (_.pathing[to] !== undefined) {
+			if (target.length === 0) {
 				window.location = _.pathing[to];
-			}
-			else
-			{
+			} else {
 				window.open(_.pathing[to], target);
 			}
 		}
@@ -1866,12 +1709,10 @@
 	 *
 	 *	@param event	The event object.
 	 */
-	$(".event-link").live("click", function (event)
-	{
+	$(".event-link").live("click", function (event) {
 		event.preventDefault();
 		
-		if ($(this).hasClass("disabled-link"))
-		{
+		if ($(this).hasClass("disabled-link")) {
 			return;
 		}
 		
@@ -1885,8 +1726,7 @@
 	 *
 	 *	@param event	The event object.
 	 */
-	$(".disabled-link").live("click", function (event)
-	{
+	$(".disabled-link").live("click", function (event) {
 		event.preventDefault();
 	});
 	
@@ -1895,12 +1735,10 @@
 	 *
 	 *	@param event	The event object.
 	 */
-	$(".refresh-link").live("click", function (event)
-	{
+	$(".refresh-link").live("click", function (event) {
 		event.preventDefault();
 		
-		if ($(this).hasClass("disabled-link"))
-		{
+		if ($(this).hasClass("disabled-link")) {
 			return;
 		}
 		
@@ -1917,8 +1755,7 @@
 	//  Localization Hook
 	//------------------------------
 	
-	if (localization_config !== null)
-	{
+	if (localization_config !== null) {
 		_.readyQueue.localization = false;
 	}
 	
@@ -1934,16 +1771,13 @@
 	 *	wrapping, which is binding to either the jQuery ready or any 
 	 *	system/koi events.
 	 */
-	if (!application("allowExceptions", true))
-	{
+	if (!application("allowExceptions", true)) {
 		jQuery.prototype.ready = _.hook(jQuery.prototype.ready, exceptionConsumer);
 		jQuery.ready = _.hook(jQuery.ready, exceptionConsumer);
 		jQuery.event.handle = _.hook(jQuery.event.handle, exceptionConsumer);
 		jQuery.handleError = _.hook(jQuery.handleError, exceptionConsumer);
-		jQuery.ajax = _.hook(jQuery.ajax, function (settings)
-		{
-			if (settings.success)
-			{
+		jQuery.ajax = _.hook(jQuery.ajax, function (settings) {
+			if (settings.success) {
 				settings.success = _.hook(settings.success, exceptionConsumer);
 			}
 			
@@ -1955,8 +1789,7 @@
 	//  Application Ready Handler
 	//------------------------------
 	
-	_.bind('application-ready', function ()
-	{
+	_.bind('application-ready', function () {
 		_.applicationReady = true;
 		$('#koi-application-loading').hide();
 		$('#koi-application-wrapper').show().removeClass("not-loaded");
@@ -1970,19 +1803,15 @@
 	 *	Unless a plugin overrides the platform's ready handler, we want to dispatch a platform ready on
 	 *	document ready.
 	 */
-	$(function ()
-	{
-		$('meta[scheme="koi"]').each(function ()
-		{
+	$(function () {
+		$('meta[scheme="koi"]').each(function () {
 			var tag = $(this).remove();
 		
 			_.metadata[tag.attr('name')] = tag.attr('content');
 		});
 		
-		if (_.metadata.typekit !== undefined)
-		{
-			$.each(_.metadata.typekit.split(","), function (index, kit)
-			{
+		if (_.metadata.typekit !== undefined) {
+			$.each(_.metadata.typekit.split(","), function (index, kit) {
 				_.embedTypekit(kit);
 			});
 		}

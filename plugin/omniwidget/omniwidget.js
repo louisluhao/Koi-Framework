@@ -7,14 +7,13 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global PluginException, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{	
+(function ($) {	
+
+	"use strict";
 
 	//------------------------------
 	//
@@ -111,8 +110,7 @@
 	 *
 	 *	@param widget			The omniwidget to setup.
 	 */
-	function setup(widget)
-	{
+	function setup(widget) {
 		//	Grab our configuration.
 		var configuration = widget.__configuration;
 	
@@ -120,8 +118,7 @@
 		//  Classes
 		//------------------------------
 	
-		if (configuration.className)
-		{
+		if (configuration.className) {
 			widget.__element.addClass(configuration.className);
 		}
 		
@@ -129,8 +126,7 @@
 		//  Embedding
 		//------------------------------
 		
-		if (widget.__parent !== undefined)
-		{
+		if (widget.__parent !== undefined) {
 			widget.__parent.append(widget.__element);
 		}
 		
@@ -138,11 +134,9 @@
 		//  Resizable
 		//------------------------------
 		
-		if (widget.__resizable)
-		{
+		if (widget.__resizable) {
 			widget.__footer.append(WIDGET_RESIZE_TEMPLATE);
-			widget.__element.addClass("omniwidget-resizable").resizable($.extend(true, {}, 
-			{
+			widget.__element.addClass("omniwidget-resizable").resizable($.extend(true, {}, {
 				handles: "se"
 			}, configuration.resizableOptions));
 		}
@@ -151,10 +145,8 @@
 		//  Draggable
 		//------------------------------
 		
-		if (widget.__draggable)
-		{
-			widget.__element.addClass("omniwidget-draggable").draggable($.extend(true, {}, 
-			{
+		if (widget.__draggable) {
+			widget.__element.addClass("omniwidget-draggable").draggable($.extend(true, {}, {
 				handle: ".omniwidget-header"
 			}, configuration.draggableOptions));
 		}
@@ -163,11 +155,9 @@
 		//  Closeable
 		//------------------------------
 		
-		if (widget.__closeable)
-		{
+		if (widget.__closeable) {
 			widget.__element.addClass("omniwidget-closeable");
-			widget.__header.append($(WIDGET_CLOSE_TEMPLATE).html(configuration.closeText || '').click(function (event)
-			{
+			widget.__header.append($(WIDGET_CLOSE_TEMPLATE).html(configuration.closeText || '').click(function (event) {
 				event.preventDefault();
 				
 				widget.hide();
@@ -178,30 +168,24 @@
 		//  Inheritable
 		//------------------------------
 		
-		if (widget.__inheritable)
-		{
+		if (widget.__inheritable) {
 			widget.__element.addClass("omniwidget-inheritable");
-			widget.__header.append($(WIDGET_INHERIT_TEMPLATE).attr(
-			{
+			widget.__header.append($(WIDGET_INHERIT_TEMPLATE).attr({
 				href: (configuration.inheritableTarget || inheritableTarget) + '#' + widget.name,
 				rel: configuration.inheritableWindowOptions || inheritableWindowOptions,
 				target: ("omniwidget_" + widget.name).replace("-", "_")
 			}).html(configuration.inheritableText || ''));
 			widget.__content = new KOI.module.jset(widget.__content);
 			
-			KOI.bind("framework-inherited-" + widget.name, function (event, proxy, child)
-			{
+			KOI.bind("framework-inherited-" + widget.name, function (event, proxy, child) {
 				child.document.title = widget.inheritableTitle || widget.title || "";
 				
-				child.__inheritUnload = function ()
-				{
+				child.__inheritUnload = function () {
 					widget.trigger("inheritUnload", [proxy]);
 				};
 				
-				proxy(function ()
-				{
-					if (widget.inheritStyles.length > 0)
-					{
+				proxy(function () {
+					if (widget.inheritStyles.length > 0) {
 						KOI.createStylesheet(widget.inheritStyles, proxy("head"));
 					}
 					
@@ -209,31 +193,26 @@
 					
 					widget.__content._set_add(proxy("body").find(".omniwidget-content"));
 					
-					setTimeout(function ()
-					{
+					setTimeout(function () {
 						widget.trigger("inherit-ready", [proxy, widget]);
 					}, INHERIT_READY_DELAY);
 				});
 				
 				widget.__header.find(".omniwidget-inherit").hide();
 				
-				if (widget.closeOnInherit)
-				{
+				if (widget.closeOnInherit) {
 					widget.hide();
 					widget.inheritClosed = true;
 				}
 				
-				$.each(widget.__liveEvents, function (type, events)
-				{
-					$.each(events, function (index, event)
-					{
+				$.each(widget.__liveEvents, function (type, events) {
+					$.each(events, function (index, event) {
 						proxy(event.selector).live(type, event.listener);
 					});
 				});
 			});
 			
-			KOI.bind("inherited-child-close-" + widget.name, function (event)
-			{
+			KOI.bind("inherited-child-close-" + widget.name, function (event) {
 				widget.__content._set_empty();
 				widget.__content._set_add(widget.__element.find(".omniwidget-content"));
 				
@@ -241,19 +220,14 @@
 				
 				widget.__header.find(".omniwidget-inherit").show();
 
-				if (widget.closeOnInherit)
-				{
+				if (widget.closeOnInherit) {
 					widget.inheritClosed = false;
 				}
 				
-				if (widget.openOnInheritClose)
-				{	
-					if (widget.skipNextInheritCloseShow)
-					{
+				if (widget.openOnInheritClose) {	
+					if (widget.skipNextInheritCloseShow) {
 						widget.skipNextInheritCloseShow = false;
-					}
-					else
-					{
+					} else {
 						widget.show();
 					}
 				}
@@ -264,8 +238,7 @@
 		//  Title
 		//------------------------------
 		
-		if (widget.title)
-		{
+		if (widget.title) {
 			widget.__element.find(".omniwidget-title").html(widget.title);
 		}
 		
@@ -273,15 +246,11 @@
 		//  Content
 		//------------------------------
 		
-		//	Inject content if we have a selector.
-		if (configuration.inject !== undefined)
-		{
+		if (configuration.inject !== undefined) {
+			//	Inject content if we have a selector.
 			widget.injectContent(configuration.inject);
-		}
-		
-		//	Set content if we're given the raw HTML.
-		else if (configuration.content !== undefined)
-		{
+		} else if (configuration.content !== undefined) {
+			//	Set content if we're given the raw HTML.
 			widget.setContent(configuration.content);
 		}
 		
@@ -298,8 +267,8 @@
 	//
 	//------------------------------
 	
-	_.build(
-	{
+	_.build({
+	
 		//------------------------------
 		//  Methods
 		//------------------------------
@@ -356,10 +325,8 @@
 		 *		inheritStyles: <arrayOfStyles>
 		 *	}
 		 */
-		create: function (name, configuration)
-		{
-			if (widgets[name] !== undefined)
-			{
+		create: function (name, configuration) {
+			if (widgets[name] !== undefined) {
 				throw new PluginException("omniwidget", "create", "name", name, "Namespace collision");
 			}
 			
@@ -373,10 +340,8 @@
 		 *
 		 *	@param name	The name of the widget to get.
 		 */
-		get: function (name)
-		{
-			if (widgets[name] === undefined)
-			{
+		get: function (name) {
+			if (widgets[name] === undefined) {
 				throw new PluginException("omniwidget", "get", "name", name, "Not defined");
 			}
 			
@@ -393,8 +358,8 @@
 	/**
 	 *	Create the omniwidget module.
 	 */
-	KOI.module.omniwidget = KOI.module.eventdispatcher.extend(
-	{
+	KOI.module.omniwidget = KOI.module.eventdispatcher.extend({
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -519,8 +484,7 @@
 		 *	
 		 *	@param configuration	A configuration object for this widget. See the plugin definition for signature.
 		 */
-		init: function (name, configuration)
-		{
+		init: function (name, configuration) {
 			this._super();
 			
 			configuration = configuration || {};
@@ -552,12 +516,9 @@
 			
 			var self = this;
 			
-			if (configuration.liveEvents !== undefined)
-			{
-				$.each(configuration.liveEvents, function (type, events)
-				{
-					$.each(events, function (index, event)
-					{
+			if (configuration.liveEvents !== undefined) {
+				$.each(configuration.liveEvents, function (type, events) {
+					$.each(events, function (index, event) {
 						self.liveBind(type, event.selector, event.listener);
 					});
 				});
@@ -577,15 +538,12 @@
 		 *
 		 *	@param listener		The listener to bind.
 		 */
-		liveBind: function (eventType, selector, listener)
-		{
-			if (this.__liveEvents[eventType] === undefined)
-			{
+		liveBind: function (eventType, selector, listener) {
+			if (this.__liveEvents[eventType] === undefined) {
 				this.__liveEvents[eventType] = [];
 			}
 			
-			this.__liveEvents[eventType].push(
-			{
+			this.__liveEvents[eventType].push({
 				selector: selector,
 				
 				listener: listener
@@ -597,10 +555,8 @@
 		/**
 		 *	Make the widget ready.
 		 */
-		makeReady: function ()
-		{
-			if (this.__showOnReady)
-			{
+		makeReady: function () {
+			if (this.__showOnReady) {
 				this.show();
 			}
 			
@@ -612,8 +568,7 @@
 		 *
 		 *	@return	The header area for the widget.
 		 */
-		header: function ()
-		{
+		header: function () {
 			return this.__header;
 		},
 		
@@ -622,8 +577,7 @@
 		 *
 		 *	@return	The content area for the widget.
 		 */
-		content: function ()
-		{
+		content: function () {
 			return this.__content;
 		},
 		
@@ -632,18 +586,15 @@
 		 *
 		 *	@return	The footer area for the widget.
 		 */
-		footer: function ()
-		{
+		footer: function () {
 			return this.__footer;
 		},
 		
 		/**
 		 *	Show the widget.
 		 */
-		show: function ()
-		{
-			if (this.inheritClosed)
-			{
+		show: function () {
+			if (this.inheritClosed) {
 				return;
 			}
 			
@@ -655,10 +606,8 @@
 		/**
 		 *	Hide the widget.
 		 */
-		hide: function ()
-		{
-			if (this.inheritClosed)
-			{
+		hide: function () {
+			if (this.inheritClosed) {
 				return;
 			}
 			
@@ -670,14 +619,10 @@
 		/**
 		 *	Toggle the state of the gallery.
 		 */
-		toggle: function ()
-		{
-			if (this.open)
-			{
+		toggle: function () {
+			if (this.open) {
 				this.hide();
-			}
-			else
-			{
+			} else {
 				this.show();
 			}
 		},
@@ -687,8 +632,7 @@
 		 *
 		 *	@param selector	The jQuery selector for the structure to inject.
 		 */
-		injectContent: function (selector)
-		{
+		injectContent: function (selector) {
 			this.setContent($(selector).remove().children().remove());
 		},
 		
@@ -697,10 +641,8 @@
 		 *
 		 *	@param content	The content to set in the widget.
 		 */
-		setContent: function (content)
-		{
-			if (this.isReady)
-			{
+		setContent: function (content) {
+			if (this.isReady) {
 				return;
 			}
 			

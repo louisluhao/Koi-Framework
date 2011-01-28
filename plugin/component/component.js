@@ -1,4 +1,4 @@
-/*!
+/**
  *	Plugin - Component
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,13 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global PluginException, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
 
 	//------------------------------
 	//
@@ -156,8 +155,7 @@
 	 *
 	 *	@return	The path to the component.
 	 */
-	function getPath(instance, version, path)
-	{
+	function getPath(instance, version, path) {
 		return [path || _.path, instance, version, instance].join('/');
 	}
 	
@@ -168,14 +166,11 @@
 	 *
 	 *	@return	True if the component is disabled, false otherwise.
 	 */
-	function disabled(element)
-	{
+	function disabled(element) {
 		var isDisabled = false;
 	
-		$.each(element.attr('class').split(' '), function (index, className)
-		{
-			if ($.inArray(className, _.disabledClasses) !== -1)
-			{
+		$.each(element.attr('class').split(' '), function (index, className) {
+			if ($.inArray(className, _.disabledClasses) !== -1) {
 				isDisabled = true;
 				return false;
 			}
@@ -193,33 +188,28 @@
 	 *
 	 *	@param id	The component to process.
 	 */
-	function process(id)
-	{
+	function process(id) {
 		var definition = components[id],
 		
 			required_index = $.inArray(id, required);
 
 		if (!definition.html || 
-			(definition.javascript !== null && !definition.javascript) ||
-			(definition.stylesheet !== null && !definition.stylesheet))
-		{
+				(definition.javascript !== null && !definition.javascript) ||
+				(definition.stylesheet !== null && !definition.stylesheet)) {
 			return;
 		}
 		
-		if (KOI.typecheck(definition.processor, "Function"))
-		{
+		if (KOI.typecheck(definition.processor, "Function")) {
 			definition.processor(definition.target);	
 		}
 		
 		definition.loaded = true;
 		
-		if (required_index !== -1)
-		{
+		if (required_index !== -1) {
 			required.splice(required_index, 1);
 		}
 		
-		if (required.length === 0)
-		{
+		if (required.length === 0) {
 			KOI.readyQueue.components = true;
 			KOI.makeReady();
 		}		
@@ -238,8 +228,7 @@
 	 *	
 	 *	@param data	The HTML for a component.
 	 */
-	function documentHandler(data)
-	{
+	function documentHandler(data) {
 			/**
 			 *	The component definition.
 			 *	JSLint complains about strict violation here. It's not.
@@ -258,8 +247,7 @@
 		definition.target = element;
 		
 		//	Inject content.
-		if (definition.content !== undefined)
-		{
+		if (definition.content !== undefined) {
 			$(".koi-component-content-receiver:first", element).replaceWith(definition.content);
 		}
 		
@@ -270,8 +258,7 @@
 		_.load();
 		
 		if (KOI.localization.components !== undefined &&
-			KOI.localization.components[definition.instance] !== undefined)
-		{
+				KOI.localization.components[definition.instance] !== undefined) {
 			KOI.localize(["components", definition.instance], element);
 		}
 		
@@ -291,12 +278,9 @@
 	 *
 	 *	@param id	The id of the component.
 	 */
-	function loadStylesheet(item, id)
-	{
-		KOI.styleloader.load("component-" + id, item + ".css", function (event, sheet)
-		{
-			if (KOI.development)
-			{
+	function loadStylesheet(item, id) {
+		KOI.styleloader.load("component-" + id, item + ".css", function (event, sheet) {
+			if (KOI.development) {
 				item = item.split("/");
 				item.pop();
 				item = item.join("/");
@@ -315,10 +299,8 @@
 	 *
 	 *	@param path	The path to load the component from.
 	 */
-	function loadScript(path)
-	{	
-		$.ajax(
-		{
+	function loadScript(path) {	
+		$.ajax({
 			url: path + ".js",
 			cache: false,
 			type: "GET",
@@ -331,17 +313,14 @@
 	 *
 	 *	@param path	The path to load the component from.
 	 */
-	function loadHTML(path, id)
-	{
-		$.ajax(
-		{
+	function loadHTML(path, id) {
+		$.ajax({
 			url: path + ".html",
 			success: documentHandler,
 			cache: false,
 			type: "GET",
 			dataType: "html",
-			context:
-			{
+			context: {
 				id: id
 			}
 		});
@@ -353,8 +332,8 @@
 	//
 	//------------------------------
 	
-	_.build(
-	{
+	_.build({
+	
 		//------------------------------
 		//  Properties
 		//------------------------------
@@ -376,8 +355,7 @@
 		/**
 		 *	Load components which are active in the document.
 		 */
-		load: function ()
-		{
+		load: function () {
 			$('.koi-component').trigger('load-component');
 		},
 		
@@ -386,10 +364,8 @@
 		 *
 		 *	@param id	The component id.
 		 */
-		loaded: function (id)
-		{
-			if (components[id] === undefined)
-			{
+		loaded: function (id) {
+			if (components[id] === undefined) {
 				return false;
 			}
 			
@@ -401,8 +377,7 @@
 		 *
 		 *	@return	The component specifications object.
 		 */
-		instances: function ()
-		{
+		instances: function () {
 			return $.extend(true, {}, instances);
 		},
 		
@@ -411,8 +386,7 @@
 		 *
 		 *	@return	The component specifications object.
 		 */
-		specifications: function ()
-		{
+		specifications: function () {
 			return $.extend(true, {}, specifications);
 		},
 	
@@ -425,20 +399,16 @@
 		 *
 		 *	@param content		Optional content to inject into the component, if supported.
 		 */
-		register: function (id, target, content)
-		{
-			if (instances[id] === undefined)
-			{
+		register: function (id, target, content) {
+			if (instances[id] === undefined) {
 				throw new PluginException("component", "register", "id", id, "No instance registered");
 			}
 			
-			if (specifications[instances[id]] === undefined)
-			{
+			if (specifications[instances[id]] === undefined) {
 				throw new PluginException("component", "register", "instance", instances[id], "No specification listed");
 			}
 		
-			if (components[id] !== undefined)
-			{
+			if (components[id] !== undefined) {
 				throw new PluginException("component", "register", "id", id, "Namespace collision");
 			}
 			
@@ -455,8 +425,7 @@
 				/**
 				 *	The definition for this component.
 				 */
-				definition = 
-				{
+				definition = {
 					instance: instance,
 					
 					html: false,
@@ -477,17 +446,14 @@
 				 */
 				basePath = getPath(instance, specification.version);
 			
-			if (content !== undefined)
-			{
+			if (content !== undefined) {
 				definition.content = content;
 			}
 
 			components[id] = definition;
 			
-			$.each(specification.composition, function (index, type)
-			{
-				switch ($.trim(type))
-				{
+			$.each(specification.composition, function (index, type) {
+				switch ($.trim(type)) {
 				
 				case "stylesheet":
 					definition.stylesheet = false;
@@ -514,11 +480,9 @@
 		 *
 		 *	@param fn	The processor function to trigger when the component is ready.
 		 */
-		process: function (name, fn)
-		{
+		process: function (name, fn) {
 			//	Only allow processors which have been stubbed in.
-			if (processors[name] === undefined)
-			{
+			if (processors[name] === undefined) {
 				throw new PluginException("component", "process", "name", name, "Not registered");
 			}
 			
@@ -538,8 +502,8 @@
 	/**
 	 *	Exceptions specific to components.
 	 */
-	window.ComponentException = window.Exception.extend(
-	{
+	window.ComponentException = window.Exception.extend({
+	
 		//------------------------------
 		//  Properties
 		//------------------------------
@@ -566,8 +530,7 @@
 		 *
 		 *	@param description	The description of the error.
 		 */
-		init: function (component, method, property, value, description)
-		{
+		init: function (component, method, property, value, description) {
 			this.component = component;
 			
 			this._super("KOI.component<" + component + ">", method, property, value, description);
@@ -594,8 +557,7 @@
 	 *	innerHTML:	If the component defines an injection area for content, the content within the code block
 	 *				will be injected into the content receiver.
 	 */
-	$('.koi-component').live('load-component', function ()
-	{
+	$('.koi-component').live('load-component', function () {
 			/**
 			 *	The element representing a component.
 			 */
@@ -611,8 +573,7 @@
 			 */
 			content;
 		
-		if (disabled(element))
-		{
+		if (disabled(element)) {
 			return;
 		}
 		
@@ -622,8 +583,7 @@
 		/**
 		 *	If the element contains children, they are for content injection.
 		 */
-		if (element.children().length > 0)
-		{
+		if (element.children().length > 0) {
 			content = element.children().remove();
 		}
 		
@@ -640,8 +600,7 @@
 	//  Ready interruption
 	//------------------------------
 
-	if (required.length > 0)
-	{
+	if (required.length > 0) {
 		KOI.readyQueue.components = false;
 	}
 	
@@ -649,10 +608,8 @@
 	//	 On Ready
 	//------------------------------
 		
-	KOI.bind("platform-initialized", function () 
-	{
-		$(function ()
-		{
+	KOI.bind("platform-initialized", function () {
+		$(function () {
 			_.load();
 		});
 	});

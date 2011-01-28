@@ -1,4 +1,4 @@
-/*!
+/**
  *	Plugin - ContentShuffler
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,13 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
+/*global InterfaceException, PluginException, ModuleException, KOI, Class, window, jQuery */
 
-/*global PluginException, ModuleException, KOI, Class, window, jQuery */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: false, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+(function ($) {	
 
-(function ($) 
-{	
+	"use strict";
 
 	//------------------------------
 	//
@@ -68,8 +67,8 @@
 	//
 	//------------------------------
 	
-	_.build(
-	{
+	_.build({
+	
 		//------------------------------
 		//  Methods
 		//------------------------------
@@ -83,10 +82,8 @@
 		 *
 		 *	@param transition	A transition object for processing effects.
 		 */
-		create: function (name, display, transition)
-		{
-			if (decks[name] !== undefined)
-			{
+		create: function (name, display, transition) {
+			if (decks[name] !== undefined) {
 				throw new PluginException("contentshuffler", "create", "name", name, "Namespace collision");
 			}
 			
@@ -100,10 +97,8 @@
 		 *
 		 *	@param name	The name of the contentdeck to get.
 		 */
-		get: function (name)
-		{
-			if (decks[name] === undefined)
-			{
+		get: function (name) {
+			if (decks[name] === undefined) {
 				throw new PluginException("contentshuffler", "get", "name", undefined, "Not defined");
 			}
 			
@@ -125,8 +120,8 @@
 	 *	Create the contentshuffler class, which contains a Timer to dispatch
 	 *	render events.
 	 */
-	KOI.module.contentshuffler = KOI.module.eventdispatcher.extend(
-	{
+	KOI.module.contentshuffler = KOI.module.eventdispatcher.extend({
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -188,8 +183,7 @@
 		 *
 		 *	@param transition	The transition function to use when swapping content, if any.
 		 */
-		init: function (display, transition)
-		{
+		init: function (display, transition) {
 			this._super();
 		
 			var self = this;
@@ -197,25 +191,19 @@
 			this.__display = display;
 			this.__providers = {};
 			this.__order = [];
-			this.__timer = new KOI.module.timer(function ()
-			{
+			this.__timer = new KOI.module.timer(function () {
 				self.__switchContent();
 			}, 0, false);
 			
-			if (!$.isFunction(transition))
-			{
-				this.__transition = function (element, state, complete)
-				{
+			if (!$.isFunction(transition)) {
+				this.__transition = function (element, state, complete) {
 					complete.call();
-				}
-			}
-			else
-			{
+				};
+			} else {
 				this.__transition = transition;
 			}
 			
-			this.ready(function ()
-			{
+			this.ready(function () {
 				self.__switchContent();
 			});
 		},
@@ -227,26 +215,21 @@
 		/**
 		 *	Sets the readyness of this contentdeck.
 		 */
-		makeReady: function ()
-		{
-			if ($.isEmptyObject(this.__providers))
-			{
+		makeReady: function () {
+			if ($.isEmptyObject(this.__providers)) {
 				return;
 			}
 		
 			var readyable = true;
 		
-			$.each(this.__providers, function (index, provider)
-			{
-				if (!provider.isReady)
-				{
+			$.each(this.__providers, function (index, provider) {
+				if (!provider.isReady) {
 					readyable = false;
 					return false;
 				}
 			});
 		
-			if (!readyable)
-			{
+			if (!readyable) {
 				return;
 			}
 		
@@ -258,28 +241,22 @@
 		 *
 		 *	@param provider	The data provider to add. Must be an instance of shuffleprovider.
 		 */
-		addProvider: function (provider)
-		{
-			if (!(provider instanceof KOI.module.shuffleprovider))
-			{
+		addProvider: function (provider) {
+			if (!(provider instanceof KOI.module.shuffleprovider)) {
 				throw new ModuleException("contentshuffler", "addProvider", "provider", undefined, "Must be instanceof KOI.module.shuffleprovider");
 			}
 			
-			if (this.__providers[provider.name] !== undefined)
-			{
+			if (this.__providers[provider.name] !== undefined) {
 				throw new ModuleException("contentshuffler", "addProvider", "provider.name", provider.name, "Namespace collision");
 			}
 			
 			this.__providers[provider.name] = provider;
 			
-			if (!provider.excludeFromShuffle)
-			{
+			if (!provider.excludeFromShuffle) {
 				this.__order.push(provider.name);
 			}
 			
 			this.__shuffle();
-			
-			var self = this;
 		},
 		
 		/**
@@ -289,10 +266,8 @@
 		 *
 		 *	@return	The provider.
 		 */
-		getProvider: function (name)
-		{
-			if (this.__providers[name] === undefined)
-			{
+		getProvider: function (name) {
+			if (this.__providers[name] === undefined) {
 				throw new ModuleException("contentshuffler", "getProvider", "name", name, "Not defined");
 			}
 			
@@ -302,14 +277,11 @@
 		/**
 		 *	Wait for the ready event.
 		 */
-		waitForReady: function ()
-		{
+		waitForReady: function () {
 			var self = this;
 			
-			$.each(this.__providers, function (name, provider)
-			{
-				provider.ready(function ()
-				{
+			$.each(this.__providers, function (name, provider) {
+				provider.ready(function () {
 					provider.__display.appendTo(self.__display);
 					self.makeReady();
 				});
@@ -323,8 +295,7 @@
 		/**
 		 *	Shuffle the order of the content providers.
 		 */
-		__shuffle: function ()
-		{
+		__shuffle: function () {
 			var length = this.__order.length,
 			
 				index = length - 1,
@@ -333,8 +304,7 @@
 				
 				buffer;
 				
-			for (; index > 0; index--)
-			{
+			for (; index > 0; index--) {
 				swapkey = Math.floor(Math.random() * (index + 1));
 				buffer = this.__order[index];
 				this.__order[index] = this.__order[swapkey];
@@ -347,21 +317,15 @@
 		 *
 		 *	@param content	The name of the content provider to switch to.
 		 */
-		__switchContent: function (content)
-		{
-			if (content === undefined)
-			{
-				if (this.__currentIndex === undefined)
-				{
+		__switchContent: function (content) {
+			if (content === undefined) {
+				if (this.__currentIndex === undefined) {
 					this.__currentIndex = 0;
-				}
-				else
-				{
+				} else {
 					this.__currentIndex += 1;
 				}
 				
-				if (this.__currentIndex >= this.__order.length)
-				{
+				if (this.__currentIndex >= this.__order.length) {
 					this.__currentIndex = 0;
 				}
 				
@@ -370,10 +334,8 @@
 		
 			var self = this;
 		
-			this.__setCurrentProvider(content, function ()
-			{
-				self.__transition(self.__getCurrentProvider().__display, "in", function ()
-				{
+			this.__setCurrentProvider(content, function () {
+				self.__transition(self.__getCurrentProvider().__display, "in", function () {
 					self.__getCurrentProvider().activate();
 					self.__timer.stop();
 					
@@ -391,26 +353,20 @@
 		 *
 		 *	@param callback	The callback to trigger when the transition completes.
 		 */
-		__setCurrentProvider: function (name, callback)
-		{
-			if (this.__providers[name] === undefined)
-			{
+		__setCurrentProvider: function (name, callback) {
+			if (this.__providers[name] === undefined) {
 				throw new ModuleException("contentshuffler", "__setCurrentProvider", "name", undefined, "Not defined");
 			}
 			
 			var self = this;
 			
-			if (!(this.__currentProvider === undefined || this.__currentProvider === null))
-			{
-				this.__transition(this.__getCurrentProvider().__display, "out", function ()
-				{
+			if (!(this.__currentProvider === undefined || this.__currentProvider === null)) {
+				this.__transition(this.__getCurrentProvider().__display, "out", function () {
 					self.__getCurrentProvider().idle();
 					self.__currentProvider = name;
 					callback.call();
 				});
-			}
-			else
-			{
+			} else {
 				this.__currentProvider = name;
 				callback.call();
 			}	
@@ -421,10 +377,8 @@
 		 *
 		 *	@return	The current active provider.
 		 */
-		__getCurrentProvider: function ()
-		{
-			if (this.__currentProvider === undefined || this.__currentProvider === null)
-			{
+		__getCurrentProvider: function () {
+			if (this.__currentProvider === undefined || this.__currentProvider === null) {
 				throw new ModuleException("contentshuffler", "__getCurrentProvider", "__currentProvider", undefined, "Not defined");
 			}
 			
@@ -440,8 +394,8 @@
 	 *	Create the shuffleprovider class, which is designed to work with the
 	 *	contentshuffler.
 	 */
-	KOI.module.shuffleprovider = KOI.module.eventdispatcher.extend(
-	{
+	KOI.module.shuffleprovider = KOI.module.eventdispatcher.extend({
+	
 		//------------------------------
 		//  Internal Properties
 		//------------------------------
@@ -487,16 +441,12 @@
 		 *
 		 *	@param exclude		Should this be exluded from the shuffle? Default is false.
 		 */
-		init: function (name, display, duration, exclude)
-		{
+		init: function (name, display, duration, exclude) {
 			duration = parseInt(duration, 10);
 			
-			if (isNaN(duration))
-			{
+			if (isNaN(duration)) {
 				this.duration = DEFAULT_PROVIDER_DURATION;
-			}
-			else
-			{
+			} else {
 				this.duration = duration;
 			}
 		
@@ -517,24 +467,21 @@
 		 *
 		 *	@param configuration	The configuration for this object.
 		 */
-		configure: function (configuration)
-		{
+		configure: function (configuration) {
 			throw new InterfaceException("shuffleprovider", "configure");
 		},
 		
 		/**
 		 *	Activate this provider.
 		 */
-		activate: function ()
-		{
+		activate: function () {
 			this.__display.addClass("active-provider");
 		},
 		
 		/**
 		 *	Idle this provider.
 		 */
-		idle: function ()
-		{
+		idle: function () {
 			this.__display.removeClass("active-provider");
 		}
 		

@@ -1,4 +1,4 @@
-/*!
+/**
  *	Module - TextScroll
  *
  *	Copyright (c) 2010 Knewton
@@ -7,14 +7,14 @@
  *		GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
 
-"use strict";
-
 /*global ModuleException, KOI, Class, window, jQuery */
 
-/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true, maxerr: 50, indent: 4 */
+/*jslint white: true, browser: true, onevar: true, undef: true, eqeqeq: true, bitwise: true, regexp: true, strict: false, newcap: true, immed: true, maxerr: 50, indent: 4 */
 
-(function ($) 
-{
+(function ($) {
+
+	"use strict";
+	
 	//------------------------------
 	//
 	//	 Constants
@@ -40,8 +40,8 @@
 	 *	Phase 2: Full Scroll (moves the remainder of the text out of the viewport)
 	 *	Phase 3: Marquee Scroll	(begins scrolling the text from the other side of the viewport, back to repeat.)
 	 */
-	KOI.module.textscroll = KOI.module.eventdispatcher.extend(
-	{
+	KOI.module.textscroll = KOI.module.eventdispatcher.extend({
+	
 		//------------------------------
 		//	 Internal Properties
 		//------------------------------
@@ -124,15 +124,12 @@
 		 *
 		 *	@param direction	Optional. The direction for scrolling.
 		 */
-		init: function (container, text, speed, margin, direction)
-		{
-			if (direction === undefined)
-			{
+		init: function (container, text, speed, margin, direction) {
+			if (direction === undefined) {
 				direction = "left";
 			}
 		
-			switch (direction.toLowerCase())
-			{
+			switch (direction.toLowerCase()) {
 			
 			case "left":
 				this.__direction = "Left";
@@ -155,8 +152,7 @@
 			
 			this.__setDefaultMargin();
 			
-			if (text !== undefined)
-			{
+			if (text !== undefined) {
 				this.text(text);
 			}
 			
@@ -174,11 +170,9 @@
 		 *
 		 *	@return	Self
 		 */
-		text: function (text)
-		{
+		text: function (text) {
 			this.__element.html(text);
-			this.__dimensions = 
-			{
+			this.__dimensions = {
 				container: this.__container.width(),
 				element: this.__element.width()
 			};
@@ -195,15 +189,12 @@
 		 *
 		 *	@return Self
 		 */
-		start: function ()
-		{
-			if (this.mustScroll === undefined)
-			{
+		start: function () {
+			if (this.mustScroll === undefined) {
 				throw new ModuleException("textscroll", "start", "mustScroll", "undefined", "State undetermined; call `text' first");
 			}
 
-			if (this.__running)
-			{
+			if (this.__running) {
 				return;
 			}
 
@@ -212,8 +203,7 @@
 			
 			this.__interrupt = undefined;
 			
-			if (this.mustScroll)
-			{
+			if (this.mustScroll) {
 				this.__currentPhase = "primary";
 				this.__handlePhase();
 			}
@@ -228,14 +218,10 @@
 		 *
 		 *	@return Self
 		 */
-		stop: function (interrupt)
-		{
-			if (this.mustScroll)
-			{
+		stop: function (interrupt) {
+			if (this.mustScroll) {
 				this.__interrupt = interrupt || this.__currentPhase;
-			}
-			else
-			{
+			} else {
 				this.__complete();
 			}
 			
@@ -249,16 +235,14 @@
 		/**
 		 *	Set the default margin.
 		 */
-		__setDefaultMargin: function ()
-		{
+		__setDefaultMargin: function () {
 			this.__element.css("margin" + this.__direction, this.margin);
 		},
 		
 		/**
 		 *	Complete the textscroll.
 		 */
-		__complete: function ()
-		{
+		__complete: function () {
 			this.__running = false;
 			this.trigger("end");
 			this.__setDefaultMargin();
@@ -267,8 +251,7 @@
 		/**
 		 *	Handle the current phase.
 		 */
-		__handlePhase: function ()
-		{
+		__handlePhase: function () {
 				/**
 				 *	The distance to move the text.
 				 */
@@ -294,8 +277,7 @@
 				 */
 				offset = Math.abs(parseInt(this.__element.css(margin), 10));
 		
-			switch (this.__currentPhase)
-			{
+			switch (this.__currentPhase) {
 			
 			case "primary":
 				distance = this.__dimensions.element + (offset * 2) - this.__dimensions.container;
@@ -316,8 +298,7 @@
 			
 			animation[margin] = "-=" + distance;
 			
-			this.__element.animate(animation, this.speedCoefficient * distance, "linear", function ()
-			{
+			this.__element.animate(animation, this.speedCoefficient * distance, "linear", function () {
 				self.__phaseCleanup();
 			});
 		},
@@ -325,16 +306,13 @@
 		/**
 		 *	Cleanup after a phase completes.
 		 */
-		__phaseCleanup: function ()
-		{
-			if (this.__interrupt === this.__currentPhase)
-			{
+		__phaseCleanup: function () {
+			if (this.__interrupt === this.__currentPhase) {
 				this.__complete();
 				return;
 			}
 			
-			switch (this.__currentPhase)
-			{
+			switch (this.__currentPhase) {
 			
 			case "primary":
 				this.__currentPhase = "full";
@@ -364,8 +342,7 @@
 	//
 	//------------------------------
 	
-	KOI.createStylesheet(
-	[
+	KOI.createStylesheet([
 		".koi-textscroll-container { overflow: hidden; }",
 		
 		".koi-textscroll-content { white-space: nowrap; float: left; }"
