@@ -157,7 +157,7 @@
 			}
 		};
 	}
-	
+
 	/**
 	 *	Extract the replicant reference from an element.
 	 *

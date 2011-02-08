@@ -889,6 +889,13 @@
 		}
 		
 		root.removeChild(script);
+		
+		//	Expose to the window.
+		window.KOI_SDK = {
+			manifest: applicationManifest,
+			resources: resources,
+			loaded: included
+		};
 	}());
 	
 	/**

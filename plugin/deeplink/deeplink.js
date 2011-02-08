@@ -1,5 +1,5 @@
 /**
- *	Plugin - Deeplink
+ *	Deeplink
  *
  *	Copyright (c) 2010 Knewton
  *	Dual licensed under:
