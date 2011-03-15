@@ -527,6 +527,7 @@
 		 *
 		 *	Possible flags:
 		 *		a:			Attributes
+		 *		y:			Styles
 		 *		u:			Uppercase
 		 *		l:			Lowercase
 		 *		t<size>:	Truncate to size
@@ -682,6 +683,11 @@
 								
 								case "a":
 									element.attr(value);
+									setValue = false;
+									return false;
+								
+								case "y":
+									element.css(value);
 									setValue = false;
 									return false;
 									

@@ -58,9 +58,19 @@
 		loading_screen,
 		
 		/**
+		 *	Is the current request being forwarded along?
+		 */
+		is_forwarding = false,
+		
+		/**
 		 *	Should first child automation be enabled?
 		 */
 		enableFirstChildAutomation = config("enableFirstChildAutomation", true),
+		
+		/**
+		 *	Should history be used (back/forward buttons).
+		 */
+		use_history = config("use_history", true),
 		
 		/**
 		 *	A collection of routes to be considered variable declarations instead of deeplink routes.
@@ -309,7 +319,15 @@
 	/**
 	 *	Notify external plugins that the path has been set.
 	 */
-	function triggerPathSet() {			
+	function triggerPathSet() {
+		if (is_forwarding) {
+			is_forwarding = false;
+			
+			if (use_history) {
+				$.address.history(true);
+			}
+		}
+			
 		if (routingError) {
 			return false;
 		}
@@ -329,11 +347,17 @@
 	function generateMap() {
 		$('#koi-deeplink-root').extractDeeplinkIdentifiers();
 
+		var initializing = true;
+
 		mapGenerated = true;
+		
+		$.address.history(use_history);
 
 		$.address.init(function (event) {
 			$.address.change(function (event) {
-				_.recover(event.value, event.parameters);
+				if (!initializing) {
+					_.recover(event.value, event.parameters);
+				}
 			});
 	
 			if ($.address.value() === '/') {
@@ -347,6 +371,8 @@
 			} else {
 				_.recover(event.value, event.parameters);
 			}
+			
+			initializing = false;
 		});
 	}
 	
@@ -521,10 +547,20 @@
 		 *	@param path			The base deeplinking path being set.
 		 *
 		 *	@param parameters	Optional parameters to set along with the path.
+		 *
+		 *	@param forward		Forward the change (make no history entry).
 		 */
-		set: function (path, parameters) {
+		set: function (path, parameters, forward) {
 			if (!$.isEmptyObject(parameters) || !$.isEmptyObject(currentParameters)) {
 				path += '?' + $.param(parameters || currentParameters);
+			}
+			
+			if (Boolean(forward)) {
+				is_forwarding = true;
+				
+				if (use_history) {
+					$.address.history(false);
+				}
 			}
 
 			$.address.value(path);
@@ -865,7 +901,9 @@
 			}
 			
 			if (this.data('koi-deeplink-map') !== undefined) {
-				if (identifier === undefined && 
+				if (identifier === false) {
+					return this;
+				} else if (identifier === undefined && 
 						!this.hasClass('koi-deeplink-stop-automation')) {
 					$.each(this.data('koi-deeplink-map'), function (path) {
 						currentPath.push(path);
@@ -886,7 +924,7 @@
 					if (target) {
 						setCurrentChild(target);
 						
-						target.showDeeplinkChild(identifier.length ? identifier : undefined);
+						target.showDeeplinkChild(identifier.length ? identifier : (firstChildAutomation ? undefined : false));
 						
 						return this;
 					}
@@ -895,7 +933,8 @@
 			
 			//	If we make it to this point with an identifier, and we have an error handler, utilize it.
 			if ($('.koi-deeplink-error').length > 0 && 
-					identifier !== undefined) {	
+					identifier !== undefined &&
+					identifier !== false) {
 				if (!_.raise404(true, true)) {
 					return false;
 				}
