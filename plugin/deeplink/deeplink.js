@@ -292,6 +292,7 @@
 			ignoreProcessing = true;
 
 			_.set('/' + currentPath.join('/') + '/');
+			_.recover(currentPath.join('/'), {});
 			
 			ignoreProcessing = false;
 		} else if (mapGenerated && currentPath) {
@@ -620,7 +621,7 @@
 			}
 			
 			correctRoute(correctPath([].concat(currentPath).join("/"))).split("/");
-
+			
 			if (correctPath(currentPath.join('/')) !== explicitPath) {
 				ignoreProcessing = true;
 
