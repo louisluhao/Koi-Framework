@@ -98,6 +98,33 @@
 		 *	}
 		 */
 		route_variables = config("route_variables", {}),
+		
+		/**
+		 *	A collection of routes to be considered variable declarations instead of deeplink routes.
+		 *
+		 *	These variables will respond with true|false, depending on their presence.
+		 *
+		 *	In the URL:
+		 *		/foo/bar/
+		 *
+		 *	With route boolean variables:
+		 *		bar, baz
+		 *
+		 *	The resultant URL which is routed to will be:
+		 *		/foo/
+		 *
+		 *	Providing as parameters:
+		 *		bar: true,
+		 *		baz: false
+		 *
+		 *	Signature:
+		 *	{
+		 *		<routeVariable>: <variableName>,
+		 *
+		 *		...
+		 *	}
+		 */
+		route_boolean_variables = config("route_boolean_variables", {}),
 	
 		/**
 		 *	A route map will reappend extracted route variables to the path.
@@ -255,7 +282,24 @@
 		pathArgs.pop();
 		pathArgs.shift();
 		
+		$.each(route_boolean_variables, function (route, key) {
+			var position = $.inArray(key, pathArgs),
+			
+				exists = position !== -1;
+			
+			routeParameters[route] = exists; 
+			
+			if (exists &&
+					$.inArray(route, route_map) === -1) {
+				pathArgs[position] = null;
+			}
+		});
+		
 		$.each(pathArgs, function (index, route) {
+			if (route === null) {
+				return;
+			}
+		
 			if (extractNextArgument) {
 				routeParameters[argumentKey] = route;
 				extractNextArgument = false;
@@ -287,11 +331,13 @@
 	 */
 	function processAutomation() {
 		if (mapGenerated && firstChildAutomation) {
+			firstChildAutomation = false;
+			
 			$('#koi-deeplink-root').showDeeplinkChild();
 			
 			ignoreProcessing = true;
 
-			_.set('/' + currentPath.join('/') + '/');
+			_.set('/' + currentPath.join('/') + '/', undefined, true);
 			_.recover(currentPath.join('/'), {});
 			
 			ignoreProcessing = false;
@@ -365,7 +411,6 @@
 				if (enableFirstChildAutomation) {
 					firstChildAutomation = true;
 					processAutomation();
-					firstChildAutomation = false;
 				}
 				
 				triggerPathSet();
@@ -596,7 +641,6 @@
 						if (processAutomation() === false) {
 							process = false;
 						}
-						firstChildAutomation = false;
 					}
 				} else {
 					//	Split the path fragments into an array.
@@ -633,7 +677,7 @@
 
 				triggerPathSet();
 				
-				_.set(explicitPath, currentParameters);
+				_.set(explicitPath, currentParameters, true);
 				
 				ignoreProcessing = false;
 			} else if (ignoreProcessing) {
@@ -674,6 +718,17 @@
 		 */
 		addRouteVariable: function (variable, key) {
 			route_variables[variable] = key;
+		},
+		
+		/**
+		 *	Add a route boolean variable.
+		 *
+		 *	@param variable	The route boolean variable to add.
+		 *
+		 *	@param key		The key to identify this variable.
+		 */
+		addRouteBoolean: function (variable, key) {
+			route_boolean_variables[variable] = key;
 		},
 		
 		/**
@@ -829,6 +884,54 @@
 		 */
 		loaded: function () {
 			_.loading(false);
+		},
+		
+		/**
+		 *	Update the current path.
+		 *
+		 *	@param	path_parameters		An object containing updated path parameters.
+		 *
+		 *	@param	route_parameters	An object containing updated route parameters.
+		 *
+		 *	@param	appendations		An array of path arguments to append to the updated route.
+		 */
+		update: function (path_parameters, route_parameters, appendations) {
+			var new_parameters = $.extend({}, KOI.deeplink.routeParameters(), route_parameters),
+			
+				new_path_parameters = $.extend({}, currentParameters, path_parameters),
+			
+				new_path = [],
+				
+				next_path_value;
+				
+			$.each(currentPath, function (index, key) {
+				if (next_path_value !== undefined) {
+					if (isValid(next_path_value)) {
+						new_path.push(next_path_value);
+					}
+					
+					next_path_value = undefined;
+				} else if (key in route_variables) {
+					if (isValid(new_parameters[key])) {
+						new_path.push(key);
+						next_path_value = new_parameters[route_variables[key]];
+					} else {
+						next_path_value = null;
+					}
+				} else if (key in route_boolean_variables) {
+					if (new_parameters[key]) {
+						new_path.push(key);
+					}
+				} else {
+					new_path.push(key);
+				}
+			});
+			
+			if ($.isArray(appendations)) {
+				new_path = new_path.concat(appendations);
+			}
+		
+			KOI.deeplink.set("/" + new_path.join("/") + "/", new_path_parameters, true);
 		}
 	});
 	
