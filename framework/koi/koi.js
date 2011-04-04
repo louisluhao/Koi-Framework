@@ -70,7 +70,7 @@
 		/**
 		 *	The event delegate.
 		 */
-		delegate = $(_),
+		delegate = $(document.createElement('a')),
 		
 		/**
 		 *	An array of all the plugins added to koi.
@@ -157,7 +157,7 @@
 			}
 		};
 	}
-
+	
 	/**
 	 *	Extract the replicant reference from an element.
 	 *
@@ -482,7 +482,7 @@
 		 */
 		storeReplicant: function (name, content) {
 			if (replicants[name] === undefined) {
-				content = $(content);
+				content = $(content).addClass("replicant-family-" + name);
 				
 				var replicant = content.filter(".replicant-target");
 
@@ -509,7 +509,7 @@
 			}
 		
 			$.each(names, function (index, name) {
-				$(".replicant-" + name, selector).hide();
+				$(".replicant-family-" + name, selector).hide();
 			});
 		},
 		
@@ -1237,7 +1237,7 @@
 			if (path === undefined) {
 				throw new Exception("KOI", "localizeApplication", "path", "undefined", "Must declare a localization path.");
 			}
-			
+
 			$.ajax({
 				url: path + "/" + language + ".json",
 				type: "GET",
@@ -1248,8 +1248,9 @@
 					_.trigger("localization-loaded");
 					_.makeReady();
 				},
-				error: function () {
+				error: function (xhr, textStatus, errorThrown) {
 					throw new Exception("KOI", "localizeApplication", "document", "invalid", "The localization document could not be loaded");
+					throw new Exception(xhr, textStatus, errorThrown);
 				},
 				cache: false
 			});
@@ -1294,7 +1295,7 @@
 		 *	Constructor.
 		 */
 		init: function () {
-			this.__delegate = $({});
+			this.__delegate = $(document.createElement('a'));
 			this.isReady = false;
 		},
 		
@@ -1327,7 +1328,7 @@
 		 *	Plugin specific alias of jQuery.unbind
 		 */
 		unbind: function () {
-			this.__delegate.update.apply(this.__delegate, arguments);
+			this.__delegate.unbind.apply(this.__delegate, arguments);
 		},
 		
 		/**
@@ -1439,6 +1440,12 @@
 	//------------------------------
 	//  Utility Function
 	//------------------------------
+	
+	/**
+	 *	Map a proxy over the console.log method.
+	 */
+	window.console = window.console || {};
+	window.console.log = window.console.log || function () {};
 
 	/**
 	 *	Check the data to ensure it's neither undefined or null.
