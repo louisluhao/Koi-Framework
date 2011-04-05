@@ -1444,8 +1444,11 @@
 	/**
 	 *	Map a proxy over the console.log method.
 	 */
-	window.console = window.console || {};
-	window.console.log = window.console.log || function () {};
+	if (window.console === undefined) {
+		window.console = {
+			log: function () {}
+		};
+	}
 
 	/**
 	 *	Check the data to ensure it's neither undefined or null.
