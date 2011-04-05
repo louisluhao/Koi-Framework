@@ -1738,6 +1738,22 @@
 	});
 	
 	/**
+	 *	Handle the user hitting enter to submit.
+	 *
+	 *	@param	event	The keyup event.
+	 */
+	$("input").live("keyup", function (event) {
+		var element = $(this);
+		
+		if (element.hasClass("disable-enter-submit")) {
+			return false;
+		} else if (event.keyCode == 13) {
+			element.parents("form").submit();
+			return false;
+		}
+	});
+	
+	/**
 	 *	Disabled Links simply terminate.
 	 *
 	 *	@param event	The event object.
