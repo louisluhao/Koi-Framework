@@ -11,8 +11,6 @@
 
 (function () {
 
-	"use strict";
-
 		/**
 		 *	Test to see if we are initializaing to allow us to skip certain steps during setup.
 		 */
