@@ -869,6 +869,7 @@
 		loading: function (isLoading) {
 			if (isLoading ||
 					isLoading === undefined) {
+				window.scrollTo(0, 0);
 				loading_screen.show();
 				$(".koi-deeplink-state-element, .koi-deeplink-active-child").hide();
 				_.trigger("loading");

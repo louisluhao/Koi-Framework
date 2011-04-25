@@ -535,6 +535,7 @@
 		 *		c:			Add class
 		 *		s:			Storage
 		 *		u_first:	Uppercase First
+		 *		v:			Value
 		 *
 		 *	@param object	The object to set text against.
 		 *
@@ -614,7 +615,7 @@
 					//	Decrement the instance to properly identify the target.
 					instance -= 1;
 					
-					$(".replicant-instance-" + instance, context).show();
+					$(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context).show();
 					context = $(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context);
 				} else {
 					context = context.eq(instance);
@@ -688,6 +689,11 @@
 								
 								case "y":
 									element.css(value);
+									setValue = false;
+									return false;
+									
+								case "v":
+									element.val(value);
 									setValue = false;
 									return false;
 									
@@ -883,7 +889,41 @@
 			
 			return buffer;
 		},
-		
+
+		/**
+		 *	Map an object using the given propery as the keys.
+		 *
+		 *	@param object	The object remap.
+		 *
+		 *	@param prop		The property to use as the keys.
+		 */
+		mapKey: function (object, prop) {
+			var buffer = {}, i;
+
+			if (object === undefined) {
+				throw new Exception("KOI", "mapKey", "object", "undefined", "Must be an object");
+			}
+
+			for (i in object) {
+				var obj = object[i];
+				if (obj.hasOwnProperty(prop)) {
+					buffer[obj[prop]] = obj;
+				}
+			}
+
+			return buffer;
+		},
+
+		getKeys: function (object) {
+				var keys = [], i;
+				for (i in object) {
+					if (object.hasOwnProperty(i)) {
+						keys.push(i);
+					}
+				}
+				return keys;
+		},
+
 		/**
 		 *	Perform an extends from check on a non-instanciated class object.
 		 *
