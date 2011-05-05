@@ -609,7 +609,11 @@
 				}
 			}
 
-			$.address.value(path);
+			if (path === explicitPath) {
+				_.recover($.address.path(), $.param($.address.queryString()));
+			} else {
+				$.address.value(path);
+			}
 		},
 		
 		/**
@@ -897,14 +901,14 @@
 		 *	@param	appendations		An array of path arguments to append to the updated route.
 		 */
 		update: function (path_parameters, route_parameters, appendations) {
-			var new_parameters = $.extend({}, KOI.deeplink.routeParameters(), route_parameters),
+			var new_parameters = $.extend({}, routeParameters, route_parameters),
 			
 				new_path_parameters = $.extend({}, currentParameters, path_parameters),
 			
 				new_path = [],
 				
 				next_path_value;
-				
+			
 			$.each(currentPath, function (index, key) {
 				if (next_path_value !== undefined) {
 					if (isValid(next_path_value)) {
@@ -913,14 +917,14 @@
 					
 					next_path_value = undefined;
 				} else if (key in route_variables) {
-					if (isValid(new_parameters[key])) {
+					if (isValid(new_parameters[route_variables[key]])) {
 						new_path.push(key);
 						next_path_value = new_parameters[route_variables[key]];
 					} else {
 						next_path_value = null;
 					}
 				} else if (key in route_boolean_variables) {
-					if (new_parameters[key]) {
+					if (new_parameters[route_variables[key]]) {
 						new_path.push(key);
 					}
 				} else {

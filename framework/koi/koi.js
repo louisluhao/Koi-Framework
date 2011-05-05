@@ -568,16 +568,11 @@
 		template: function (object, selector, instance, prefix, regexp) {
 			prefix = prefix || "tpl";
 			regexp = regexp || RX_TMPL;
-		
-				/**
-				 *	The context for scoping the update.
-				 */
-			var context,
 			
 				/**
 				 *	A replicant reference, if applicable to the update.
 				 */
-				replicant,
+			var	replicant,
 				
 				/**
 				 *	The replicant selector.
@@ -592,169 +587,182 @@
 				/**
 				 *	The target for updating
 				 */
-				target;
+				target,
+				
+				/**
+				 *	Scope container.
+				 */
+				scope_container;
 			
 			if (selector !== undefined) {
-				context = $(selector);
+				scope_container = $(selector);
+			} else {
+				scope_container = $("body");
 			}
 			
-			if (instance !== undefined && context !== undefined) {
-				if (context.hasClass("replicant-container")) {
-					replicantSelector = extractReplicant(context);
-					replicant = $(".replicant-" + replicantSelector, context);
-					
-					//	Increment the instance to simply the logic for checking replicant instances
-					instance += 1;
-					
-					if (replicant.length < instance) {
-						for (; index < instance - replicant.length; index++) {
-							replicants[replicantSelector].clone().appendTo(context).hide().addClass("replicant-instance-" + (index + replicant.length));
-						}
-					}
-					
-					//	Decrement the instance to properly identify the target.
-					instance -= 1;
-					
-					$(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context).show();
-					context = $(".replicant-" + replicantSelector + ".replicant-instance-" + instance, context);
-				} else {
-					context = context.eq(instance);
-				}
-			}
-
-			$.each(object, function (key, value) {
-				var class_target = "[class*='" + prefix + "-" + key + "']";
+			scope_container.each(function () {
+				var context = $(this);
 				
-				target = $(class_target, context);
-
-				if (isValid(context)) {
-					if (context.length == 1 && context.has(class_target)) {
-						target = target.add(context);
+								if (instance !== undefined && context !== undefined) {
+					if (context.hasClass("replicant-container")) {
+						replicantSelector = extractReplicant(context);
+						replicant = $(".replicant-" + replicantSelector, context[0]);
+						
+						//	Increment the instance to simply the logic for checking replicant instances
+						instance += 1;
+						
+						if (replicant.length < instance) {
+							for (; index < instance - replicant.length; index++) {
+								context.each(function () {
+									replicants[replicantSelector].clone().appendTo(this).hide().addClass("replicant-instance-" + (index + replicant.length));
+								});
+							}
+						}
+						
+						//	Decrement the instance to properly identify the target.
+						instance -= 1;
+						
+						$(".replicant-family-" + replicantSelector + ".replicant-instance-" + instance, context).show();
+						context = $(".replicant-family-" + replicantSelector + ".replicant-instance-" + instance, context);
 					} else {
-						target = target.add(context.find(class_target));
+						context = context.eq(instance);
 					}
 				}
-
-				target.each(function () {
-						/**
-						 *	This element.
-						 */
-					var element = $(this),
+	
+				$.each(object, function (key, value) {
+					var class_target = "[class*='" + prefix + "-" + key + "']";
 					
-						/**
-						 *	Flag to determine if the value should be set.
-						 */
-						setValue = true;
-					
-					$.each(element.attr("class").split(" "), function (index, className) {
-						if (className.replace(prefix + "-", "").split("-")[0] !== key) {
-							return;
+					target = $(class_target, context);
+	
+					if (isValid(context)) {
+						if (context.length == 1 && context.has(class_target)) {
+							target = target.add(context);
+						} else {
+							target = target.add(context.find(class_target));
 						}
+					}
+	
+					target.each(function () {
+							/**
+							 *	This element.
+							 */
+						var element = $(this),
 						
 							/**
-							 *	The set flags for the element.
+							 *	Flag to determine if the value should be set.
 							 */
-						var flags;
-					
-						if (className.match(regexp) === null) {
-							return;
-						}
+							setValue = true;
 						
-						if (className.match(RX_TMPL_HAS_FLAGS) !== null) {
-							flags = className.split("--")[1].match(RX_TMPL_FLAGS);
-						}
+						$.each(element.attr("class").split(" "), function (index, className) {
+							if (className.replace(prefix + "-", "").split("-")[0] !== key) {
+								return;
+							}
+							
+								/**
+								 *	The set flags for the element.
+								 */
+							var flags;
 						
-						if (flags !== undefined) {
-							$.each(flags, function (index, rawFlag) {
-									/**
-									 *	Grab the flag.
-									 */
-								var flag = rawFlag.replace(RX_DIGIT, ""),
-								
-									/**
-									 *	Compute a size argument.
-									 */
-									size = rawFlag.match(RX_DIGIT);
+							if (className.match(regexp) === null) {
+								return;
+							}
+							
+							if (className.match(RX_TMPL_HAS_FLAGS) !== null) {
+								flags = className.split("--")[1].match(RX_TMPL_FLAGS);
+							}
+							
+							if (flags !== undefined) {
+								$.each(flags, function (index, rawFlag) {
+										/**
+										 *	Grab the flag.
+										 */
+									var flag = rawFlag.replace(RX_DIGIT, ""),
 									
-								if (size !== null) {
-									size = parseInt(size[0], 10);
-								}
-									
-								switch (flag) {
-								
-								case "a":
-									element.attr(value);
-									setValue = false;
-									return false;
-								
-								case "y":
-									element.css(value);
-									setValue = false;
-									return false;
-									
-								case "v":
-									element.val(value);
-									setValue = false;
-									return false;
-									
-								case "s":
-									element.data(key, value);
-									setValue = false;
-									return false;
-									
-								case "u_first":
-									value = value.toLowerCase();
-									value = value.substr(0, 1).toUpperCase() + value.substr(1);
-									break;
-								
-								case "u":
-									value = value.toUpperCase();
-									break;
-									
-								case "l":
-									value = value.toLowerCase();
-									break;
-									
-								case "c":
-									if (element.data("tpl-added-class-" + key)) {
-										element.removeClass(element.data("tpl-added-class-" + key));
-										element.removeData("tpl-added-class-" + key);
+										/**
+										 *	Compute a size argument.
+										 */
+										size = rawFlag.match(RX_DIGIT);
+										
+									if (size !== null) {
+										size = parseInt(size[0], 10);
 									}
+										
+									switch (flag) {
 									
-									if (value !== undefined && value !== null) {
-										element.data("tpl-added-class-" + key, value);
-										element.addClass(value);
-									}
-									setValue = false;
-									return false;
+									case "a":
+										element.attr(value);
+										setValue = false;
+										return false;
 									
-								case "t":
-									if (!isNaN(size) && value.length > size) {
-										value = value.substr(0, size) + "&hellip;";
-									}
-									break;
+									case "y":
+										element.css(value);
+										setValue = false;
+										return false;
+										
+									case "v":
+										element.val(value);
+										setValue = false;
+										return false;
+										
+									case "s":
+										element.data(key, value);
+										setValue = false;
+										return false;
+										
+									case "u_first":
+										value = value.toLowerCase();
+										value = value.substr(0, 1).toUpperCase() + value.substr(1);
+										break;
 									
-								case "d":
-									if (value === true) {
-										element.show();
-									} else {
-										element.hide();
+									case "u":
+										value = value.toUpperCase();
+										break;
+										
+									case "l":
+										value = value.toLowerCase();
+										break;
+										
+									case "c":
+										if (element.data("tpl-added-class-" + key)) {
+											element.removeClass(element.data("tpl-added-class-" + key));
+											element.removeData("tpl-added-class-" + key);
+										}
+										
+										if (value !== undefined && value !== null) {
+											element.data("tpl-added-class-" + key, value);
+											element.addClass(value);
+										}
+										setValue = false;
+										return false;
+										
+									case "t":
+										if (!isNaN(size) && value.length > size) {
+											value = value.substr(0, size) + "&hellip;";
+										}
+										break;
+										
+									case "d":
+										if (value === true) {
+											element.show();
+										} else {
+											element.hide();
+										}
+										setValue = false;
+										return false;
+			
 									}
-									setValue = false;
-									return false;
-		
-								}
-							});
-						}
-						
-						if (setValue) {
-							element.html(value);
-						}
+								});
+							}
+							
+							if (setValue) {
+								element.html(value);
+							}
+						});
 					});
 				});
 			});
 			
-			return context === undefined ? window.document : context;
+			return scope_container;
 		},
 		
 		/**
