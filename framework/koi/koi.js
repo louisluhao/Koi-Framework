@@ -595,7 +595,7 @@
 				scope_container;
 			
 			if (selector !== undefined) {
-				scope_container = $(selector);
+				scope_container = $(selector).not(":text");
 			} else {
 				scope_container = $("body");
 			}
@@ -603,7 +603,7 @@
 			scope_container.each(function () {
 				var context = $(this);
 				
-								if (instance !== undefined && context !== undefined) {
+				if (instance !== undefined && context !== undefined) {
 					if (context.hasClass("replicant-container")) {
 						replicantSelector = extractReplicant(context);
 						replicant = $(".replicant-" + replicantSelector, context[0]);
