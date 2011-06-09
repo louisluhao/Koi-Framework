@@ -234,7 +234,7 @@
 		
 		var sheet = document.createElement("link");
 		
-		sheet.setAttribute("media", "screen");
+		sheet.setAttribute("media", "screen, print");
 		sheet.setAttribute("rel", "stylesheet");
 		sheet.setAttribute("href", item + cachebust());
 
@@ -450,6 +450,30 @@
 	}
 	
 	/**
+	 *	Resolve the proper version for a given resource.
+	 *
+	 *	@param framework	The name of the framework.
+	 *
+	 *	@param type			The type of resource.
+	 *
+	 *	@param name			The name of the resource.
+	 *
+	 *	@param version		The default version of the resource.
+	 *
+	 *	@return	The version to use.
+	 */
+	function resolveVersion(framework, type, name, version) {
+		if (applicationManifest.overrides !== undefined &&
+			applicationManifest.overrides[framework] !== undefined &&
+			applicationManifest.overrides[framework][type] !== undefined &&
+			applicationManifest.overrides[framework][type][name] !== undefined) {
+			return applicationManifest.overrides[framework][type][name];
+		}
+		
+		return version;
+	}
+	
+	/**
 	 *	Ensure the resource tree is created.
 	 *
 	 *	@param framework	The name of the framework.
@@ -582,9 +606,14 @@
 		var manifest = resource.manifest,
 		
 			/**
+			 *	The resource version.
+			 */
+			version = resolveVersion(manifest.framework, manifest["class"], manifest.name, manifest.version),
+		
+			/**
 			 *	The path for doing includes.
 			 */
-			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, manifest.version];
+			path = [metadata.sdk, manifest.framework, manifest["class"], manifest.name, version];
 	
 		//	Don't import themes
 		if (manifest["class"] === "theme") {
@@ -644,7 +673,9 @@
 	 *	@param manifest	The project manifest.
 	 */
 	function processResourceManifest(manifest) {
-		var item = createResourceTree(manifest.framework, manifest["class"], manifest.name, manifest.version, true);
+		var version = resolveVersion(manifest.framework, manifest["class"], manifest.name, manifest.version),
+			
+			item = createResourceTree(manifest.framework, manifest["class"], manifest.name, version, true);
 	
 		item.manifest = manifest;
 		pendingManifests -= 1;
@@ -653,7 +684,9 @@
 			each(manifest.dependencies, function (framework, types) {
 				each(types, function (type, resources) {
 					each(resources, function (resource, version) {
-						var dependency = createResourceTree(framework, type, resource, version);
+						var resolved_version = resolveVersion(framework, type, resource, version),
+							
+							dependency = createResourceTree(framework, type, resource, resolved_version);
 						
 						if (!dependency.included) {
 							dependency.holding[item.uid] = true;
@@ -661,7 +694,7 @@
 						}
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
+						if (!simpleRequest([metadata.sdk, framework, type, resource, resolved_version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}
 					});
@@ -702,10 +735,11 @@
 			each(manifest.dependencies, function (framework, types) {
 				each(types, function (type, resources) {
 					each(resources, function (resource, version) {
-						createResourceTree(framework, type, resource, version);
+						var resolved_version = resolveVersion(framework, type, resource, version);
+						createResourceTree(framework, type, resource, resolved_version);
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
+						if (!simpleRequest([metadata.sdk, framework, type, resource, resolved_version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}
 					});
@@ -747,9 +781,9 @@
 				 *	The version of the asset to load.
 				 */
 				version;
-				
+				 
 			try {
-				version = applicationManifest.application.assets[details[0]][details[1]][details[2]];
+				version = resolveVersion(details[0], details[1], details[2], applicationManifest.application.assets[details[0]][details[1]][details[2]]);
 			} catch (e) {
 				throw new Error("Bootstrap.processConfigurationFile:asset");
 			}
@@ -788,12 +822,13 @@
 			each(manifest.includes, function (framework, types) {
 				if (types.theme !== undefined) {
 					each(types.theme, function (resource, version) {
+						var resolved_version = resolveVersion(framework, "theme", resource, version);
 						each(manifest.themes, function (group, theme) {
 							if (theme === resource) {
 								themes[group] = {
 									resource: theme,
 									
-									version: version
+									version: resolved_version
 								};
 							}
 						});
@@ -815,21 +850,25 @@
 					}
 
 					each(resources, function (resource, version) {
+						var resolved_version = resolveVersion(framework, type, resource, version);
+						
 						SDK.component.specifications[resource] = {
-							version: version
+							version: resolved_version
 						};
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processComponentManifest)) {
+						if (!simpleRequest([metadata.sdk, framework, type, resource, resolved_version, "manifest.json"].join('/'), processComponentManifest)) {
 							pendingManifests -= 1;
 						}					
 					});
 				} else {
 					each(resources, function (resource, version) {
-						createResourceTree(framework, type, resource, version);
+						var resolved_version = resolveVersion(framework, type, resource, version);
+						
+						createResourceTree(framework, type, resource, resolved_version);
 						
 						pendingManifests += 1;
-						if (!simpleRequest([metadata.sdk, framework, type, resource, version, "manifest.json"].join('/'), processResourceManifest)) {
+						if (!simpleRequest([metadata.sdk, framework, type, resource, resolved_version, "manifest.json"].join('/'), processResourceManifest)) {
 							pendingManifests -= 1;
 						}				
 					});

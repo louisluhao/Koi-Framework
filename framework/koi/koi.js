@@ -592,7 +592,12 @@
 				/**
 				 *	Scope container.
 				 */
-				scope_container;
+				scope_container,
+				
+				/**
+				 *	The return context.
+				 */
+				return_context;
 			
 			if (selector !== undefined) {
 				scope_container = $(selector).not(":text");
@@ -627,6 +632,12 @@
 					} else {
 						context = context.eq(instance);
 					}
+				}
+				
+				if (!isValid(return_context)) {
+					return_context = context;
+				} else {
+					return_context.add(context);
 				}
 	
 				$.each(object, function (key, value) {
@@ -762,7 +773,7 @@
 				});
 			});
 			
-			return scope_container;
+			return isValid(return_context) ? return_context : window.document;
 		},
 		
 		/**
@@ -833,7 +844,7 @@
 		createStylesheet: function (styles, context) {
 			styles = _.typecheck(styles, "Array") ? styles : [styles];
 			
-			(context || $("head")).append('<style type="text/css">' + styles.join('') + '</style>');
+			(context || $("head")).append('<style type="text/css" media="screen, print">' + styles.join('') + '</style>');
 			
 			return _;
 		},
@@ -905,20 +916,29 @@
 		 *
 		 *	@param prop		The property to use as the keys.
 		 */
-		mapKey: function (object, prop) {
-			var buffer = {}, i;
+		mapKey: function (iter, prop) {
+			var buffer = {}, i, obj;
 
-			if (object === undefined) {
-				throw new Exception("KOI", "mapKey", "object", "undefined", "Must be an object");
+			if (iter === undefined) {
+				throw new Exception("KOI", "mapKey", "object", "undefined", "Must be an iterable (object or array).");
 			}
 
-			for (i in object) {
-				var obj = object[i];
-				if (obj.hasOwnProperty(prop)) {
-					buffer[obj[prop]] = obj;
+			if (KOI.typecheck(iter, 'Array')) {
+				var len = iter.length;
+				for (i = 0; i < len; i++) {
+					obj = iter[i];
+					if (obj.hasOwnProperty(prop)) {
+						buffer[obj[prop]] = obj;
+					}
+				}
+			} else if (KOI.typecheck(iter, 'Object')) {
+				for (i in iter) {
+					obj = iter[i];
+					if (obj.hasOwnProperty(prop)) {
+						buffer[obj[prop]] = obj;
+					}
 				}
 			}
-
 			return buffer;
 		},
 

@@ -97,7 +97,12 @@
 		 *		...
 		 *	}
 		 */
-		route_variables = config("route_variables", {}),
+		route_variables = {},
+		
+		/**
+		 *	Reverse lookup for route variables.
+		 */
+		route_varaible_reference = {},
 		
 		/**
 		 *	A collection of routes to be considered variable declarations instead of deeplink routes.
@@ -124,7 +129,12 @@
 		 *		...
 		 *	}
 		 */
-		route_boolean_variables = config("route_boolean_variables", {}),
+		route_boolean_variables = {},
+		
+		/**
+		 *	Reverse lookup for route booleans.
+		 */
+		route_boolean_reference = {},
 	
 		/**
 		 *	A route map will reappend extracted route variables to the path.
@@ -367,25 +377,24 @@
 	 *	Notify external plugins that the path has been set.
 	 */
 	function triggerPathSet() {
+		if (!routingError) {
+			_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
+			_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
+			
+			$.each(routedPath, function (index, route) {
+				_.trigger("route-set-" + route, [_.parameters(), _.routeParameters()]);
+			});
+		}
+		
 		if (is_forwarding) {
 			is_forwarding = false;
 			
 			if (use_history) {
-				$.address.history(true);
+				setTimeout(function (){
+					$.address.history(true);
+				}, 0);
 			}
 		}
-			
-		if (routingError) {
-			return false;
-		}
-		
-		_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
-
-		_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
-		
-		$.each(routedPath, function (index, route) {
-			_.trigger("route-set-" + route, [_.parameters(), _.routeParameters()]);
-		});
 	}
 	
 	/**
@@ -722,6 +731,7 @@
 		 */
 		addRouteVariable: function (variable, key) {
 			route_variables[variable] = key;
+			route_varaible_reference[key] = variable;
 		},
 		
 		/**
@@ -733,6 +743,7 @@
 		 */
 		addRouteBoolean: function (variable, key) {
 			route_boolean_variables[variable] = key;
+			route_boolean_reference[key] = variable;
 		},
 		
 		/**
@@ -899,15 +910,26 @@
 		 *	@param	route_parameters	An object containing updated route parameters.
 		 *
 		 *	@param	appendations		An array of path arguments to append to the updated route.
+		 *
+		 *	@param	do_forward			Should the request be forwarded?
 		 */
-		update: function (path_parameters, route_parameters, appendations) {
+		update: function (path_parameters, route_parameters, appendations, do_forward) {
 			var new_parameters = $.extend({}, routeParameters, route_parameters),
 			
 				new_path_parameters = $.extend({}, currentParameters, path_parameters),
 			
 				new_path = [],
 				
-				next_path_value;
+				next_path_value,
+				
+				handled_parameters = {};
+				
+			//	Hold all references to the parameters handled by the swap.
+			if (isValid(route_parameters)) {
+				$.each(route_parameters, function (key) {
+					handled_parameters[key] = false;
+				});			
+			}
 			
 			$.each(currentPath, function (index, key) {
 				if (next_path_value !== undefined) {
@@ -918,13 +940,16 @@
 					next_path_value = undefined;
 				} else if (key in route_variables) {
 					if (isValid(new_parameters[route_variables[key]])) {
+						handled_parameters[key] = true;
 						new_path.push(key);
 						next_path_value = new_parameters[route_variables[key]];
 					} else {
 						next_path_value = null;
 					}
 				} else if (key in route_boolean_variables) {
-					if (new_parameters[route_variables[key]]) {
+					handled_parameters[key] = true;
+					
+					if (Boolean(new_parameters[route_boolean_variables[key]])) {
 						new_path.push(key);
 					}
 				} else {
@@ -932,11 +957,25 @@
 				}
 			});
 			
+			$.each(handled_parameters, function (key, handled) {
+				if (!handled) {
+					if (key in route_boolean_variables) {
+						if (Boolean(route_parameters[key])) {
+							new_path.push(route_boolean_reference[key]);
+						}
+					} else {
+						if (isValid(route_parameters[key])) {
+							new_path.push(route_varaible_reference[key], route_parameters[key]);
+						}
+					}
+				}
+			});
+			
 			if ($.isArray(appendations)) {
 				new_path = new_path.concat(appendations);
 			}
 		
-			KOI.deeplink.set("/" + new_path.join("/") + "/", new_path_parameters, true);
+			KOI.deeplink.set("/" + new_path.join("/") + "/", new_path_parameters, Boolean(do_forward));
 		}
 	});
 	
