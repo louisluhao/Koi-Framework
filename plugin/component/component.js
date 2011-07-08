@@ -30,6 +30,11 @@
 		 *	Regular expression to extract image URLs from loaded stylesheet, repathing them.
 		 */
 		RX_IMAGES = /url\((images\/.*)\)/g,
+		
+		/**
+		 *	Regular expression to extract component content type.
+		 */
+		RX_CONTENT_TARGET = /koi\-component\-content\-type\-/,
 	
 	//------------------------------
 	//
@@ -248,7 +253,32 @@
 		
 		//	Inject content.
 		if (definition.content !== undefined) {
-			$(".koi-component-content-receiver:first", element).replaceWith(definition.content);
+		
+			/**
+			 *	Determine if component content targets will be used instead of content receivers.
+			 */
+			if (definition.content.eq(0).hasClass("koi-component-content-target")) {
+				definition.content.each(function () {
+					var content = $(this),
+					
+						content_type;
+						
+					if (content.hasClass("koi-component-content-target")) {
+						$.each(content.attr("class").split(" "), function (index, class_name) {
+							if (isValid(class_name.match(RX_CONTENT_TARGET))) {
+								content_type = class_name.replace(RX_CONTENT_TARGET, "");
+								return false;
+							}
+						});
+						
+						if (isValid(content_type)) {
+							$(".koi-component-content-receiver.koi-component-content-type-" + content_type, element).replaceWith(content.children());
+						}
+					}
+				});
+			} else {
+				$(".koi-component-content-receiver:first", element).replaceWith(definition.content);
+			}			
 		}
 		
 		//	Mark the HTML as included.

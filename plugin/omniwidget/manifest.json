@@ -15,8 +15,8 @@
 		{
 			"plugin":
 			{
-				"ui.draggable": "1.8.5",
-				"ui.resizable": "1.8.5",
+				"ui.draggable": "1.8.13",
+				"ui.resizable": "1.8.13",
 				"opener": "0.1.x"
 			}
 		},
