@@ -760,7 +760,7 @@
 				}
 				
 				each(manifest.theme, function (index, style) {
-					embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
+				//	embedStylesheet([metadata.sdk, manifest.framework, "theme", themes[manifest.themegroup].resource, themes[manifest.themegroup].version, (style + ".css")].join('/'));
 				});
 			}
 		}
