@@ -742,8 +742,8 @@
 		 *	@param key		The key to identify this variable.
 		 */
 		addRouteBoolean: function (variable, key) {
-			route_boolean_variables[variable] = key;
-			route_boolean_reference[key] = variable;
+			route_boolean_variables[key] = variable;
+			route_boolean_reference[variable] = key;
 		},
 		
 		/**

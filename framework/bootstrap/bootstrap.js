@@ -227,6 +227,12 @@
 	 *	@param callback	The callback to notify when the style is included.
 	 */
 	function embedStylesheet(item) {
+		if (included[item] !== undefined) {
+			return false;
+		}
+		
+		included[item] = true;
+	
 		if (document.createStyleSheet !== undefined) {
 			document.createStyleSheet(item + cachebust());
 			return;
@@ -248,7 +254,7 @@
 	 *
 	 *	@param callback	The callback to notify when the script is included.
 	 */
-	function embedScript(item, callback) {
+	function embedScript(item, callback) {	
 		if (pendingLoad) {
 			scripts.push([
 				item,

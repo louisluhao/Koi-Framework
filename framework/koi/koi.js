@@ -536,6 +536,7 @@
 		 *		s:			Storage
 		 *		u_first:	Uppercase First
 		 *		v:			Value
+		 *		h:			Hide
 		 *
 		 *	@param object	The object to set text against.
 		 *
@@ -757,6 +758,15 @@
 											element.show();
 										} else {
 											element.hide();
+										}
+										setValue = false;
+										return false;
+			
+									case "h":
+										if (value === true) {
+											element.hide();
+										} else {
+											element.show();
 										}
 										setValue = false;
 										return false;
