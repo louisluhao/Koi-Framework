@@ -21,6 +21,10 @@
 	//
 	//------------------------------
 	
+	//------------------------------
+	//  Regular expressions
+	//------------------------------
+	
 		/**
 		 *	Regular Expression to parse flags out of a text set.
 		 */
@@ -52,9 +56,41 @@
 		RX_DIGIT = /\d+/,
 		
 		/**
+		 *	Space selector.
+		 */
+		RX_SPACE = /\+/g,
+		
+		/**
+		 *	Obejct key matcher.
+		 */
+		RX_OBJECT_KEY_OPENER = /\[/,
+		
+		/**
+		 *	Object key matcher.
+		 */
+		RX_OBJECT_KEY_CLOSER = /\]$/,
+		
+	//------------------------------
+	//  Typekit
+	//------------------------------
+		
+		/**
 		 *	Path for loading typekit.
 		 */
 		TYPEKIT_PATH = "https://use.typekit.com/",
+		
+	//------------------------------
+	//  Deparam coersion
+	//------------------------------
+		
+		/**
+		 *	Type coersion values for deparam.
+		 */
+		COERSION_TYPES = {
+			"true": true,
+			"false": false,
+			"null": null
+		},
 	
 	//------------------------------
 	//
@@ -1108,6 +1144,101 @@
 				
 				return response;
 			}
+		},
+		
+		/**
+		 *	Deparam a complex parameter string.
+		 *
+		 *	Copied from Ben Alman's jQuery BBQ plugin.
+		 *
+		 *	https://github.com/cowboy/jquery-bbq/
+		 *
+		 *	@param	parameters	The parameter string.
+		 *
+		 *	@param	coerce		Coerce the parameters into the proper type. Default false.
+		 */
+		deparam: function (parameters, coerce) {
+			var object = {};
+			
+			coerce = Boolean(coerce);
+			
+			$.each(parameters.replace(RX_SPACE, " ").split("&"), function (parameter_index, raw_value) {
+				var parameter = raw_value.split("="),
+				
+					key = decodeURIComponent(parameter[0]),
+					
+					value,
+					
+					current = object,
+					
+					index = 0,
+					
+					/**
+					 *	If the key is more complex than 'foo', like 'a[]' or 'a[b][c]', split it into its constitutent parts
+					 */
+					keys = key.split("]["),
+					
+					keys_last = keys.length - 1;
+				
+				if (RX_OBJECT_KEY_OPENER.test(keys[0]) &&
+						RX_OBJECT_KEY_CLOSER.test(keys[keys_last])) {
+					//	If the first keys part contains [ and the last ends with ], then [] are correctly balanced.
+						
+					// Remove the trailing ] from the last keys part.
+			        keys[keys_last] = keys[keys_last].replace(RX_OBJECT_KEY_CLOSER, "");
+			        
+			        // Split first keys part into two parts on the [ and add them back onto the beginning of the keys array.
+			        keys = keys.shift().split('[').concat(keys);
+			        
+			        keys_last = keys.length - 1;
+				} else {
+					//	Basic key
+					keys_last = 0;
+				}
+				
+				// Are we dealing with a name=value pair, or just a name?
+				if (parameter.length === 2) {
+					value = decodeURIComponent(parameter[1]);
+					
+					if (coerce) {
+								//	Number coersion
+						value = value && !isNaN(value) ? +value :
+								
+								//	Undefined coersion
+								value === "undefined" ? undefined :
+								
+								//	Boolean/null coersion
+								COERSION_TYPES[value] !== undefined ? COERSION_TYPES[value] :
+								
+								//	Uncoerced
+								value;
+					}
+				
+					if (keys_last > 0) {
+						//	Complex key, build deep object structure.
+						for (; index <= keys_last; index++) {
+							key = keys[index] === "" ? current.length : keys[index];
+							current = current[key] = index < keys_last ? current[key] || 
+									(keys[index + 1] && isNaN(keys[index + 1]) ? {} : []) :
+									value;
+						}
+					} else {
+						//	Simple key
+						if ($.isArray(object[key])) {
+							object[key].push(value);
+						} else if (object[key] !== undefined) {
+							//	A double specified key becomes an array
+							object[key] = [object[key], value];
+						} else {
+							object[key] = value;
+						}
+					}
+				} else if (key) {
+					object[key] = coerce ? undefined : "";
+				}
+			});	
+			
+			return object;
 		},
 		
 		/**
