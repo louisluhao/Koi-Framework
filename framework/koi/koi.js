@@ -784,9 +784,7 @@
 										return false;
 										
 									case "t":
-										if (!isNaN(size) && value.length > size) {
-											value = value.substr(0, size) + "&hellip;";
-										}
+										value = _.truncate(value, size);
 										break;
 										
 									case "d":
@@ -820,6 +818,27 @@
 			});
 			
 			return isValid(return_context) ? return_context : window.document;
+		},
+		
+		/**
+		 *	Truncate a string to a given size.
+		 *
+		 *	@param	string	The string to truncate.
+		 *
+		 *	@param	size	The max size of the string.
+		 *
+		 *	@param	ellipse	Use an ellipse. Default is true.
+		 */
+		truncate: function (string, size, ellipse) {			
+			if (!isNaN(size) && string.length > size) {
+				string = string.substr(0, size);
+				
+				if (!isValid(ellipse) || Boolean(ellipse)) {
+					string += "&hellip;"
+				}
+			}
+			
+			return string;
 		},
 		
 		/**
