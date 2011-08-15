@@ -1138,7 +1138,7 @@
 		urlParam: function (name) {
 			var match = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href.toString());
 		
-			return _.typecheck(match, 'Array') ? match[1] : null;
+			return _.typecheck(match, 'Array') ? decodeURIComponent(match[1]) : null;
 		},
 		
 		/**
@@ -1249,7 +1249,7 @@
 							//	A double specified key becomes an array
 							object[key] = [object[key], value];
 						} else {
-							object[key] = value;
+							object[key] = decodeURIComponent(value);
 						}
 					}
 				} else if (key) {
