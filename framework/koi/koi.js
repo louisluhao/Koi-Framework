@@ -70,6 +70,11 @@
 		 */
 		RX_OBJECT_KEY_CLOSER = /\]$/,
 		
+		/**
+		 *	Test for a mailto link.
+		 */
+		RX_MAILTO = /^mailto:/,
+		
 	//------------------------------
 	//  Typekit
 	//------------------------------
@@ -297,6 +302,33 @@
 		}
 	}
 	
+	/**
+	 *	Listen for a window message.
+	 *
+	 *	@param	event	The message event.
+	 */
+	function windowListen(event) {
+		if (!$.isArray(_.receivable_message_domains)) {
+			_.receivable_message_domains = [_.receivable_message_domains];
+		}
+		
+		if ($.inArray(event.origin, _.receivable_message_domains) !== -1) {
+			var data;
+			
+			if (isValid(event.data)) {
+				data = JSON.parse(event.data);
+
+				if ($.isPlainObject(data)) {
+					if (isValid(data.event_type)) {
+						KOI.trigger(data.event_type, [data.data]);
+					}
+				}
+			
+				KOI.trigger("window-message", [data, event.source, event.origin]);	
+			}
+		}
+	}
+	
 	//------------------------------
 	//
 	//	 Configuration
@@ -421,6 +453,16 @@
 		 */
 		errorHandlers: [],
 		
+		/**
+		 *	The domain which is valid for posting messages to.
+		 */
+		post_message_domain: application("post_message_domain", "*"),
+	
+		/**
+		 *	The domain(s) which are valid for fetching messages.
+		 */
+		receivable_message_domains: application("receivable_message_domains", []),
+		
 		//------------------------------
 		//	Methods
 		//------------------------------
@@ -503,8 +545,7 @@
 			}
 			
 			parent
-				.addClass("replicant-container")
-				.data("replicant-selector", name);
+				.addClass("replicant-container replicant-selector-" + name);
 				
 			_.storeReplicant(name, content);
 		},
@@ -1357,6 +1398,69 @@
 		},
 		
 		/**
+		 *	Set all the elements with a tabindex to -1, turning them off.
+		 *
+		 *	@param	container	The container to remove tabindexing from.
+		 */
+		detabindex: function (container) {
+			container = $(container);
+			
+			var selector = ".autoindexed[tabindex!='-1']";
+			
+			container.each(function () {
+				var elements = $(selector, this),
+					container_element = $(this);
+
+				if (container_element.is(selector)) {
+					if (elements.length > 0) {
+						elements.add(container_element);
+					} else {
+						elements = container_element;
+					}
+				}
+				
+				elements.each(function () {
+					var element = $(this);
+					
+					element.data("__tabindex__", element.attr("tabindex"));
+					element.attr("tabindex", "-1");
+				});
+			});
+		},
+		
+		/**
+		 *	Set all the elements with a tabindex of -1 to their old state or 0.
+		 *
+		 *	@param	container	The container to add tabindexing to.
+		 */
+		retabindex: function (container) {
+			container = $(container);
+			
+			var selector = ".autoindexed[tabindex='-1']";
+			
+			container.each(function () {
+				var elements = $(selector, this),
+					container_element = $(this);
+
+				if (container_element.is(selector)) {
+					if (elements.length > 0) {
+						elements.add(container_element);
+					} else {
+						elements = container_element;
+					}
+				}
+				
+				elements.each(function () {
+					var element = $(this),
+					old_index = element.data("__tabindex__") || "0";
+					
+					element.attr("tabindex", old_index);
+					element.removeData("__tabindex__")
+				});
+			});
+		},
+		
+		/**
 		 *	Embed a typekit font.
 		 *
 		 *	@param kit_id	The ID of the kit to embed.
@@ -1426,6 +1530,7 @@
 		
 			_.isReady = true;
 			_.trigger('platform-ready');
+			_.tabindex();
 			
 			if (_.autoReadyApplication) {
 				_.trigger('application-ready');
@@ -1435,6 +1540,35 @@
 				if (!plugin.__disableAutoReady) {
 					plugin.makeReady();
 				}
+			});
+		},
+		
+		/**
+		 *	Tabindexes the page.
+		 *
+		 *	@param	container	The container.
+		 *
+		 *	@param	groups		
+		 */
+		tabindex: function (container, groups) {
+			if (!isValid(container)) {
+				container = "body";
+			}
+			
+			KOI.settings.tabindexing = $.extend({}, KOI.settings.tabindexing);
+			
+			if (isValid(groups)) {
+				KOI.settings.tabindexing = $.extend(KOI.settings.tabindexing, groups);
+			}
+			
+			$.each(KOI.settings.tabindexing, function (group, index) {
+				$(".koi-tabindex-" + group, container).each(function () {
+					if (!$(this).hasClass("autoindexed")) {
+						$(this).addClass("autoindexed").attr("tabindex", index++);
+					}
+				});
+				
+				KOI.settings.tabindexing[group] = index;
 			});
 		},
 		
@@ -1482,8 +1616,40 @@
 				},
 				cache: false
 			});
-		}
+		},
+		
+		/**
+		 *	Send a message to the parent.
+		 *
+		 *	@param	message	The message to send.
+		 *
+		 *	@param	domain	The domain to send to. Default is post_message_domain property.
+		 */
+		sendParentMessage: function (message, domain) {
+			if (!isValid(domain)) {
+				domain = _.post_message_domain;
+			}
 			
+			if (window.parent.postMessage) {
+				window.parent.postMessage(JSON.stringify(message), domain)	
+			}
+		},
+		
+		/**
+		 *	Send an event to the parent.
+		 *
+		 *	@param	event_type	The type of event being sent.
+		 *
+		 *	@param	data		The event data to send.
+		 *
+		 *	@param	domain		The domain to send to. Default is post_message_domain property.
+		 */
+		sendParentEvent: function (event_type, data, domain) {
+			_.sendParentMessage({
+				event_type: event_type,
+				data: data
+			}, domain);
+		}
 	});
 		
 	//------------------------------
@@ -1934,16 +2100,20 @@
 		}
 		
 		var element = $(this),
-		
 			to = element.attr("rel"),
-			
-			target = element.attr("target");
+			target = element.attr("target"),
+			opened_window;
 		
 		if (_.pathing[to] !== undefined) {
 			if (target.length === 0) {
 				window.location = _.pathing[to];
 			} else {
-				window.open(_.pathing[to], target);
+				opened_window = window.open(_.pathing[to], target);
+				if (isValid(_.pathing[to].match(RX_MAILTO)) &&
+						opened_window.open &&
+						!opened_window.closed) {
+					opened_window.close();
+				}
 			}
 		}
 	});
@@ -1963,6 +2133,11 @@
 		var send = $(this).attr("rel");
 		
 		_.trigger(send, [$(this)]);
+		
+		if (event.clientX !== 0 &&
+				event.clientY !== 0) {
+			$(this).blur();	
+		}
 	});
 	
 	/**
@@ -2086,6 +2261,18 @@
 	//------------------------------
 	
 	window.KOI = _;
+	
+	//------------------------------
+	//  Bind the window listener
+	//------------------------------
+	
+	if (window.postMessage) {
+    	if (window.addEventListener !== undefined) {
+    		window.addEventListener('message', windowListen, false);
+    	} else if (window.attachEvent !== undefined) {
+    		window.attachEvent('onmessage', windowListen); 
+    	}
+    }
 	
 	//------------------------------
 	//	Destroy configuration

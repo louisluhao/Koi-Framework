@@ -1,32 +1,24 @@
 {
 	"name": "koi",
-	
 	"class": "framework",
-	
 	"framework": "koi",
-	
 	"composition": ["js"],
-	
 	"version": "development",
-	
 	"themegroup": "koi-application",
-	
 	"theme": "application",
-	
-	"dependencies":
-	{
-		"jquery":
-		{
-			"framework":
-			{
+	"dependencies": {
+		"generic": {
+			"script": {
+				"json2": "1.0.x"
+			}
+		},
+		"jquery": {
+			"framework": {
 				"jquery": "1.4.2"
 			}
 		},
-		
-		"koi":
-		{
-			"framework":
-			{
+		"koi": {
+			"framework": {
 				"class": "1.0.x"
 			}
 		}

@@ -886,10 +886,12 @@
 					isLoading === undefined) {
 				window.scrollTo(0, 0);
 				loading_screen.show();
+				KOI.detabindex("#koi-deeplink-root");
 				$(".koi-deeplink-state-element, .koi-deeplink-active-child").hide();
 				_.trigger("loading");
 			} else {
 				loading_screen.hide();
+				KOI.retabindex(".koi-deeplink-active-child");
 				$(".koi-deeplink-active-child").show();
 				_.trigger("loaded");
 			}

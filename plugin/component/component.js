@@ -292,6 +292,9 @@
 			KOI.localize(["components", definition.instance], element);
 		}
 		
+		//	Tabindex the component
+		KOI.tabindex(element);
+		
 		//	Process the component
 		//	JSLint complains about strict violation here. It's not.
 		process(this.id);
