@@ -143,7 +143,26 @@
 		 *		...
 		 *	}
 		 */
-		replicants = {};
+		replicants = {},
+		
+		/**
+		 *	A declaration of URL parameters to treat as course configurations.
+		 *
+		 *	The provided encoding can be one of:
+		 *		string, boolean, integer, float
+		 *
+		 *	@signature	{
+		 *		<parameter_name(string)>: <encoding(string)>,
+		 *
+		 *		...
+		 *	}
+		 */
+		configuration_parameters,
+		
+		/**
+		 *	A list of configurations from the URL.
+		 */
+		parameter_configurations = {};
 
 	//------------------------------
 	//
@@ -329,6 +348,47 @@
 		}
 	}
 	
+	/**
+	 *	Generate the parameter configuration.
+	 */
+	function generateParameterConfiguration() {
+		$.each(configuration_parameters, function (parameter, encoding) {
+			var value = _.urlParam(parameter);
+			
+			switch (encoding) {
+			
+			case "boolean":
+				if (isValid(value)) {
+					if (value.toLowerCase() === "false") {
+						value = false;
+					} else {
+						value = true;
+					}
+				} else {
+					value = false;
+				}
+				break;
+			
+			case "integer":
+				value = parseInt(value, 10);
+				break;
+			
+			case "float":
+				value = parseFloat(value);
+				break;
+				
+			case "url":
+				if (isValid(value)) {
+					value = decodeURIComponent(value);
+				}
+				break;
+		
+			}
+			
+			parameter_configurations[parameter] = value;
+		});
+	}
+	
 	//------------------------------
 	//
 	//	 Configuration
@@ -336,10 +396,13 @@
 	//------------------------------
 		
 	//	Fetch application configuration.
-	application = getConfiguration('application');
+	application = getConfiguration("application");
 	
 	//	Store localization configuration
 	localization_config = application("localization", null);
+	
+	//	Store configuration parameters
+	configuration_parameters = application("configuration_parameters", {});
 
 	//	Clear the config object out of the window namespace.
 	window.__CONFIG = undefined;
@@ -466,6 +529,21 @@
 		//------------------------------
 		//	Methods
 		//------------------------------
+		
+		/**
+		 *	Return system configuration data (URL parameters).
+		 *
+		 *	@param	key	An optional key to reutrn only a specific configuration.
+		 */
+		parameterConfiguration: function (key) {
+			var configuration = parameter_configurations;
+		
+			if (isValid(key)) {
+				configuration = parameter_configurations[key];
+			}
+			
+			return configuration;
+		},
 		
 		/**
 		 *	Bind an error handler.
@@ -2279,5 +2357,11 @@
 	//------------------------------
 	
 	application();
+	
+	//------------------------------
+	//  Load configuration parameters
+	//------------------------------
+	
+	generateParameterConfiguration();
 	
 }(jQuery));

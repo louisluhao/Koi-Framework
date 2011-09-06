@@ -48,6 +48,11 @@
 	//------------------------------
 	
 		/**
+		 *	The number of remaining startup scripts.
+		 */
+		pending_startup_scripts = 0,
+	
+		/**
 		 *	An object for holding koi-bootstrap metadata.
 		 */
 		metadata = {},
@@ -531,6 +536,18 @@
 	}
 	
 	/**
+	 *	Reduce the count of pending scripts.
+	 */
+	function reducePendingScript() {
+		pending_startup_scripts -= 1;
+		if (pending_startup_scripts == 0) {
+			if (window.bootstrapping_ready !== undefined) {
+				window.bootstrapping_ready.call(window.__SDK);
+			}
+		}
+	}
+	
+	/**
 	 *	Once the bootstrapping process has finished, load any application resources.
 	 */
 	function loadApplicationResources() {
@@ -554,9 +571,12 @@
 		applicationResourcesLoaded = true;
 		
 		if (applicationManifest.application !== undefined) {
-			each(applicationManifest.application.scripts, function (index, file) {
-				embedScript(file + '.js');
-			});
+			if (applicationManifest.application.scripts !== undefined) {
+				pending_startup_scripts = applicationManifest.application.scripts.length;
+				each(applicationManifest.application.scripts, function (index, file) {
+					embedScript(file + '.js', reducePendingScript);
+				});			
+			}
 			
 			each(applicationManifest.application.styles, function (index, file) {
 				embedStylesheet(file + '.css');
@@ -684,7 +704,7 @@
 			item = createResourceTree(manifest.framework, manifest["class"], manifest.name, version, true);
 	
 		item.manifest = manifest;
-		pendingManifests -= 1;
+		pendingManifests -= 1;applicationManifest.application.scripts.length
 		
 		if (manifest.dependencies !== undefined) {
 			each(manifest.dependencies, function (framework, types) {
