@@ -544,6 +544,11 @@
 			if (window.bootstrapping_ready !== undefined) {
 				window.bootstrapping_ready.call(window.__SDK);
 			}
+
+			if (window.KOI !== undefined) {
+				KOI.readyQueue.bootstrap = true;
+				KOI.makeReady();
+			}
 		}
 	}
 	
@@ -822,6 +827,18 @@
 		});
 		
 		evalScript(config);
+
+		if (window.__CONFIG.application === undefined) {
+			window.__CONFIG.application = {};
+		}
+
+		if (window.__CONFIG.application.readyQueue === undefined) {
+			window.__CONFIG.application.readyQueue = {};
+		}
+
+		if (window.__CONFIG.application.readyQueue.bootstrap === undefined) {
+			window.__CONFIG.application.readyQueue.bootstrap = false;
+		}
 	}
 	
 	/**

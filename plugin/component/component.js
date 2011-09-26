@@ -594,6 +594,7 @@
 			/**
 			 *	The element representing a component.
 			 */
+			
 		var element = $(this),
 		
 			/**
@@ -652,5 +653,5 @@
 	//------------------------------
 		
 	config();
-		
+	console.log("development component plugin" );
 }(jQuery));

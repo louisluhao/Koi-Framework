@@ -1582,6 +1582,7 @@
 			_.initialized = true;
 			_.trigger("platform-initialized");
 			_.readyQueue.initialized = true;
+			
 			_.makeReady();
 		},
 		
@@ -1665,6 +1666,7 @@
 		 *	}
 		 */
 		localizeApplication: function (language, path) {
+			
 			if (localization_config !== null) {
 				language = language || localization_config.defaultLanguage;
 				path = path || localization_config.path;
@@ -2363,5 +2365,5 @@
 	//------------------------------
 	
 	generateParameterConfiguration();
-	
+
 }(jQuery));

@@ -305,11 +305,12 @@
 			}
 		});
 		
+				
 		$.each(pathArgs, function (index, route) {
 			if (route === null) {
 				return;
 			}
-		
+			
 			if (extractNextArgument) {
 				routeParameters[argumentKey] = route;
 				extractNextArgument = false;
@@ -318,7 +319,6 @@
 			} else if (route_variables[route] !== undefined) {
 				argumentKey = route_variables[route];
 				extractNextArgument = true;
-				
 				if ($.inArray(route, route_map) === -1) {
 					return;
 				}
@@ -379,6 +379,7 @@
 	function triggerPathSet() {
 		if (!routingError) {
 			_.trigger("path-set", [routedPath, _.parameters(), _.routeParameters()]);
+			
 			_.trigger("path-set-" + explicitRoute, [_.parameters(), _.routeParameters()]);
 			
 			$.each(routedPath, function (index, route) {
@@ -948,7 +949,7 @@
 					} else {
 						next_path_value = null;
 					}
-				} else if (key in route_boolean_variables) {
+				} else if (key in route_boolean_reference) {
 					handled_parameters[key] = true;
 					
 					if (Boolean(new_parameters[route_boolean_variables[key]])) {
@@ -1127,6 +1128,7 @@
 	});
 	
 	_.ready(function () {
+				
 		generateMap();
 	});
 	
