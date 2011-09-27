@@ -1,0 +1,14 @@
+{
+	"framework": "koi", 
+	"composition": ["css", "js"], 
+	"class": "framework", 
+	"version": "0.3.0", 
+	"name": "deeplink",
+	"dependencies": {
+		"koi": {
+			"framework": {
+				"koi": "0.3.x"
+			}
+		}
+	}
+}
