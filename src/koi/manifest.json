@@ -4,8 +4,8 @@
 	"framework": "koi",
 	"composition": ["js"],
 	"version": "0.3.0",
-	"themegroup": "koi-application",
-	"theme": "application",
+	"themegroup": "application",
+	"theme": ["layout", "typography", "iconography"],
 	"dependencies": {
 		"jquery": {
 			"framework": {

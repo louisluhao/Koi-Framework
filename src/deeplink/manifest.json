@@ -1,6 +1,6 @@
 {
 	"framework": "koi", 
-	"composition": ["css", "js"], 
+	"composition": ["js"], 
 	"class": "framework", 
 	"version": "0.3.0", 
 	"name": "deeplink",
