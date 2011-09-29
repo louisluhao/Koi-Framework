@@ -54,6 +54,23 @@ A Koi application consists of:
 
 ### 1. Creating an application
 #### index.html
+
+This contains a basic HTML skeleton for your application. At a minimum, the `<head>`
+should contain two `<meta>` tags and one `<script>` that look something like this:
+
+```html
+<meta name="manifest" content="manifest.json" scheme="koi-bootstrap" />
+<meta name="sdk" content="/remote/sdk" scheme="koi-bootstrap" />
+<script type="text/javascript" src="/remote/sdk/koi/framework/bootstrap/development/bootstrap.js"></script>
+```
+
+These describe the location of your manifest.json file and load bootstap.js, which
+reads the manifest and dynamically loads everything your application needs from it.
+
+In the `<body>`, the app should contain an HTML layout structure for your application.
+
+_TODO more!_
+
 #### manifest.json
 #### configuration.js
 #### en_US.json
