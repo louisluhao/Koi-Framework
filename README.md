@@ -1,21 +1,35 @@
 # Koi
-Koi is a framework for developing Javascript applications on top of jQuery.
+Koi is a framework for developing web applications on top of jQuery.
 
-## Development philosophy
+## Development Philosophy
 > Write once, use forever.
 
-Koi is designed to create software which is:
+Koi is designed to create software which is _extensible_, _configurable_ and
+_reusable_.
 
--   Extensible
--   Configurable
--   Reusable
+By _extensible_, we mean we see it as a subset of what you need; it provides
+a set of common functionality as a starting point and allows you to add
+whatever else you may need with minimum agony.
 
-To accomplish this goal, Koi requires external software to manage its
-components and generate production builds. The Koi SDK client is an open
-source command line interface which is maintained and developed alongside the 
-Koi system. It's available [here](https://github.com/Knewton/Koi-SDK-Client "Koi SDK Client").
+By _configurable_, we mean it tries not to be opinionated; it should
+be able to handle many different use cases without trying to define what's
+important for you. In the worst case, everything is modular; if you don't
+like what something is doing, you can rip it out and replace it with something
+better for the job.
 
-An application will almost always need some external software, but
+By _reusable_, we mean applications are made up of replaceable components that
+can be reused across multiple projects. If you've been using Koi for awhile,
+writing a new application should mostly be a matter of fitting together
+parts you've already written.
+
+### The SDK
+
+Koi uses external software to manage its components and generate builds. The
+Koi SDK client is an open source command line interface which is maintained
+and developed alongside the Koi system. It's available
+[here](https://github.com/Knewton/Koi-SDK-Client "Koi SDK Client").
+
+An application will almost certainly need some external software for this, but
 there's no particular reason why you'd need to use the provided SDK client.
 External parties are free to develop their own SDK management software.
 
@@ -27,7 +41,7 @@ We use different capitalizations of Koi in different contexts:
 
 -	"Koi" is the Koi system as a whole and associated development philosophy.
 -	"koi" is the command line SDK client that builds applications from sources.
--	"KOI" is the object exposed to Javascript that provides the framework's functionality.
+-	"KOI" is Javascript object that exposes its functionality within applications.
 
 ## Application Development
 
