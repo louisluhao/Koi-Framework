@@ -41,7 +41,7 @@ We use different capitalizations of Koi in different contexts:
 
 -	"Koi" is the Koi system as a whole and associated development philosophy.
 -	"koi" is the command line SDK client that builds applications from sources.
--	"KOI" is Javascript object that exposes its functionality within applications.
+-	"KOI" is the Javascript object that exposes framework functionality within applications.
 
 ## Application Development
 
