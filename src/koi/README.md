@@ -17,6 +17,7 @@ ready queue contains no keys which are "false".
 
 The point of handling readying in this way is to allow arbitrary delay of the
 ready event. For example:
+
     KOI.readyQueue.foobar = false;
     KOI.makeReady(); // No effect
     KOI.readyQueue.foobar = true;
@@ -50,9 +51,10 @@ they need to execute before the application is ready. However, the execution
 code of most plugins and the application itself should wait for the koi 
 system's ready event.
 
-## 3. Initialization
+## 3. initialization
 The initialization stage of startup must be triggered by the application. This
 is done by executing the following within the application code:
+
     KOI.initialize(language);
 
 This will dispatch the "initialized" event, which is a signal that the
@@ -64,6 +66,7 @@ postponed until some included plugin can determine if access should be granted.
 
 Application code which wants to listen for this event should bind it's handler
 using the auto-dispatch method:
+
     KOI.initialized(listener);  // Dispatches immediately if initialized
 
 Application code can check `KOI.isInitialized` if a boolean determination must 
@@ -76,6 +79,7 @@ been loaded and is available, the "localization-loaded" event is dispatched.
 
 Application code which wants to listen for this event should bind its handler
 using the auto-dispatch method:
+
     KOI.localizable(listener); // Dispatches immediately if localization exists
 
 Application code can check `KOI.hasLocalization` if a boolean determination
@@ -96,6 +100,7 @@ to `KOI.makeReady()` will dispatch the ready event.
 
 Application code which wants to listen for this event should bind its handler
 using the auto-dispatch method:
+
     KOI.ready(listener); // Dispatches immediately if koi is ready
 
 Application code can check `KOI.isReady` if a boolean determination must be 

@@ -10,6 +10,7 @@ application-specific configurations for those plugins, and application-specific
 software which makes use of those plugins.
 
 The koi system is designed to facilitate the development of software which is:
+
 -   Extensible
 -   Configurable
 -   Reusable
