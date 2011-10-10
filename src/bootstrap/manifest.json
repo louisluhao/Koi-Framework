@@ -1,7 +1,0 @@
-{
-	"name": "bootstrap",
-	"class": "framework",
-	"framework": "koi",
-	"composition": ["js"],
-	"version": "0.3.0"
-}
