@@ -1,5 +1,5 @@
 # Koi
-Koi is a framework for developing web applications on top of jQuery.
+Koi is an application toolkit for developing web applications.
 
 ## Development Philosophy
 > Write once, use forever.
@@ -41,7 +41,7 @@ We use different capitalizations of Koi in different contexts:
 
 -	"Koi" is the Koi system as a whole and associated development philosophy.
 -	"koi" is the command line SDK client that builds applications from sources.
--	"KOI" is the Javascript object that exposes framework functionality within applications.
+-	"KOI" is the Javascript object that exposes the toolkit.
 
 ## Application Development
 
@@ -55,8 +55,11 @@ A Koi application consists of:
 ### 1. Creating an application
 #### index.html
 
-This contains a basic HTML skeleton for your application. At a minimum, the `<head>`
-should contain two `<meta>` tags and one `<script>` that look something like this:
+_Notice_: This section is old and must be updated.
+
+This contains a basic HTML skeleton for your application. At a minimum, the 
+`<head>` should contain two `<meta>` tags and one `<script>` that look 
+something like this:
 
 ```html
 <meta name="manifest" content="manifest.json" scheme="koi-bootstrap" />
@@ -64,10 +67,12 @@ should contain two `<meta>` tags and one `<script>` that look something like thi
 <script type="text/javascript" src="/remote/sdk/koi/framework/bootstrap/development/bootstrap.js"></script>
 ```
 
-These describe the location of your manifest.json file and load bootstap.js, which
-reads the manifest and dynamically loads everything your application needs from it.
+These describe the location of your manifest.json file and load bootstap.js, 
+which reads the manifest and dynamically loads everything your application 
+needs from it.
 
-In the `<body>`, the app should contain an HTML layout structure for your application.
+In the `<body>`, the app should contain an HTML layout structure for your 
+application.
 
 _TODO more!_
 
