@@ -1,0 +1,5 @@
+{
+	"name": "koi-core",
+	"composition": ["js"],
+	"version": "0.3.0"
+}
