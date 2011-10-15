@@ -24,23 +24,13 @@
          * Match the print out for variable.constructor.toString().
          * @type {RegExp}
          */
-    var RX_TYPE_SPLIT = /\s([A-Za-z0-9]+)\(/,
+    var RX_TYPE_SPLIT = /\s([A-Za-z0-9]+)\(/;
 
     //------------------------------
     //
     // Properties
     //
     //------------------------------
-
-    //------------------------------
-    // Events
-    //------------------------------
-
-        /**
-         * Events and listeners. 
-         * @type {Object.<string, Array.<function(...*)>>}
-         */
-        events = {};
 
     //------------------------------
     //
@@ -266,23 +256,6 @@
                 throw name + "is already exposed";
             }
         });
-    }
-
-    //------------------------------
-    // Events
-    //------------------------------
-
-    /**
-     * Bind a listener to some event.
-     * The eventType parameter accepts a number of formats.
-     * "event-name": Listens for "event-name".
-     * "event-name other-event": Listens for "event-name" and "other-event".
-     * "event-name.namespace": Listens for "event-name" within "namespace".
-     * ".namespace": Listens for all events within "namespace".*
-     * @param {string} eventType The type of event to bind to.
-     * @param {function(...*)} listener The event listener.
-     */
-    function bind(eventType, listener) {
     }
 
     //------------------------------

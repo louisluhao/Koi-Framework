@@ -123,6 +123,13 @@
                 expect(KOI.format(str, {a: {b: {c: "d"}}})).to(equal, "d");
             }); 
         });
+        describe("formatting spec", function () {
+            it("obeys string length spec", function () {
+                var str = "{0:10}",
+                    expected = "a         ";
+                expect(KOI.format(str, "a")).to(equal, expected);
+            }); 
+        });
         describe("general formatting guidelines", function () {
             it("returns an empty string on invalid string", function () {
                 expect(KOI.format(null)).to(equal, "");
@@ -205,6 +212,17 @@
                     error;
                 try {
                     KOI.format(str);
+                } catch (e) {
+                    error = e;
+                }
+                expect(error).to(equal, expected);
+            });
+            it("errors with nested format spec fields", function () {
+                var str = "{0:{1:{2}}}",
+                    expected = "cannot nest format spec fields",
+                    error;
+                try {
+                    KOI.format(str, 1, 8);
                 } catch (e) {
                     error = e;
                 }
