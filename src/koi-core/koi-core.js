@@ -10,6 +10,11 @@
 (function () {
     "use strict";
 
+    /**
+     * todo: readme
+     * todo: tests
+     */
+    
     //------------------------------
     //
     // Constants
@@ -137,6 +142,24 @@
     }
 
     /**
+     * Determine if a variable is an interger.
+     * @param {?*} v The variable.
+     * @return {boolean} Whether the variable is an interger.
+     */
+    function isInterger(v) {
+        return isNumber(v) && v % 1 === 0;
+    }
+
+    /**
+     * Determine if a variable is a float.
+     * @param {?*} v The variable.
+     * @return {boolean} Whether the variable is a float.
+     */
+    function isFloat(v) {
+        return isNumber(v) && !isInterger(v);
+    }
+
+    /**
      * Determine if a variable is a string.
      * @param {?*} v The variable.
      * @return {boolean} Whether the variable is a string.
@@ -209,7 +232,7 @@
      */
     function each(src, iterator) {
         var key,
-            index,
+            index = 0,
             length;
         
         if (isFunction(iterator) && isValid(src)) {
@@ -222,7 +245,6 @@
                     }
                 }
             } else if (isArray(src) && !isEmpty(src)) {
-                index = 0;
                 length = src.length;
                 for (; index < length; index++) {
                     if (iterator.call(src, index, src[index]) === false) {
@@ -230,9 +252,15 @@
                     }
                 }
             } else if (isNumber(src) && src > 0) {
-                index = 0;
                 for (; index < src; index++) {
                     if (iterator.call(src, index, index) === false) {
+                        return;
+                    }
+                }
+            } else if (isString(src) && src.length > 0) {
+                length = src.length;
+                for (; index < length; index++) {
+                    if (iterator.call(src, index, src[index]) === false) {
                         return;
                     }
                 }
@@ -279,11 +307,14 @@
         isNull: isNull,
         isUndefined: isUndefined,
         isValid: isValid,
+        getType: getType,
         isOfType: isOfType,
         isArray: isArray,
         isObject: isObject,
         isFunction: isFunction,
         isNumber: isNumber,
+        isInterger: isInterger,
+        isFloat: isFloat,
         isString: isString,
         isRegExp: isRegExp,
         isDate: isDate,

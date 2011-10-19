@@ -11,12 +11,7 @@
     "use strict";
 
     /**
-     * todo: readme
-     * todo: formatting spec
-    //todo: make the spec stuff handle one internal repl
-    //todo: make the spec stuff work
-    //note: internal replacement is incompatible with 
-    //      unnamed parameters. That's probably important
+     * todo: create readme
      */
 
     //------------------------------
@@ -26,140 +21,121 @@
     //------------------------------
 
     //------------------------------
-    // Expressions
+    // Expressions: Trim
     //------------------------------
 
         /**
-         * Escape a string's special character for creating a regex.
-         * new RegExp(text.replace(RX_ESCAPE_FOR_REGEX, "\\$&"))
+         * Match leading whitespace.
          * @type {RegExp}
          */
-    var RX_ESCAPE_FOR_REGEX = /[\-\[\]{}()*+?.,\\\^$|#\s]/g,
+    var RX_LTRIM = /^\s+/,
 
         /**
-         * Match a left square bracket.
-         * @type {RegExp}
+         * Match trailing whitespace.
+         * @type {regexp}
          */
-        RX_LBRACKET = /\[/g,
+        RX_RTRIM = /\s+$/,
 
         /**
-         * Match a right square bracket.
+         * Match leading and trailing whitespace.
          * @type {RegExp}
          */
-        RX_RBRACKET = /\]/g,
+        RX_TRIM = /^\s+|\s+$/g,
+
+    //------------------------------
+    // Expressions: Format
+    //------------------------------
 
         /**
-         * Match a left curly brace.
+         * Match period separated properties.
          * @type {RegExp}
          */
-        RX_LCURLY = /\{/g,
+        RX_KEYS = /\.[^\.]+/g,
 
         /**
-         * Match a left curly brace.
+         * Match an field's explicit position.
          * @type {RegExp}
          */
-        RX_LCURLY_ESCAPED = /\\\{/g,
+        RX_DIGIT = /^\d+$/,
 
-        /**
-         * Match a right curly brace.
-         * @type {RegExp}
-         */
-        RX_RCURLY = /\}/g,
-
-        /**
-         * Match a left curly brace.
-         * @type {RegExp}
-         */
-        RX_RCURLY_ESCAPED = /\\\}/g,
-
-        /**
-         * Match a double format spec.
-         * {0:{1:{2}}}
-         * @type {RegExp}
-         */
-        RX_DOUBLE_FORMAT_SPEC_FIELD = /\{[^\{\}]*:\{[^\{\}]*:\{/,
-
-        /**
-         * Match the replacement field within a string for formatting.
-         * @type {RegExp}
-         */
-        RX_FORMAT_SPLIT = /\{\{?([^\{\}]*(:{[^\{\}]})?)\}?\}/gi,
-
-        /**
-         * Match an escaped replacement field.
-         * {{}}
-         * @type {RegExp}
-         */
-        RX_FORMAT_ESCAPED = /\{\{([^}]*)\}\}/gi,
-
-        /**
-         * Match the dot-key syntax within a replacement field.
-         * {0.name}
-         * @type {RegExp}
-         */
-        RX_FORMAT_DOT_KEY = /\.[a-zA-Z0-9_\-]+/g,
-
-        /**
-         * Match the bracket-key syntax within a replacement field.
-         * {0[name]}
-         * @type {RegExp}
-         */
-        RX_FORMAT_BRACKET_KEY = /\[([^\]]+)\]/g,
-
-        /**
-         * Match the coersion syntax within a replacement field.
-         * {0:fill^30}
-         * @type {RegExp}
-         */
-        RX_FORMAT_SPEC = /:(.*)/g,
-
-        /**
-         * Match only a digit.
-         * @type {RegExp}
-         */
-        RX_FORMAT_INDEX = /^\d+$/,
+    //------------------------------
+    // Expressions: Spec Format
+    //------------------------------
 
         /**
          * Match the [[fill]align] spec declaration.
          * @type {RegExp}
          */
-        RX_SPEC_FILL_ALIGN = /([^\^<>])?(\^|>|<)/,
+        RX_SPEC_FILL_ALIGN = /^([^\^<>\=])?(\^|>|<|=)/,
 
         /**
          * Match the [sign] spec declaration.
          * @param {RegExp}
          */
-        RX_SPEC_SIGN = /(\+|\-|\s)/,
+        RX_SPEC_SIGN = /^(\+|\-|\s)/,
 
         /**
          * Match the [#] spec declaration.
          * @param {RegExp}
          */
-        RX_SPEC_ALTERNATE = /#/,
+        RX_SPEC_ALTERNATE = /^#/,
 
         /**
          * Match the [0] spec declaration.
          * @param {RegExp}
          */
-        RX_SPEC_ZERO = /0/,
+        RX_SPEC_ZERO = /^0/,
 
         /**
          * Match the [width] spec declaration.
          * @param {RegExp}
          */
-        RX_SPEC_WIDTH = /\d+/,
+        RX_SPEC_WIDTH = /^\d+/,
 
         /**
          * Match the [.precision] spec declaration.
          * @param {RegExp}
          */
-        RX_SPEC_PRECISION = /\.(\d+)/,
+        RX_SPEC_PRECISION = /^\.(\d+)/,
 
         /**
-         * Match the [type] declaration.
+         * Match the [type] declaration for intergers.
          * @param {RegExp}
          */
-        RX_SPEC_TYPE = /([bcdoxXneEfFgGn%])/;
+        RX_SPEC_INTERGER = /^[bcdoxXn]/,
+        
+        /**
+         * Match the [type] declaration for floats.
+         * @param {RegExp}
+         */
+        RX_SPEC_FLOAT = /^[eEfFgGn%]/,
+
+    //------------------------------
+    // Settings
+    //------------------------------
+
+        /**
+         * The default precision to use for formatting numbers.
+         * @param {number}
+         */
+        DEFAULT_PRECISION = 6,
+
+        /**
+         * The default fill to use for padding strings.
+         */
+        DEFAULT_FILL = " ",
+
+        /**
+         * The default alignment to use for formatting padded strings.
+         * @param {string}
+         */
+        DEFAULT_ALIGN = "<",
+
+        /**
+         * The default sign to use for formatting numbers.
+         * @param {string}
+         */
+        DEFAULT_SIGN = "-";
 
     //------------------------------
     //
@@ -174,24 +150,107 @@
     //------------------------------
 
     //------------------------------
+    // Trimming
+    //------------------------------
+
+    /**
+     * Trim leading spacing from a string.
+     * @param {string} s The string to trim.
+     * @return {string} The trimmed string.
+     */
+    function ltrim(s) {
+        return s.replace(RX_LTRIM, "");
+    }
+
+    /**
+     * Trim trailing spacing from a string.
+     * @param {string} s The string to trim.
+     * @return {string} The trimmed string.
+     */
+    function rtrim(s) {
+        return s.replace(RX_RTRIM, "");
+    }
+
+    /**
+     * Trim leading and trailing spacing from a string.
+     * @param {string} s The string to trim.
+     * @return {string} The trimmed string.
+     */
+    function trim(s) {
+        return s.replace(RX_TRIM, "");
+    }
+
+    //------------------------------
+    // Padding
+    //------------------------------
+
+    /**
+     * Pad a string with a leading fill character.
+     * @param {string} s The string.
+     * @param {string} fill The fill character.
+     * @param {number} length The length to target string.
+     * @return {string} The padded string.
+     */
+    function lpad(s, fill, length) {
+        if (s.length < length) {
+            s = (new Array(length + 1 - s.length)).join(fill) + s;
+        }
+
+        return s;
+    }
+
+    /**
+     * Pad a string with a trailing fill character.
+     * @param {string} s The string.
+     * @param {string} fill The fill character.
+     * @param {number} length The length of the target string.
+     * @return {string} The padded string.
+     */
+    function rpad(s, fill, length) {
+        if (s.length < length) {
+            s += (new Array(length + 1 - s.length)).join(fill);
+        }
+
+        return s;
+    }
+
+    /**
+     * Pad a string with leading and trailing fill character.
+     * Extra padding is added as trailing.
+     * @param {string} s The string.
+     * @param {string} fill The fill character.
+     * @param {number} length The length of the target string.
+     * @return {string} The padded string.
+     */
+    function pad(s, fill, length) {
+        if (s.length < length) {
+            var size = (length - s.length) / 2;
+            s = lpad("", fill, Math.floor(size)) + s + 
+                rpad("", fill, Math.ceil(size));
+        }
+
+        return s;
+    }
+
+    //------------------------------
     // Format
     //------------------------------
 
     /**
-     * Apply the formatting spec to the given string.
+     * Format a string using the formatting spec.
      * [[fill]align][sign][#][0][minimumwidth][.precision][type]
-     * @param {string} str The string to format.
+     * @param {string|number} value The value to format.
      * @param {string} spec The formatting spec.
      * @return {string} The formatted string.
      */
-    function formatSpec(str, spec) {
+    function formatSpec(value, spec) {
         if (KOI.isValid(spec)) {
                 // The fill|align pair.
-            var fillAlign = spec.match(RX_SPEC_FILL_ALIGN),
+            var fillAlign,
                 // The fill character
-                fill,
+                fill = DEFAULT_FILL,
                 // The alignment character
-                align,
+                align = DEFAULT_ALIGN,
                 // The formatting sign
                 sign,
                 // If numeric alternate form should be used
@@ -203,18 +262,27 @@
                 // Number precision or max string length
                 precision,
                 // The number formatting type
-                type;
+                type,
+                // The exponent of a number being formatted
+                exponent,
+                // If the numeric value is negative
+                isNegative = false,
+                // The display sign for numeric values
+                displaySign = "";
 
+            fillAlign  = spec.match(RX_SPEC_FILL_ALIGN);
             if (KOI.isValid(fillAlign)) {
-                fill = fillAlign[1];
-                align = fillAlign[2];
+                fill = fillAlign[1] || DEFAULT_FILL;
+                align = fillAlign[2] || DEFAULT_ALIGN;
                 spec = spec.replace(RX_SPEC_FILL_ALIGN, "");
             }
-
+            
             sign = spec.match(RX_SPEC_SIGN);
             if (KOI.isValid(sign)) {
                 sign = sign[0];
                 spec = spec.replace(RX_SPEC_SIGN, "");
+            } else {
+                sign = DEFAULT_SIGN;
             }
 
             alternateForm = KOI.isValid(spec.match(RX_SPEC_ALTERNATE));
@@ -226,11 +294,14 @@
             if (zeroPad) {
                 spec = spec.replace(RX_SPEC_ZERO, "");
                 fill = "0";
+                if (align !== "=") {
+                    align = ">";
+                }
             }
 
             width = spec.match(RX_SPEC_WIDTH);
             if (KOI.isValid(width)) {
-                width = parseInt(width[1], 10);
+                width = parseInt(width[0], 10);
                 spec = spec.replace(RX_SPEC_WIDTH, "");
             }
 
@@ -240,22 +311,174 @@
                 spec = spec.replace(RX_SPEC_PRECISION, "");
             }
 
-            type = spec.match(RX_SPEC_TYPE);
+            type = spec.match(RX_SPEC_INTERGER);
             if (KOI.isValid(type)) {
-                type = type[1];
-                spec = spec.replace(RX_SPEC_TYPE, "");
+                type = type[0];
+                spec = spec.replace(RX_SPEC_INTERGER, "");
+            } else {
+                type = spec.match(RX_SPEC_FLOAT);
+                if (KOI.isValid(type)) {
+                    type = type[0];
+                    spec = spec.replace(RX_SPEC_FLOAT, "");
+                } else if (spec === "s") {
+                    // String format
+                    type = "s"; 
+                    spec = "";
+                } else {
+                    // Assumed string format
+                    type = "s";
+                }
             }
 
             if (spec.length > 0) {
-                throw "invalid format spec";
+                throw "invalid format spec: " + spec;
             }
 
-            //todo: modify the string based on the defined spec options
+            if (KOI.isNumber(value)) {
+                if (!KOI.isValid(precision)) {
+                    precision = DEFAULT_PRECISION;
+                }
+                isNegative = value < 0;
+                value = Math.abs(value);
+                exponent = parseInt(value.toExponential(precision)
+                    .split("+")[1], 10);
+                switch (type) {
+                //------------------------------
+                // Interger formatting
+                //------------------------------
+                // Binary
+                case "b":
+                    value = value.toString(2);
+                    if (alternateForm) {
+                        value = "0b" + value;
+                    }
+                    break;
+                // Character
+                case "c":
+                    value = window.String.fromCharCode(value);
+                    break; 
+                // Octal
+                case "o":
+                    value = value.toString(8);
+                    if (alternateForm) {
+                        value = "0o" + value;
+                    }
+                    break;
+                // Hex
+                case "x":
+                    value = value.toString(16).toLowerCase();
+                    if (alternateForm) {
+                        value = "0x" + value;
+                    }
+                    break;
+                // Uppercase Hex
+                case "X":
+                    value = value.toString(16).toUpperCase();
+                    if (alternateForm) {
+                        value = "0X" + value;
+                    }
+                    break;
+                // Decimal
+                case "d":
+                    value = value.toString(10);
+                    break;
+                // Exponent notation
+                case "e":
+                    value = value.toExponential(precision).toString();
+                    break;
+                // Uppercase exponent notation
+                case "E":
+                    value = value.toExponential(precision).toString()
+                        .toUpperCase();
+                    break;
+                // Fixed point
+                case "f":
+                case "F":
+                    value = value.toFixed(precision);
+                    break;
+                // General formatting
+                case "g":
+                    if (exponent >= precision) {
+                        value = value.toExponential(); 
+                    }
+                    break; 
+                // Uppercase general formatting
+                case "G":
+                    if (exponent >= precision) {
+                        value = value.toExponential().toString().toUpperCase();
+                    }
+                    break; 
+                // Percent formatting (Multiply by 100, display with sign)
+                case "%":
+                    value = (value * 100).toFixed().toString() + "%";
+                    break;
+                // String format
+                case "s":
+                    value = value.toString();
+                    break;
+                default:
+                    if (KOI.isInterger(value)) {
+                        // Interger default: Decimal (d)
+                        value = value.toString(10);
+                    } else {
+                        // Float default: General (g)
+                        if (exponent >= precision) {
+                            value = value.toExponential(); 
+                        }
+                    }
+                    break;
+                }
+
+                if (isNegative) {
+                    displaySign = "-";
+                } else {
+                    switch (sign) {
+                    // Always show sign
+                    case "+":
+                        displaySign = "+";
+                        break;
+                    // Show space when positive
+                    case " ":
+                        displaySign = " ";
+                        break;
+                    }
+                }
+
+                if (align === "=") {
+                    value = displaySign + 
+                        lpad(value, fill, width - displaySign.length);
+                } else {
+                    value = displaySign + value;
+                }
+            } else if (type === "s") {
+                // Apply string precision formatting
+                if (KOI.isValid(precision) && value.length > precision) {
+                    value = value.substr(0, precision);
+                }
+            } else {
+                throw "invalid formatting type (" + type + ") for: " + 
+                    KOI.getType(value);
+            }
+
+            switch (align) {
+            // Left
+            case ">":
+                value = lpad(value, fill, width);
+                break;
+            // Right
+            case "<":
+                value = rpad(value, fill, width);
+                break;
+            // Center
+            case "^":
+                value = pad(value, fill, width);
+                break;
+            }
         }
 
-        return str;
+        return value;
     }
-    
+
     /**
      * Perform the replacement of string fields with proper values.
      * @param {string} str The string with fields to replace.
@@ -268,145 +491,229 @@
         var implicitPositioning = null,
             // The current position replacement value
             currentPosition,
-            // The max position index defined
-            positionMax;
+            // The output string
+            buffer = [],
+            // Various parser buffers
+            bufferField = [],
+            bufferSpec = [],
+            bufferSpecField = [],
+            bufferSpecFieldSpec = [],
+            bufferSpecPostField = [],
+            // Various parser capture modes
+            captureField = false,
+            captureSpec = false,
+            captureSpecField = false,
+            captureSpecFieldSpec = false,
+            // Parser spec modes
+            allowSpecFieldCapture = true,
+            // Format the spec field?
+            processSpecField = false,
+            // Unmatched closing brace
+            unmatchedClosing = false,
+            // The last character seen by the parser
+            lastCharacter;
 
-        // Set the max index, used for throwing count errors
-        if (KOI.isValid(positions)) {
-            positionMax = positions.length - 1;
-        }
-
-        KOI.each(str.match(RX_FORMAT_SPLIT), function (index, field) {
-            // A the index of a position replacement 
-            var position,
-            // The name of a named field replacement
+        /**
+         * Returns the value of a given field.
+         * @param {string} field The field string.
+         * @return {string} The unformatted value for the field.
+         */
+        function getValue(field) {
+                // Nested keys for this value
+            var keys = [],
+                // The position
+                position,
+                // The name
                 name,
-            // Used to replace the field in the string
-                fieldReplacement,
-            // The replacement value
-                value,
-            // A key on the replacement value to use
-                keys,
-            // The content between the field's braces
-                contents,
-            // The formatting spec
-                spec;
+                // The value to return
+                value;
 
-            // Escape curly braces for proper RegExp generation
-            fieldReplacement = new RegExp(field
-                .replace(RX_ESCAPE_FOR_REGEX, "\\$&"));
-            // Remove curly braces to handle the contents of the field
-            contents = field.substring(1,
-                field.length - 1);
+            // Extract keys
+            KOI.each(field.match(RX_KEYS), function (index, key) {
+                keys.push(key.substr(1));  
+            });
+            field = field.replace(RX_KEYS, "");
 
-            if (field === "{}") {
-                // Implicit positioning
+            // Determine spec field type
+            if (field === "") {
+                // Implicit numbering
                 if (!KOI.isValid(implicitPositioning)) {
                     implicitPositioning = true;
                     currentPosition = 0;
                 }
-
                 if (!implicitPositioning) {
                     throw "cannot mix explicit and implicit counting";
                 }
-
-                // Return then incrememnt the current position
                 position = currentPosition++;
-            } else if (KOI.isValid(field.match(RX_FORMAT_ESCAPED))) {
-                // {{}} is an escaped string
-                value = contents
-                    .replace(RX_LCURLY, "\\{")
-                    .replace(RX_RCURLY, "\\}");
-            } else { 
-                // Check for bracket replacement keys
-                KOI.each(contents.match(RX_FORMAT_BRACKET_KEY),
-                    function (index, key) {
-                        if (!KOI.isValid(keys)) {
-                            keys = [];
-                        }
-                        contents = contents.replace(key, "");
-                        keys[index] = key.substring(1, key.length - 1);
-                    });
-
-                // Check for dot replacement keys
-                KOI.each(contents.match(RX_FORMAT_DOT_KEY),
-                    function (index, key) {
-                        if (!KOI.isValid(keys)) {
-                            keys = [];
-                        } else if (index === 0) {
-                            throw "cannot mix dot and bracket syntax";
-                        }
-                        contents = contents.replace(key, "");
-                        keys[index] = key.substring(1);
-                    });
-
-                spec = contents.match(RX_FORMAT_SPEC);
-                if (KOI.isValid(spec)) {
-                    // Remove the spec from the contents
-                    contents = contents.replace(spec, "");
-                    // Remove the key from the contents
-                    spec = spec[0].substring(1);
-                    if (KOI.isValid(spec.match(RX_FORMAT_SPLIT))) {
-                        spec = stringReplacement(spec, names, positions);
-                    }
+            } else if (KOI.isValid(field.match(RX_DIGIT))) {
+                if (!KOI.isValid(implicitPositioning)) {
+                    implicitPositioning = false;
                 }
-
-                if (contents.match(RX_FORMAT_INDEX)) {
-                    if (!KOI.isValid(implicitPositioning)) {
-                        implicitPositioning = false;
-                    }
-
-                    if (implicitPositioning) {
-                        throw "cannot mix explicit and implicit counting";
-                    }
-
-                    // Position replacement with explicit index
-                    position = parseInt(contents, 10);
-                } else {
-                    // Named replacement
-                    name = contents;
+                // Explicit numbering
+                if (implicitPositioning) {
+                    throw "cannot mix explicit and implicit counting";
                 }
+                position = parseInt(field.match(RX_DIGIT), 10);
+            } else {
+                // Named replacement
+                name = field;
             }
 
-            if (!KOI.isValid(value)) {
-                // value is already set for escaped strings only
-                if (KOI.isValid(position)) {
-                    // Position replacement
-                    if (position > positionMax) {
-                        throw "fields and values do not match";
-                    }
-
+            // Store the value
+            if (KOI.isValid(position)) {
+                if (KOI.isValid(positions[position])) {
                     value = positions[position];
-                } else if (KOI.isValid(name)) {
-                    // Named replacement
-                    if (!KOI.isValid(names[name])) {
-                        throw "missing named value: " + name;
-                    }
+                } else {
+                    throw "field out of range";
+                }
+            } else if (KOI.isValid(names[name])) {
+                value = names[name]; 
+            } else {
+                throw "key error: " + name;
+            }
 
-                    value = names[name];
+            // Handle key expansion
+            KOI.each(keys, function (index, key) {
+                if (KOI.isValid(value[key])) {
+                    value = value[key];
+                } else {
+                    throw "key error: " + key;
+                }
+            });
+
+            return value;
+        }
+
+        KOI.each(str, function (index, c) {
+                // Temporarily suppress one unmatched field terminator
+            var ignoreUnmatched = false,
+                // Format the buffered string?
+                process = false,
+                // Add the current character to the proper buffer
+                addToBuffer = false,
+                // Various parser values
+                field,
+                spec,
+                specField,
+                specFieldSpec,
+                // The value for the field
+                fieldValue;
+
+            switch (c) {
+            case "{":
+                if (lastCharacter === "{") {
+                    if (captureSpec) {
+                        throw "unmatched '{' in format";
+                    } else if (captureField) {
+                        captureField = false;
+                    }
+                    
+                    buffer.push(c);
+                } else if (captureSpecFieldSpec || captureSpecField) {
+                    throw "Max string recursion exceeded";
+                } else if (captureSpec && allowSpecFieldCapture) {
+                    allowSpecFieldCapture = false;
+                    captureSpecField = true;
+                } else if (captureField) {
+                    throw "Single '{' encountered in format string";
+                } else {
+                    captureField = true;
+                }
+                break;
+            case "}":
+                if (captureSpecField) {
+                    processSpecField = true;
+                    captureSpecField = false;
+                } else if (captureField) {
+                    captureField = false;
+                    process = true;
+                    allowSpecFieldCapture = true;
+                } else if (lastCharacter === "}") {
+                    unmatchedClosing = false;
+                    buffer.push(c); 
+                } else {
+                    ignoreUnmatched = true;
+                    unmatchedClosing = true;
+                }
+                break;
+            case ":":
+                if (!captureSpecFieldSpec && captureSpecField) {
+                    captureSpecFieldSpec = true;
+                } else if (!captureSpec && captureField) {
+                    captureSpec = true;
+                } else {
+                    addToBuffer = true;
+                }
+                break;
+            default:
+                addToBuffer = true;
+                break;
+            }
+
+            if (addToBuffer) {
+                if (captureSpecFieldSpec) {
+                    bufferSpecFieldSpec.push(c);
+                } else if (captureSpecField) {
+                    bufferSpecField.push(c);
+                } else if (captureSpec) {
+                    if (allowSpecFieldCapture) {
+                        bufferSpec.push(c);
+                    } else {
+                        bufferSpecPostField.push(c);
+                    }
+                } else if (captureField) {
+                    bufferField.push(c);
+                } else {
+                    buffer.push(c);
                 }
             }
 
-            if (KOI.isFunction(value)) {
-                value = value.call(window);
+            if (unmatchedClosing && !ignoreUnmatched) {
+                throw "Single '}' encountered in format string";
             }
 
-            if (KOI.isValid(keys)) {
-                KOI.each(keys, function (index, key) {
-                    if (KOI.isValid(value[key])) {
-                        value = value[key];
-                    } else {
-                        throw "key error: " + key;
-                    }
-                });
+            lastCharacter = c;
+
+            if (process) {
+                // Copy buffers into strings
+                field = bufferField.join("");
+                spec = bufferSpec.join("");
+                specField = bufferSpecField.join("");
+                specFieldSpec = bufferSpecFieldSpec.join("");
+
+                // Clear buffers
+                bufferField = [];
+                bufferSpec = [];
+                bufferSpecField = [];
+                bufferSpecFieldSpec = [];
+
+                // Extract the field value
+                fieldValue = getValue(field);
+
+                // Extract the spec field value
+                if (processSpecField) {
+                    spec += formatSpec(getValue(specField), specFieldSpec) +
+                        bufferSpecPostField.join("");
+                }
+
+                bufferSpecPostField = [];
+
+                // Add the formatted field back to the output buffer
+                buffer.push(formatSpec(fieldValue, spec));
             }
+        });
 
-            str = str.replace(fieldReplacement, formatSpec(value, spec));
-        }); 
+        // Error if the parser didn't close properly
+        if (captureField || captureSpecField) {
+            throw "Single '{' encountered in format string";
+        }
 
-        return str
-            .replace(RX_LCURLY_ESCAPED, "{")
-            .replace(RX_RCURLY_ESCAPED, "}");
+        // Error if the parser started but didn't finish closing a curly
+        if (unmatchedClosing) {
+            throw "Single '}' encountered in format string";
+        }
+
+        return buffer.join("");
     }
 
     /**
@@ -418,11 +725,7 @@
         var str,
             namedValues,
             positionValues,
-            args = Array.prototype.slice.call(arguments),
-            // The number of left curly braces defined
-            leftBraceCount,
-            // The number of right curly braces defined
-            rightBraceCount;
+            args = Array.prototype.slice.call(arguments);
 
         // Disambiguate the use of this function.
         if (args.length >= 3 && KOI.isBoolean(args[0])) {
@@ -451,33 +754,6 @@
         }
 
         if (KOI.isString(str)) {
-            str = str
-                .replace(RX_LCURLY_ESCAPED, "\\")
-                .replace(RX_RCURLY_ESCAPED, "\\");
-
-            leftBraceCount = str.match(RX_LCURLY);
-            rightBraceCount = str.match(RX_RCURLY);
-
-            if (!KOI.isValid(leftBraceCount)) {
-                leftBraceCount = [];
-            }
-
-            if (!KOI.isValid(rightBraceCount)) {
-                rightBraceCount = [];
-            }
-
-            if (leftBraceCount.length !== rightBraceCount.length) {
-                if (leftBraceCount.length > rightBraceCount.length) {
-                    throw "single { detected";
-                } else {
-                    throw "single } detected";
-                }
-            }
-
-            if (KOI.isValid(str.match(/\{[^\{\}]*:\{[^\{\}]*:\{/))) {
-                throw "cannot nest format spec fields";
-            }
-
             return stringReplacement(str, namedValues, positionValues);
         } else {
             return "";
@@ -501,6 +777,22 @@
     //------------------------------
 
     KOI.expose({
+    
+    //------------------------------
+    // Trimming
+    //------------------------------
+    
+        rtrim: rtrim,
+        ltrim: ltrim,
+        trim: trim,
+
+    //------------------------------
+    // Padding
+    //------------------------------
+
+        lpad: lpad,
+        rpad: rpad,
+        pad: pad,
     
     //------------------------------
     // Format
