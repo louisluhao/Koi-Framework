@@ -12,7 +12,6 @@
 
     /**
      * todo: readme
-     * todo: tests
      */
     
     //------------------------------
@@ -278,17 +277,34 @@
     /**
      * Expose methods on koi.
      * @param {Object.<string, function(...[*]>} methods The methods to expose.
+     * @param {string=} namespace A namespace for the exposure.
+     * @param {boolean=} force Force overwriting of defined.
      */
-    function expose(methods) {
+    function expose(methods, namespace, force) {
         if (window.KOI === undefined) {
             window.KOI = {};
         }
 
+        var exposer = window.KOI;
+
+        if (isValid(namespace)) {
+            if (!isValid(exposer[namespace])) {
+                exposer[namespace] = {};
+            }
+
+            if (!isObject(exposer[namespace])) {
+                throw namespace + " is not a namespace";
+            }
+
+            exposer = exposer[namespace];
+        }
+
         each(methods, function (name, method) {
-            if (window.KOI[name] === undefined) {
-                window.KOI[name] = method;
+            if (exposer[name] === undefined || Boolean(force) || 
+                    !isFunction(exposer[name])) {
+                exposer[name] = method;
             } else {
-                throw name + "is already exposed";
+                throw name + " is already exposed";
             }
         });
     }
