@@ -226,8 +226,9 @@
     /**
      * Call an iterator function for each element within the source.
      * Have the iterator return false to break. 
-     * @param {?Array|Object|number} src The source for iteration.
-     * @param {function(this:Array|Object|number, string|number, *)} iterator 
+     * If a function is provided, it will be run until it returns false.
+     * @param {Array|Object|number|string|function()} src The source.
+     * @param {?function(this:Array|Object|number, string|number, *)} iterator 
      *     An iterator callback.
      */
     function each(src, iterator) {
@@ -235,7 +236,7 @@
             index = 0,
             length;
         
-        if (isFunction(iterator) && isValid(src)) {
+        if (isValid(src) && (isFunction(iterator) || isFunction(src))) {
             if (isObject(src) && !isEmpty(src)) {
                 for (key in src) {
                     if (src.hasOwnProperty(key)) {
@@ -261,6 +262,12 @@
                 length = src.length;
                 for (; index < length; index++) {
                     if (iterator.call(src, index, src[index]) === false) {
+                        return;
+                    }
+                }
+            } else if (isFunction(src)) {
+                while (true) {
+                    if (src.call(src) === false) {
                         return;
                     }
                 }
@@ -331,4 +338,3 @@
     });
 
 }());
-

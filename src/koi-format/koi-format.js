@@ -492,26 +492,7 @@
             // The current position replacement value
             currentPosition,
             // The output string
-            buffer = [],
-            // Various parser buffers
-            bufferField = [],
-            bufferSpec = [],
-            bufferSpecField = [],
-            bufferSpecFieldSpec = [],
-            bufferSpecPostField = [],
-            // Various parser capture modes
-            captureField = false,
-            captureSpec = false,
-            captureSpecField = false,
-            captureSpecFieldSpec = false,
-            // Parser spec modes
-            allowSpecFieldCapture = true,
-            // Format the spec field?
-            processSpecField = false,
-            // Unmatched closing brace
-            unmatchedClosing = false,
-            // The last character seen by the parser
-            lastCharacter;
+            buffer = [];
 
         /**
          * Returns the value of a given field.
@@ -584,134 +565,133 @@
             return value;
         }
 
-        KOI.each(str, function (index, c) {
-                // Temporarily suppress one unmatched field terminator
-            var ignoreUnmatched = false,
-                // Format the buffered string?
-                process = false,
-                // Add the current character to the proper buffer
-                addToBuffer = false,
-                // Various parser values
-                field,
+        KOI.each(function () {
+                // String buffers
+            var field,
                 spec,
                 specField,
                 specFieldSpec,
-                // The value for the field
-                fieldValue;
+                // Values
+                fieldValue,
+                // The index of the character to detect
+                charIndex,
+                // The max index allowed for parsing
+                charBoundary;
 
-            switch (c) {
-            case "{":
-                if (lastCharacter === "{") {
-                    if (captureSpec) {
-                        throw "unmatched '{' in format";
-                    } else if (captureField) {
-                        captureField = false;
-                    }
-                    
-                    buffer.push(c);
-                } else if (captureSpecFieldSpec || captureSpecField) {
-                    throw "Max string recursion exceeded";
-                } else if (captureSpec && allowSpecFieldCapture) {
-                    allowSpecFieldCapture = false;
-                    captureSpecField = true;
-                } else if (captureField) {
-                    throw "Single '{' encountered in format string";
-                } else {
-                    captureField = true;
-                }
-                break;
-            case "}":
-                if (captureSpecField) {
-                    processSpecField = true;
-                    captureSpecField = false;
-                } else if (captureField) {
-                    captureField = false;
-                    process = true;
-                    allowSpecFieldCapture = true;
-                } else if (lastCharacter === "}") {
-                    unmatchedClosing = false;
-                    buffer.push(c); 
-                } else {
-                    ignoreUnmatched = true;
-                    unmatchedClosing = true;
-                }
-                break;
-            case ":":
-                if (!captureSpecFieldSpec && captureSpecField) {
-                    captureSpecFieldSpec = true;
-                } else if (!captureSpec && captureField) {
-                    captureSpec = true;
-                } else {
-                    addToBuffer = true;
-                }
-                break;
-            default:
-                addToBuffer = true;
-                break;
-            }
-
-            if (addToBuffer) {
-                if (captureSpecFieldSpec) {
-                    bufferSpecFieldSpec.push(c);
-                } else if (captureSpecField) {
-                    bufferSpecField.push(c);
-                } else if (captureSpec) {
-                    if (allowSpecFieldCapture) {
-                        bufferSpec.push(c);
-                    } else {
-                        bufferSpecPostField.push(c);
-                    }
-                } else if (captureField) {
-                    bufferField.push(c);
-                } else {
-                    buffer.push(c);
+            charIndex = str.indexOf("{");   
+            if (charIndex !== -1) {
+                if (KOI.isValid(str[charIndex + 1]) && 
+                        str[charIndex + 1] === "{") {
+                    // A brace followed by a brace is an escape
+                    buffer.push(str.substr(0, charIndex + 1));
+                    str = str.substr(charIndex + 2);
+                    return;
                 }
             }
 
-            if (unmatchedClosing && !ignoreUnmatched) {
-                throw "Single '}' encountered in format string";
+            charBoundary = str.indexOf("}");
+            if (charIndex !== -1 && charBoundary === -1) {
+                // This field is missing a closing brace
+                throw "Single '{' encountered in format string";
+            } else if (KOI.isValid(str[charBoundary + 1]) && 
+                    str[charBoundary + 1] === "}") {
+                charIndex = str.indexOf(":");
+                if (charIndex === -1 || charIndex > charBoundary + 1) {
+                    // A brace followed by a brace is an escape
+                    // unless it's part of a field spec
+                    buffer.push(str.substr(0, charBoundary + 1));
+                    str = str.substr(charBoundary + 2);
+                    return;
+                } else {
+                    // Reset the proper index
+                    charIndex = str.indexOf("{");
+                }
             }
 
-            lastCharacter = c;
+            if (charIndex === -1) {
+                if (str.indexOf("}") !== -1) {
+                    // No matching brace
+                    throw "Single '}' encountered in format string";
+                }
 
-            if (process) {
-                // Copy buffers into strings
-                field = bufferField.join("");
-                spec = bufferSpec.join("");
-                specField = bufferSpecField.join("");
-                specFieldSpec = bufferSpecFieldSpec.join("");
+                // No parsing remains to be done.
+                buffer.push(str);
+                return false;
+            }
 
-                // Clear buffers
-                bufferField = [];
-                bufferSpec = [];
-                bufferSpecField = [];
-                bufferSpecFieldSpec = [];
+            // Add content before a brace to the buffer
+            buffer.push(str.substr(0, charIndex));
+            // Trim the brace off the string
+            str = str.substr(charIndex + 1);
+            charBoundary = str.indexOf("}");
+            if (charBoundary === -1) {
+                // This field is missing a closing brace
+                throw "Single '{' encountered in format string";
+            }
 
+            charIndex = str.indexOf(":");
+            if (charIndex !== -1 && charIndex < charBoundary) {
+                // Format spec within the field
+                field = str.substr(0, charIndex);
                 // Extract the field value
                 fieldValue = getValue(field);
+                str = str.substr(charIndex + 1);
+                charBoundary = str.indexOf("}");
 
-                // Extract the spec field value
-                if (processSpecField) {
-                    spec += formatSpec(getValue(specField), specFieldSpec) +
-                        bufferSpecPostField.join("");
+                charIndex = str.indexOf("{");
+                if (charIndex !== -1 && charIndex < charBoundary) {
+                    // Field within the format spec
+                    spec = str.substr(0, charIndex);
+                    str = str.substr(charIndex + 1);
+                    charBoundary = str.indexOf("}");
+
+                    charIndex = str.indexOf(":");
+                    if (charIndex !== -1 && charIndex < charBoundary) {
+                        // Format spec within the field within the format spec
+                        specField = str.substr(0, charIndex);
+                        str = str.substr(charIndex + 1);
+                        charBoundary = str.indexOf("}");
+
+                        charIndex = str.indexOf("{");
+                        if (charIndex !== -1 && charIndex < charBoundary) {
+                            throw "Max string recursion exceeded";
+                        }
+                        
+                        specFieldSpec = str.substr(0, charBoundary);
+                        str = str.substr(charBoundary + 1);
+                        charBoundary = str.indexOf("}");
+
+                        spec += formatSpec(getValue(specField), specFieldSpec);
+                    } else {
+                        specField = str.substr(0, charBoundary);
+                        spec += getValue(specField);
+                        str = str.substr(charBoundary + 1);
+                        charBoundary = str.indexOf("}");
+                    }
+                    
+                    if (charBoundary === -1) {
+                        // This field is missing a closing brace
+                        throw "Single '{' encountered in format string";
+                    }
+
+                    spec += str.substr(0, charBoundary);
+                    str = str.substr(charBoundary + 1);
+                    charBoundary = str.indexOf("}");
+                } else {
+                    spec = str.substr(0, charBoundary);
+                    str = str.substr(charBoundary + 1);
                 }
 
-                bufferSpecPostField = [];
-
-                // Add the formatted field back to the output buffer
                 buffer.push(formatSpec(fieldValue, spec));
+            } else {
+                field = str.substr(0, charBoundary);
+                str = str.substr(charBoundary + 1);
+                // Extract the field value
+                buffer.push(getValue(field));
             }
+
+            return;
         });
-
-        // Error if the parser didn't close properly
-        if (captureField || captureSpecField) {
-            throw "Single '{' encountered in format string";
-        }
-
-        // Error if the parser started but didn't finish closing a curly
-        if (unmatchedClosing) {
-            throw "Single '}' encountered in format string";
-        }
 
         return buffer.join("");
     }
