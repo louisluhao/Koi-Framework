@@ -27,6 +27,7 @@
         /**
          * Match the print out for variable.constructor.toString().
          * @type {RegExp}
+         * @const
          */
     var RX_TYPE_SPLIT = /\s([A-Za-z0-9]+)\(/;
 
@@ -277,7 +278,7 @@
     /**
      * Expose methods on koi.
      * @param {Object.<string, function(...[*]>} methods The methods to expose.
-     * @param {string=} namespace A namespace for the exposure.
+     * @param {string|*=} namespace A namespace for the exposure.
      * @param {boolean=} force Force overwriting of defined.
      */
     function expose(methods, namespace, force) {
@@ -288,15 +289,20 @@
         var exposer = window.KOI;
 
         if (isValid(namespace)) {
-            if (!isValid(exposer[namespace])) {
-                exposer[namespace] = {};
-            }
+            if (isString(namespace)) {
+                if (!isValid(exposer[namespace])) {
+                    exposer[namespace] = {};
+                }
 
-            if (!isObject(exposer[namespace])) {
-                throw namespace + " is not a namespace";
-            }
+                if (!isObject(exposer[namespace])) {
+                    throw namespace + " is not a namespace";
+                }
 
-            exposer = exposer[namespace];
+                exposer = exposer[namespace];
+            } else {
+                // Allow the namespace to be any object
+                exposer = namespace;
+            }
         }
 
         each(methods, function (name, method) {

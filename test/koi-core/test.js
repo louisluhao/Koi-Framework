@@ -244,6 +244,12 @@
                 KOI.expose({c: "d"});
                 expect(KOI.c).to(equal, "d");
             });
+            it("allows objects as namespaces", function () {
+                var obj = {};
+                KOI.expose({a: "b"}, obj);
+                expect(obj.a).to_not(be_undefined);
+                expect(obj.a).to(equal, "b");
+            });
             it("allows multiple exposure for a namespace", function () {
                 KOI.expose({c: function () {}}, "namespacetest");
                 KOI.expose({d: function () {}}, "namespacetest");

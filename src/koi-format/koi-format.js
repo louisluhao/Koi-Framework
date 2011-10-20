@@ -27,18 +27,21 @@
         /**
          * Match leading whitespace.
          * @type {RegExp}
+         * @const
          */
     var RX_LTRIM = /^\s+/,
 
         /**
          * Match trailing whitespace.
          * @type {regexp}
+         * @const
          */
         RX_RTRIM = /\s+$/,
 
         /**
          * Match leading and trailing whitespace.
          * @type {RegExp}
+         * @const
          */
         RX_TRIM = /^\s+|\s+$/g,
 
@@ -49,12 +52,14 @@
         /**
          * Match period separated properties.
          * @type {RegExp}
+         * @const
          */
         RX_KEYS = /\.[^\.]+/g,
 
         /**
          * Match an field's explicit position.
          * @type {RegExp}
+         * @const
          */
         RX_DIGIT = /^\d+$/,
 
@@ -65,48 +70,56 @@
         /**
          * Match the [[fill]align] spec declaration.
          * @type {RegExp}
+         * @const
          */
         RX_SPEC_FILL_ALIGN = /^([^\^<>\=])?(\^|>|<|=)/,
 
         /**
          * Match the [sign] spec declaration.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_SIGN = /^(\+|\-|\s)/,
 
         /**
          * Match the [#] spec declaration.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_ALTERNATE = /^#/,
 
         /**
          * Match the [0] spec declaration.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_ZERO = /^0/,
 
         /**
          * Match the [width] spec declaration.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_WIDTH = /^\d+/,
 
         /**
          * Match the [.precision] spec declaration.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_PRECISION = /^\.(\d+)/,
 
         /**
          * Match the [type] declaration for intergers.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_INTERGER = /^[bcdoxXn]/,
         
         /**
          * Match the [type] declaration for floats.
-         * @param {RegExp}
+         * @type {RegExp}
+         * @const
          */
         RX_SPEC_FLOAT = /^[eEfFgGn%]/,
 
@@ -116,24 +129,29 @@
 
         /**
          * The default precision to use for formatting numbers.
-         * @param {number}
+         * @type {number}
+         * @const
          */
         DEFAULT_PRECISION = 6,
 
         /**
          * The default fill to use for padding strings.
+         * @type {string}
+         * @const
          */
         DEFAULT_FILL = " ",
 
         /**
          * The default alignment to use for formatting padded strings.
-         * @param {string}
+         * @type {string}
+         * @const
          */
         DEFAULT_ALIGN = "<",
 
         /**
          * The default sign to use for formatting numbers.
-         * @param {string}
+         * @type {string}
+         * @const
          */
         DEFAULT_SIGN = "-";
 
@@ -750,10 +768,6 @@
     //
     // Exposure
     //
-    //------------------------------
-
-    //------------------------------
-    // Koi
     //------------------------------
 
     KOI.expose({
