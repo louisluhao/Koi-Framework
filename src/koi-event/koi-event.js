@@ -32,7 +32,7 @@
 
         /**
          * Event queues.
-         * @type {Object<string, EventQueue>}
+         * @type {Object<string, Array<number>>}
          */
     var events = {},
 
@@ -80,6 +80,23 @@
         return listener.koiListenerUID;
     }
 
+    //------------------------------
+    // Events
+    //------------------------------
+
+    /**
+     * Creates a queue for the event.
+     * @param {string} event The event.
+     * @return {Array<number>} The event.
+     */
+    function eventListeners(event) {
+        if (!KOI.isValid(events[event])) {
+            events[event] = [];
+        }
+
+        return events[event];
+    }
+
     /**
      * Mark an event listener to either be disabled or not disabled following
      * some event.
@@ -103,108 +120,74 @@
             disableAfterTriggering[event].splice(index, 1);
         }
     }
-    
-    //------------------------------
-    // Event queue
-    //------------------------------
-
-    /**
-     * @constructor
-     * @private
-     * @param {string} event The event.
-     */
-    function EventQueue(event) {
-        /**
-         * The listeners bound to this queue
-         * @type {Array<function(...*)>}
-         */
-        this.listeners = [];
-
-        /**
-         * The type of event.
-         * @type {string}
-         */
-        this.event = event;
-    }
 
     /**
      * Determines if the listener is in the queue.
+     * @param {string} event The event.
      * @param {function(...*)|number} listener The listener.
      * @return {boolean} True if the listener is in the queue.
      */
-    function hasListener(listener) {
-        return this.listeners.indexOf(assignListener(listener)) !== -1;
+    function eventHasListener(event, listener) {
+        return eventListeners(event).indexOf(assignListener(listener)) !== -1;
     }
 
     /**
      * Add an event listener.
+     * @param {string} event The event.
      * @param {function(...*)|number} The listener function.
      * @param {boolean=} once Execute the listener only once.
      * @return {number} The unique id for the listener.
      */
-    function addListener(listener, once) {
+    function addListener(event, listener, once) {
         var uid = assignListener(listener);
-        disableListenerAfterExecution(this.event, uid, Boolean(once));
-        if (!this.hasListener(uid)) {
-            this.listeners.push(uid);
+        disableListenerAfterExecution(event, uid, Boolean(once));
+        if (!eventHasListener(event, uid)) {
+            eventListeners(event).push(uid);
         }
     }
 
     /**
      * Remove an event listener.
+     * @param {string} event The event.
      * @param {function(...*)|number} The listener or unique id.
      */
-    function removeListener(listener) {
-        var uid = assignListener(listener);
-        disableListenerAfterExecution(this.event, uid, false);
-        if (this.hasListener(uid)) {
-            this.listeners.splice(this.listeners.indexOf(uid), 1);
+    function removeListener(event, listener) {
+        var uid = assignListener(listener),
+            listenerList;
+        disableListenerAfterExecution(event, uid, false);
+        if (eventHasListener(event, uid)) {
+            listenerList = eventListeners(event);
+            listenerList.splice(listenerList.indexOf(uid), 1);
         }
     }
 
     /**
      * Remove all listeners.
+     * @param {string} event the event.
      */
-    function purgeQueue() {
-        var self = this;
-        KOI.each([].concat(this.listeners), function (index, uid) {
-            self.removeListener(uid);
+    function purgeQueue(event) {
+        // Clone the array before purging
+        KOI.each([].concat(eventListeners(event)), function (index, uid) {
+            removeListener(event, uid);
         });
     }
 
     /**
      * Trigger all listeners.
+     * @param {string} event the event.
      * @param {Array<*>} args The args to send to the listeners.
      */
-    function triggerQueue(args) {
-        var self = this,
-            disable = disableAfterTriggering[this.event];
-        KOI.each(this.listeners, function (index, uid) {
+    function triggerQueue(event, args) {
+        var disable = disableAfterTriggering[event];
+        KOI.each(eventListeners(event), function (index, uid) {
             listeners[uid].apply(listeners[uid], args);
         });
         if (KOI.isValid(disable)) {
             KOI.each(disable, function (index, uid) {
-                self.removeListener(uid); 
+                removeListener(event, uid); 
             });
-            disableAfterTriggering[this.event] = [];
+            disableAfterTriggering[event] = [];
         }
-    }
-
-    //------------------------------
-    // Events
-    //------------------------------
-
-    /**
-     * Creates a queue for the event.
-     * @param {string} event The event.
-     * @return {Array<EventQueue>} The event queue.
-     */
-    function createEvent(event) {
-        if (!KOI.isValid(events[event])) {
-            events[event] = new EventQueue(event);
-        }
-
-        return events[event];
     }
 
     /**
@@ -215,7 +198,7 @@
      */
     function bind(e, listener, once) {
         KOI.each(e.split(" "), function (index, event) {
-            createEvent(event).addListener(listener, once);
+            addListener(event, listener, once);
         });
     }
 
@@ -237,7 +220,7 @@
         var args = Array.prototype.slice.call(arguments);
         args.shift();
 
-        createEvent(event).triggerQueue(args);
+        triggerQueue(event, args);
     }
 
     /**
@@ -247,7 +230,7 @@
      */
     function unbind(e, listener) {
         KOI.each(e.split(" "), function (index, event) {
-            createEvent(event).removeListener(listener);
+            removeListener(event, listener);
         });
     }
 
@@ -257,7 +240,7 @@
      */
     function purge(e) {
         KOI.each(e.split(" "), function (index, event) {
-            createEvent(event).purgeQueue();
+            purgeQueue(event);
         });
     }
 
@@ -272,18 +255,6 @@
     // Exposure
     //
     //------------------------------
-
-    //------------------------------
-    // EventQueue class
-    //------------------------------
-    
-    KOI.expose({
-        hasListener: hasListener,
-        addListener: addListener,
-        removeListener: removeListener,
-        purgeQueue: purgeQueue,
-        triggerQueue: triggerQueue,
-    }, EventQueue.prototype);
 
     //------------------------------
     // KOI
