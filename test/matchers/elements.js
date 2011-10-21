@@ -19,7 +19,10 @@ Screw.Matchers["be_element_type"] = {
  */
 Screw.Matchers["have_id"] = {
 	match: function (expected, actual) {
-		return expected === actual.attr("id");
+        if (actual instanceof jQuery) {
+            actual = actual[0];
+        }
+		return expected === actual.getAttribute("id");
 	},
 	
 	failure_message: function (expected, actual, not) {
@@ -34,11 +37,16 @@ Screw.Matchers["have_classes"] = {
 		if (!$.isArray(expected)) {
 			expected = [expected];
 		}
+
+        if (actual instanceof jQuery) {
+            actual = actual[0];
+        }
 	
-		var hasAllClasses = true;
+		var hasAllClasses = true,
+            classes = actual.className.split(" ");
 		
 		$.each(expected, function (index, className) {
-			if (!actual.hasClass(className)) {
+			if (classes.indexOf(className) === -1) {
 				hasAllClasses = false;
 				return false;
 			}

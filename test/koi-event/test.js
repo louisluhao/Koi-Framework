@@ -1,5 +1,5 @@
 /**
- * String Formatting 
+ * KOI event
  *
  * Copyright (c) 2010 Knewton
  * Dual licensed under:
