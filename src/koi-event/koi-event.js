@@ -46,7 +46,13 @@
          * Listener UIDs to disable after they next trigger.
          * @type {Object<string, Array<number>>}
          */
-        disableAfterTriggering = {};
+        disableAfterTriggering = {},
+
+        /**
+         * Events which should be triggered once, and if they have been.
+         * @type {Object<string, boolean>}
+         */
+        toggleEvents = {};
 
     //------------------------------
     //
@@ -139,6 +145,11 @@
      * @return {number} The unique id for the listener.
      */
     function addListener(event, listener, once) {
+        if (KOI.isValid(toggleEvents[event]) && toggleEvents[event]) {
+            listener.apply(listener); 
+            return;
+        }
+
         var uid = assignListener(listener);
         disableListenerAfterExecution(event, uid, Boolean(once));
         if (!eventHasListener(event, uid)) {
@@ -170,6 +181,7 @@
         KOI.each([].concat(eventListeners(event)), function (index, uid) {
             removeListener(event, uid);
         });
+        disableAfterTriggering[event] = [];
     }
 
     /**
@@ -182,6 +194,11 @@
         KOI.each(eventListeners(event), function (index, uid) {
             listeners[uid].apply(listeners[uid], args);
         });
+        if (KOI.isValid(toggleEvents[event])) {
+            toggleEvents[event] = true;
+            purgeQueue(event);
+            return;
+        }
         if (KOI.isValid(disable)) {
             KOI.each(disable, function (index, uid) {
                 removeListener(event, uid); 
@@ -245,10 +262,126 @@
     }
 
     //------------------------------
+    // Browser events 
+    //------------------------------
+
+    /**
+     * Creates an event listener for some event on an element.
+     * @param {Element} element An HTML element.
+     * @param {string} event The event type.
+     * @param {function(Event)} The event listener.
+     */
+    function listen(element, event, listener) {
+        if (KOI.isValid(element) && KOI.isFunction(element.addEventListener)) {
+            element.addEventListener(event, listener, false);
+        } else {
+            element.attachEvent(event, listener);
+        }
+    }
+
+     /**
+      * Fires an event for some element.
+      * @param {Element} element An HTML element.
+      * @param {string} event The event type.
+      */
+    function fire(element, event) {
+        var evt;
+        if (KOI.isFunction(document.createEvent)) {
+            evt = document.createEvent("HTMLEvents");
+            evt.initEvent(event, true, true);
+            element.dispatchEvent(evt);
+        } else {
+            evt = document.createEventObject();
+            evt.eventType = event;
+            element.fireEvent('on' + event, evt);
+        }
+    }
+
+    //------------------------------
+    // Listeners: DOMReady
+    //------------------------------
+
+    /**
+     * DOMReady
+     *
+     * Cross browser object to attach functions that will be called
+     * immediatly when the DOM is ready.
+     *
+     * @version   1.0
+     * @author    Victor Villaverde Laan
+     * @license   MIT license
+     */
+    function IEDOMReady() {
+        if (!document.uniqueID && document.expando) {
+            return;
+        }
+        try {
+            document.createElement("document:ready").doScroll("left");
+            trigger("DOMReady");
+        } catch (e) {
+            setTimeout(IEDOMReady, 0);
+        }
+    }
+
+    /**
+     * Mark the DOM as ready.
+     */
+    function domReady() {
+        KOI.isDOMReady = true;
+    }
+
+    //------------------------------
+    // Listeners: window events
+    //------------------------------
+
+    /**
+     * Dispatches click events.
+     * @param {Event} event The event object.
+     */
+    function windowClick(event) {
+        var target = event.target || event.srcElement || event.originalTarget;
+
+        if (target.className.split(" ").indexOf("koi-event") !== -1) {
+            trigger(target.getAttribute("rel"), target);
+        }
+    }
+
+    /**
+     * Dispatches keyboard events.
+     * @param {Event} event The event object.
+     */
+    function windowType(event) {
+        var char = String.fromCharCode(event.keyCode);
+        trigger("keyboard", char, event.keyCode);
+        trigger("keyboard-" + char, event.keyCode);
+    }
+
+    //------------------------------
     //
     // Event bindings
     //
     //------------------------------
+
+    //------------------------------
+    // Window click
+    //------------------------------
+
+    listen(window, "click", windowClick);
+    listen(window, "keydown", windowType);
+
+    //------------------------------
+    // DOMReady
+    //------------------------------
+
+    toggleEvents.DOMReady = false;
+    bind("DOMReady", domReady);
+    if (KOI.isFunction(window.addEventListener)) {
+        listen(document, "DOMContentLoaded", function () {
+            trigger("DOMReady");
+        });
+    } else {
+        IEDOMReady();
+    }
 
     //------------------------------
     //
@@ -263,16 +396,30 @@
     KOI.expose({
 
     //------------------------------
+    // DOMReady
+    //------------------------------
+
+        isDOMReady: false,
+
+    //------------------------------
     // Events
     //------------------------------
 
         events: events,
         listeners: listeners,
+        toggleEvents: toggleEvents,
         bind: bind,
         trigger: trigger,
         one: one,
         unbind: unbind,
-        purge: purge
+        purge: purge,
+
+    //------------------------------
+    // Browser events
+    //------------------------------
+
+        listen: listen,
+        fire: fire
 
     });
 
