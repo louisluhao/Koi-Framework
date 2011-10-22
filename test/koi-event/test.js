@@ -61,6 +61,33 @@
                 KOI.trigger("testPurgeEvent");
                 expect(executed).to(equal, 0);
             });
+            it("supports toggle events", function () {
+                KOI.toggleEvents.testToggle = false; 
+                var triggered = 0;
+                KOI.bind("testToggle", function () {
+                    triggered += 1;
+                });
+                KOI.trigger("testToggle");
+                expect(triggered).to(equal, 1);
+                KOI.bind("testToggle", function () {
+                    triggered += 1;
+                });
+                expect(triggered).to(equal, 2);
+                KOI.trigger("testToggle");
+                expect(triggered).to(equal, 2);
+            });
+            it("can trigger events with parameters", function () {
+                var a, b, c;
+                KOI.bind("params", function (v1, v2, v3) {
+                    a = v1;
+                    b = v2;
+                    c = v3;
+                });
+                KOI.trigger("params", "a", "b", "c");
+                expect(a).to(equal, "a");
+                expect(b).to(equal, "b");
+                expect(c).to(equal, "c");
+            });
         });
         describe("multiple event binding", function () {
             it("can bind multiple events with one call", function () {
@@ -86,38 +113,7 @@
                 expect(executed).to(equal, 2);
             });
         });
-        describe("event parameters", function () {
-            it("can trigger events with parameters", function () {
-                var a, b, c;
-                KOI.bind("params", function (v1, v2, v3) {
-                    a = v1;
-                    b = v2;
-                    c = v3;
-                });
-                KOI.trigger("params", "a", "b", "c");
-                expect(a).to(equal, "a");
-                expect(b).to(equal, "b");
-                expect(c).to(equal, "c");
-            });
-        });
-        describe("toggle events", function () {
-            it("supports toggle events", function () {
-                KOI.toggleEvents.testToggle = false; 
-                var triggered = 0;
-                KOI.bind("testToggle", function () {
-                    triggered += 1;
-                });
-                KOI.trigger("testToggle");
-                expect(triggered).to(equal, 1);
-                KOI.bind("testToggle", function () {
-                    triggered += 1;
-                });
-                expect(triggered).to(equal, 2);
-                KOI.trigger("testToggle");
-                expect(triggered).to(equal, 2);
-            });
-        });
-        describe("event dispatching", function () {
+        describe("browser events", function () {
             it("can bind and trigger browser events", function () {
                 var e = document.createElement("a"),
                     triggered = false;
@@ -132,7 +128,7 @@
                     expect(KOI.isDOMReady).to(be_true);
                 }); 
             });
-            it("fires koi-event links", function () {
+            it("triggers koi-event links", function () {
                 var e = document.createElement("a"),
                     triggered = false;
                 e.setAttribute("rel", "elementTrigger");
