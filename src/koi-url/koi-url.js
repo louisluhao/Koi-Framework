@@ -26,8 +26,21 @@
 
         /**
          * Matches URL encoded spaces.
+         * @type {RegExp}
          */
-    var RX_20 = /%20/g;
+    var RX_20 = /%20/g,
+
+        /**
+         * Matches "+" places spaces.
+         * @type {RegExp}
+         */
+        RX_SPACE = /\+/g,
+
+        /**
+         * Matches nested keys in parameters.
+         * @type {RegExp}
+         */
+        RX_KEY = /\[([a-z0-9_\-]*)\]/g;
 
     //------------------------------
     //
@@ -82,7 +95,7 @@
         KOI.each(params, function (key, value) {
             encodeAsParameter(key, value, s);
         });
-        return s.join("&");
+        return s.join("&").replace(RX_20, "+");
     }
 
     /**
@@ -92,6 +105,47 @@
      */
     function parseParameters(s) {
         var params = {};
+
+        KOI.each(s.replace(RX_SPACE, " ").split("&"), function (i, p) {
+            p = p.split("="); 
+
+            if (p.length !== 2) {
+                // Invalid format; ignore.
+                return;
+            }
+
+            var k = decodeURIComponent(p[0]),
+                keys = [],
+                matcher,
+                current;
+
+            while(KOI.isValid(matcher = RX_KEY.exec(k))) {
+                keys.push(matcher[1]);
+            }
+            k = k.replace(RX_KEY, "");
+
+            if (keys.length > 0) {
+                current = params[k];
+                KOI.each(keys, function (ki, key) {
+                    if (key === "" || !isNaN(key)) {
+                        if (!KOI.isValid(current)) {
+                            current = [];
+                        }
+
+                        if (isNaN(key)) {
+                            key = current.length;
+                        } else {
+                            key = parseInt(key, 10);
+                        }
+                    } else {
+                        current = {};
+                    }
+                    current = current[key];
+                });
+            } else {
+                params[k] = decodeURIComponent(p[1]);
+            }
+        });
 
         return params;
     }
