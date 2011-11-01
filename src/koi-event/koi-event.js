@@ -118,7 +118,7 @@
             disableAfterTriggering[event] = [];
         }
 
-        index = disableAfterTriggering[event].indexOf(uid);
+        index = KOI.indexOf(disableAfterTriggering[event], uid);
 
         if (disable && index === -1) {
             disableAfterTriggering[event].push(uid);
@@ -134,7 +134,7 @@
      * @return {boolean} True if the listener is in the queue.
      */
     function eventHasListener(event, listener) {
-        return eventListeners(event).indexOf(assignListener(listener)) !== -1;
+        return KOI.indexOf(eventListeners(event), assignListener(listener)) !== -1;
     }
 
     /**
@@ -168,7 +168,7 @@
         disableListenerAfterExecution(event, uid, false);
         if (eventHasListener(event, uid)) {
             listenerList = eventListeners(event);
-            listenerList.splice(listenerList.indexOf(uid), 1);
+            listenerList.splice(KOI.indexOf(listenerList, uid), 1);
         }
     }
 
@@ -275,7 +275,7 @@
         if (KOI.isValid(element) && KOI.isFunction(element.addEventListener)) {
             element.addEventListener(event, listener, false);
         } else {
-            element.attachEvent(event, listener);
+            element.attachEvent('on' + event, listener);
         }
     }
 
@@ -341,7 +341,7 @@
     function windowClick(event) {
         var target = event.target || event.srcElement || event.originalTarget;
 
-        if (target.className.split(" ").indexOf("koi-event") !== -1) {
+        if (KOI.indexOf(target.className.split(" "), "koi-event") !== -1) {
             trigger(target.getAttribute("rel"), target);
         }
     }

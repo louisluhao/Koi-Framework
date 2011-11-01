@@ -315,6 +315,26 @@
         });
     }
 
+    /**
+     * Returns the first index of the value in the array.
+     * @param {array} ary The array to search.
+     * @param {Object} value The value to search for.
+     * @return {Number} The first index of the value in the array.
+     */
+    function indexOf(ary, value) {
+        if (Array.prototype.indexOf) {
+            return ary.indexOf(value);
+        } else {
+            for (var i = 0; i < ary.length; i++) {
+                if (ary[i] === value) {
+                    return i;
+                }
+            }
+        }
+
+        return -1;
+    }
+
     //------------------------------
     //
     // Event bindings
@@ -355,6 +375,7 @@
     //------------------------------
    
         each: each,
+        indexOf: indexOf,
         expose: expose
 
     });
