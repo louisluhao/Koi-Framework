@@ -59,7 +59,7 @@
     //------------------------------
 
     /**
-     * Recursively encode a key-value pair as parameters in some array.
+     * Recursively encodes a key-value pair as parameters in some array.
      * @param {string} k The key for the parameter.
      * @param {string|Object<string, *>|Array<*>} v Value to encode.
      * @param {Array<string>} a The array of parameters.
@@ -80,7 +80,7 @@
                 encodeAsParameter(k + "[" + name + "]", value, a);
             });
             return;
-        } 
+        }
 
         a.push(encodeURIComponent(k) + "=" + encodeURIComponent(v));
     }
@@ -107,7 +107,7 @@
         var params = {};
 
         KOI.each(s.replace(RX_SPACE, " ").split("&"), function (i, p) {
-            p = p.split("="); 
+            p = p.split("=");
 
             if (p.length !== 2) {
                 // Invalid format; ignore.
@@ -150,6 +150,25 @@
         return params;
     }
 
+    /*
+     * Parses a deeplink path and returns an object mapping keys to values.
+     * @param {string} path The path string.
+     * @return {Object<string, string>} The named parameters in it.
+     */
+    function readPath(path, given) {
+        var path_parts = path.split('/'),
+            given_parts = given.split('/'),
+            params = {};
+
+        for (var i = 0; i < path_parts.length; i++) {
+            if (path_parts[i][0] === ':') {
+                params[path_parts[i].slice(1)] = given_parts[i];
+            }
+        }
+
+        return params;
+    }
+
     //------------------------------
     //
     // Event bindings
@@ -170,7 +189,8 @@
 
         getParameters: parseParameters(window.location.search.substr(1)),
         toParameters: toParameters,
-        parseParameters: parseParameters
+        parseParameters: parseParameters,
+        readPath: readPath
 
     });
 
