@@ -322,10 +322,12 @@
      * @return {Number} The first index of the value in the array.
      */
     function indexOf(ary, value) {
+        var i = 0;
+
         if (Array.prototype.indexOf) {
             return ary.indexOf(value);
         } else {
-            for (var i = 0; i < ary.length; i++) {
+            for (; i < ary.length; i++) {
                 if (ary[i] === value) {
                     return i;
                 }

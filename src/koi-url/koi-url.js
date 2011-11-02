@@ -120,7 +120,7 @@
      */
     function toParameters(params) {
         if (KOI.isString(params)) {
-            return parmas;
+            return params;
         }
 
         var s = [];
@@ -182,25 +182,6 @@
                 params[k] = decodeURIComponent(p[1]);
             }
         });
-
-        return params;
-    }
-
-    /*
-     * Parses a deeplink path and returns an object mapping keys to values.
-     * @param {string} path The path string.
-     * @return {Object<string, string>} The named parameters in it.
-     */
-    function readPath(path, given) {
-        var path_parts = path.split('/'),
-            given_parts = given.split('/'),
-            params = {};
-
-        for (var i = 0; i < path_parts.length; i++) {
-            if (path_parts[i][0] === ':') {
-                params[path_parts[i].slice(1)] = given_parts[i];
-            }
-        }
 
         return params;
     }
@@ -273,7 +254,6 @@
         basepathChunks: basepathChunks,
         isLocal: isLocal,
         chunkURL: chunkURL,
-        readPath: readPath
 
     });
 

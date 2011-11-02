@@ -134,7 +134,10 @@
      * @return {boolean} True if the listener is in the queue.
      */
     function eventHasListener(event, listener) {
-        return KOI.indexOf(eventListeners(event), assignListener(listener)) !== -1;
+        return KOI.indexOf(
+            eventListeners(event),
+            assignListener(listener)
+        ) !== -1;
     }
 
     /**
@@ -311,7 +314,7 @@
      * @author    Victor Villaverde Laan
      * @license   MIT license
      */
-    function IEDOMReady() {
+    function ieDOMReady() {
         if (!document.uniqueID && document.expando) {
             return;
         }
@@ -319,7 +322,7 @@
             document.createElement("document:ready").doScroll("left");
             trigger("DOMReady");
         } catch (e) {
-            setTimeout(IEDOMReady, 0);
+            setTimeout(ieDOMReady, 0);
         }
     }
 
@@ -380,7 +383,7 @@
             trigger("DOMReady");
         });
     } else {
-        IEDOMReady();
+        ieDOMReady();
     }
 
     //------------------------------

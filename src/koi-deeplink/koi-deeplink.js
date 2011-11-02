@@ -38,6 +38,38 @@
     //
     //------------------------------
 
+    //------------------------------
+    //
+    // Utility functions
+    //
+    //------------------------------
+
+    /*
+     * Parses a deeplink path and returns an object mapping keys to values.
+     * @param {string} path The path string.
+     * @return {Object<string, string>} The named parameters in it.
+     */
+    function readPath(path, given) {
+        var path_parts = path.split('/'),
+            given_parts = given.split('/'),
+            params = {},
+            i = 0;
+
+        for (; i < path_parts.length; i++) {
+            if (path_parts[i][0] === ':') {
+                params[path_parts[i].slice(1)] = given_parts[i];
+            }
+        }
+
+        return params;
+    }
+
+    //------------------------------
+    //
+    // Route handling functions
+    //
+    //------------------------------
+
     function addRoutes(new_routes) {
         KOI.each(new_routes, function (route_path, callback) {
             routes[route_path] = callback;
@@ -84,7 +116,7 @@
 
     function executeRoute(path) {
         var route = selectRoute(path),
-            params = route ? KOI.readPath(route, path) : null;
+            params = route ? readPath(route, path) : null;
 
         if (route !== null) {
             routes[route].call(params);
