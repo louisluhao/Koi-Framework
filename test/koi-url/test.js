@@ -9,7 +9,7 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
     "use strict";
-   
+
     Screw.Unit(function () {
         describe("parameters", function () {
             it("can encode scalar values", function () {
@@ -29,6 +29,22 @@
                 var o = {a: ["b", ["c"]], d: {e: "f"}, g: 1},
                     params = KOI.parseParameters("a[]=b&a[1][]=c&d[e]=f&g=1");
                 expect(params.g).to(equal, "1");
+            });
+            it("can decode a simple path", function () {
+                expect(KOI.readPath(
+                    '/assignment/:attempt_id',
+                    '/assignment/10000'
+                )).to(equal, {attempt_id: 10000});
+            });
+            it("can decode a complex path", function () {
+                expect(KOI.readPath(
+                    '/assignment/:attempt_id/attempt/:bool_param/:another_param',
+                    '/assignment/10000/attempt/0/thing'
+                )).to(equal, {
+                    attempt_id: 10000,
+                    bool_param: 0,
+                    another_param: 'thing'
+                });
             });
         });
     });
