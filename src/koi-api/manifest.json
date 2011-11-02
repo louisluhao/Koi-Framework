@@ -1,0 +1,10 @@
+{
+	"name": "koi-api",
+	"composition": ["js"],
+	"version": "0.3.0",
+	"dependencies": {
+		"koi-core": "0.3.x",
+        "koi-event": "0.3.x",
+        "koi-url": "0.3.x"
+	}
+}

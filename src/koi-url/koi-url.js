@@ -40,13 +40,41 @@
          * Matches nested keys in parameters.
          * @type {RegExp}
          */
-        RX_KEY = /\[([a-z0-9_\-]*)\]/g;
+        RX_KEY = /\[([a-z0-9_\-]*)\]/g,
+
+        /**
+         * Splits the url into chunks.
+         * @type {RegExp}
+         */
+        RX_URL = /^([\w\+\.\-]+:)(?:\/\/([^\/?#:]*)(?::(\d+))?)?/,
 
     //------------------------------
     //
     // Properties
     //
     //------------------------------
+
+    //------------------------------
+    // URL parsing
+    //------------------------------
+
+        /**
+         * The basepath for the application.
+         * @type {String}
+         */
+        basepath,
+
+        /**
+         * The chunks of the basepath.
+         * @type {Array<string>}
+         */
+        basepathChunks,
+
+        /**
+         * If this application is running locally.
+         * @type {boolean}
+         */
+        isLocal = false;
 
     //------------------------------
     //
@@ -91,6 +119,10 @@
      * @return {string} The parameter string.
      */
     function toParameters(params) {
+        if (KOI.isString(params)) {
+            return parmas;
+        }
+
         var s = [];
         KOI.each(params, function (key, value) {
             encodeAsParameter(key, value, s);
@@ -104,6 +136,10 @@
      * @return {Object<string, string>} The parameters.
      */
     function parseParameters(s) {
+        if (!KOI.isString(s)) {
+            return {};
+        }
+
         var params = {};
 
         KOI.each(s.replace(RX_SPACE, " ").split("&"), function (i, p) {
@@ -119,7 +155,7 @@
                 matcher,
                 current;
 
-            while(KOI.isValid(matcher = RX_KEY.exec(k))) {
+            while (KOI.isValid(matcher = RX_KEY.exec(k))) {
                 keys.push(matcher[1]);
             }
             k = k.replace(RX_KEY, "");
@@ -151,6 +187,19 @@
     }
 
     //------------------------------
+    // URL parsing
+    //------------------------------
+
+    /**
+     * Split the URL into chunks.
+     * @param {string} url The URL.
+     * @return {?Array} The chunked URL.
+     */
+    function chunkURL(url) {
+        return RX_URL.exec(url);
+    }
+
+    //------------------------------
     //
     // Event bindings
     //
@@ -162,6 +211,31 @@
     //
     //------------------------------
 
+    //------------------------------
+    // URL parsing
+    //------------------------------
+
+    // Copied from jQuery
+    // IE can throw an exeception if document.domain has been set when reading
+    // properties off the location object.
+    try {
+        basepath = window.location.href;
+    } catch (e) {
+        // If IE fails here, the location will be appened to an A tag.
+        basepath = document.createElement("a");
+        basepath.href = "";
+        basepath = basepath.href;
+    }
+    // Chunk the basepath
+    basepathChunks = chunkURL(basepath);
+    // Determine if we are running locally
+    isLocal = /^(?:about|app|app\-storage|.+\-extension|file|res|widget):$/
+        .test(basepathChunks[1]); 
+
+    //------------------------------
+    // Methods
+    //------------------------------
+
     KOI.expose({
 
     //------------------------------
@@ -170,7 +244,16 @@
 
         getParameters: parseParameters(window.location.search.substr(1)),
         toParameters: toParameters,
-        parseParameters: parseParameters
+        parseParameters: parseParameters,
+
+    //------------------------------
+    // URL parsing
+    //------------------------------
+        
+        basepath: basepath,
+        basepathChunks: basepathChunks,
+        isLocal: isLocal,
+        chunkURL: chunkURL
 
     });
 
