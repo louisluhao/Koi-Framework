@@ -43,38 +43,23 @@
         RX_KEY = /\[([a-z0-9_\-]*)\]/g,
 
         /**
-         * Splits the url into chunks.
+         * Matches the protocol, hostName, and hostPort of a URL.
+         * {@code [:href, :protocol, :host, :port, :path, :search, :hash]}
          * @type {RegExp}
          */
-        RX_URL = /^([\w\+\.\-]+:)(?:\/\/([^\/?#:]*)(?::(\d+))?)?/,
+        RX_URL = /^([\w\+\.\-]+:)(?:\/\/([^\/?#:]*)(?::(\d+))?)?([^\?\#]*)?(\?[^\#]*)?(\#.*)?/,
+
+        /**
+         * Matches local protocols.
+         * @type {RegExp}
+         */
+        RX_LOCAL = /^(about|app|app\-storage|.+\-extension|file|res|widget):$/;
 
     //------------------------------
     //
     // Properties
     //
     //------------------------------
-
-    //------------------------------
-    // URL parsing
-    //------------------------------
-
-        /**
-         * The basepath for the application.
-         * @type {String}
-         */
-        basepath,
-
-        /**
-         * The chunks of the basepath.
-         * @type {Array<string>}
-         */
-        basepathChunks,
-
-        /**
-         * If this application is running locally.
-         * @type {boolean}
-         */
-        isLocal = false;
 
     //------------------------------
     //
@@ -187,16 +172,75 @@
     }
 
     //------------------------------
-    // URL parsing
+    // URL
     //------------------------------
 
+
     /**
-     * Split the URL into chunks.
+     * Returns an object equivilent to the window.location object.
      * @param {string} url The URL.
-     * @return {?Array} The chunked URL.
+     * @param {boolean=} resolvePort Should the port be resolved if it is not
+     *     provided? Default is false.
+     * @return {?Object<string, value>} The URL.
      */
-    function chunkURL(url) {
-        return RX_URL.exec(url);
+    function locationEquivalent(url, resolvePort) {
+        if (!KOI.isValid(url)) {
+            url = window.location.toString();
+        }
+
+        var chunks = RX_URL.exec(url);
+
+        if (KOI.isArray(chunks)) {
+            if (!KOI.isValid(chunks[3]) && Boolean(resolvePort)) {
+                chunks[3] = chunks[1] === "https:" ? "443" : "80";
+            }
+
+            return {
+                href: chunks[0],
+                protocol: chunks[1],
+                hostname: chunks[2],
+                port: chunks[3] || "",
+                host: chunks[2] + 
+                    (KOI.isValid(chunks[3]) ? ":" + chunks[3] : ""),
+                pathname: chunks[4] || "",
+                search: chunks[5] || "", 
+                hash: chunks[6] || ""
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Determines if the given URL is local or not.
+     * @param {?string} url The URL. Default is {@code window.location}.
+     * @return {boolean} True if the URL is local.
+     */
+    function isLocal(url) {
+        return RX_LOCAL.test(locationEquivalent(url).protocol);
+    }
+
+    /**
+     * Determines if a URL would be a cross domain request.
+     * @param {string} url The URL.
+     * @param {string=} compare Comparison URL. Default is
+     *     {@code window.location}.
+     */
+    function isCrossDomain(url, compare) {
+        var l = locationEquivalent(url, true),
+            w = locationEquivalent(compare, true),
+            crossDomain = false;
+
+        if (KOI.isValid(l) && KOI.isValid(w)) {
+            KOI.each(["protocol", "hostname", "port"], function (i, v) {
+                if (l[v] !== w[v]) {
+                    crossDomain = true;
+                    return false;
+                }
+            });
+        }
+
+        return crossDomain;
     }
 
     //------------------------------
@@ -212,50 +256,34 @@
     //------------------------------
 
     //------------------------------
-    // URL parsing
-    //------------------------------
-
-    // Copied from jQuery
-    // IE can throw an exeception if document.domain has been set when reading
-    // properties off the location object.
-    try {
-        basepath = window.location.href;
-    } catch (e) {
-        // If IE fails here, the location will be appened to an A tag.
-        basepath = document.createElement("a");
-        basepath.href = "";
-        basepath = basepath.href;
-    }
-    // Chunk the basepath
-    basepathChunks = chunkURL(basepath);
-    // Determine if we are running locally
-    isLocal = /^(?:about|app|app\-storage|.+\-extension|file|res|widget):$/
-        .test(basepathChunks[1]); 
-
-    //------------------------------
-    // Methods
+    // KOI
     //------------------------------
 
     KOI.expose({
+        
+    //------------------------------
+    // Properties
+    //------------------------------
+        
+        urlParameters: parseParameters(window.location.search.substr(1)),
 
     //------------------------------
     // Parameters
     //------------------------------
 
-        getParameters: parseParameters(window.location.search.substr(1)),
         toParameters: toParameters,
         parseParameters: parseParameters,
 
     //------------------------------
-    // URL parsing
+    // URL
     //------------------------------
         
-        basepath: basepath,
-        basepathChunks: basepathChunks,
+        locationEquivalent: locationEquivalent,
         isLocal: isLocal,
-        chunkURL: chunkURL,
+        isCrossDomain: isCrossDomain
 
     });
+
 
 }(window.KOI));
 

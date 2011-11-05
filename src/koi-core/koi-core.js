@@ -6,7 +6,7 @@
  *  MIT: http://www.opensource.org/licenses/mit-license.php
  *  GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
-/*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
+/*jslint browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
     "use strict";
 
@@ -317,24 +317,34 @@
 
     /**
      * Returns the first index of the value in the array.
-     * @param {array} ary The array to search.
-     * @param {Object} value The value to search for.
-     * @return {Number} The first index of the value in the array.
+     * @param {*} v The value to search for.
+     * @param {Array} a The array to search.
+     * @return {number} The first index of the value in the array.
      */
-    function indexOf(ary, value) {
+    function indexOf(v, a) {
         var i = 0;
 
         if (Array.prototype.indexOf) {
-            return ary.indexOf(value);
+            return a.indexOf(v);
         } else {
-            for (; i < ary.length; i++) {
-                if (ary[i] === value) {
+            for (; i < a.length; i++) {
+                if (a[i] === v) {
                     return i;
                 }
             }
         }
 
         return -1;
+    }
+
+    /**
+     * Determines if the value is in the array.
+     * @param {*} v The value to search for.
+     * @param {Array} a The array to search.
+     * @return {boolean} True if the value is in the array.
+     */
+    function inArray(v, a) {
+        return indexOf(v, a) !== -1;
     }
 
     //------------------------------
@@ -378,6 +388,7 @@
    
         each: each,
         indexOf: indexOf,
+        inArray: inArray,
         expose: expose
 
     });

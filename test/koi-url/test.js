@@ -30,21 +30,40 @@
                     params = KOI.parseParameters("a[]=b&a[1][]=c&d[e]=f&g=1");
                 expect(params.g).to(equal, "1");
             });
-            it("can decode a simple path", function () {
-                expect(KOI.readPath(
-                    '/assignment/:attempt_id',
-                    '/assignment/10000'
-                )).to(equal, {attempt_id: 10000});
+        });
+        describe("url", function () {
+            it("can create window.location equivalent objects", function () {
+                var href = "http://a.b/c/d/?e=f#g=h",
+                    l = KOI.locationEquivalent(href);
+
+                expect(l.href).to(equal, href);
+                expect(l.protocol).to(equal, "http:");
+                expect(l.host).to(equal, "a.b");
+                expect(l.hostname).to(equal, "a.b");
+                expect(l.port).to(equal, "");
+                expect(l.pathname).to(equal, "/c/d/");
+                expect(l.search).to(equal, "?e=f");
+                expect(l.hash).to(equal, "#g=h");
             });
-            it("can decode a complex path", function () {
-                expect(KOI.readPath(
-                    '/assignment/:attempt_id/attempt/:bool_param/:another_param',
-                    '/assignment/10000/attempt/0/thing'
-                )).to(equal, {
-                    attempt_id: 10000,
-                    bool_param: 0,
-                    another_param: 'thing'
-                });
+            it("can handle ports", function () {
+                expect(KOI.locationEquivalent("http://a.b:50/").port)
+                    .to(equal, "50");
+                expect(KOI.locationEquivalent("http://a.b/", true).port)
+                    .to(equal, "80");
+                expect(KOI.locationEquivalent("https://a.b/", true).port)
+                    .to(equal, "443");
+            }); 
+            it("can test for local URLs", function () {
+                expect(KOI.isLocal("http://a.b/")).to(be_false);
+                expect(KOI.isLocal("file://a.b/")).to(be_true);
+                expect(KOI.isLocal("about://a.b/")).to(be_true);
+            });
+            it("can test for cross domain", function () {
+                var src = "https://a.b/";
+                expect(KOI.isCrossDomain(src, src)).to(be_false);
+                expect(KOI.isCrossDomain("http://a.b/", src)).to(be_true);
+                expect(KOI.isCrossDomain("https://c.d/", src)).to(be_true);
+                expect(KOI.isCrossDomain("https://z.a.b/", src)).to(be_true);
             });
         });
     });

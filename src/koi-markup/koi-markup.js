@@ -78,7 +78,7 @@
         shorthand = shorthand.replace(RX_ATTRIBUTE, "");
         // Extract classes
         while (KOI.isValid(matcher = RX_CLASS.exec(shorthand))) {
-            if (classes.indexOf(matcher[1]) === -1) {
+            if (KOI.inArray(matcher[1], classes)) {
                 classes.push(matcher[1]);
             }
         }

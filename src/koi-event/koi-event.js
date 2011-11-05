@@ -118,7 +118,7 @@
             disableAfterTriggering[event] = [];
         }
 
-        index = KOI.indexOf(disableAfterTriggering[event], uid);
+        index = KOI.indexOf(uid, disableAfterTriggering[event]);
 
         if (disable && index === -1) {
             disableAfterTriggering[event].push(uid);
@@ -134,10 +134,7 @@
      * @return {boolean} True if the listener is in the queue.
      */
     function eventHasListener(event, listener) {
-        return KOI.indexOf(
-            eventListeners(event),
-            assignListener(listener)
-        ) !== -1;
+        return KOI.inArray(assignListener(listener), eventListeners(event));
     }
 
     /**
@@ -171,7 +168,7 @@
         disableListenerAfterExecution(event, uid, false);
         if (eventHasListener(event, uid)) {
             listenerList = eventListeners(event);
-            listenerList.splice(KOI.indexOf(listenerList, uid), 1);
+            listenerList.splice(KOI.indexOf(uid, listenerList), 1);
         }
     }
 
@@ -344,7 +341,7 @@
     function windowClick(event) {
         var target = event.target || event.srcElement || event.originalTarget;
 
-        if (KOI.indexOf(target.className.split(" "), "koi-event") !== -1) {
+        if (KOI.inArray("koi-event", target.className.split(" ")) !== -1) {
             trigger(target.getAttribute("rel"), target);
         }
     }
@@ -390,10 +387,6 @@
     //
     // Exposure
     //
-    //------------------------------
-
-    //------------------------------
-    // KOI
     //------------------------------
 
     KOI.expose({

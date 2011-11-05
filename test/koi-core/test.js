@@ -199,6 +199,16 @@
                 expect(error).to(be_undefined);
             });
         });
+        describe("utility methods: indexOf, inArray", function () {
+            it("can find items in arrays", function () {
+                expect(KOI.indexOf("a", ["b", "a"])).to(equal, 1);
+                expect(KOI.indexOf("a", ["b"])).to(equal, -1);
+            }); 
+            it ("can determine if items are in arrays", function () {
+                expect(KOI.inArray("a", ["b", "a"])).to(be_true);
+                expect(KOI.inArray("a", ["b"])).to(be_false);
+            });
+        });
         describe("utility method: expose", function () {
             it("exposes via KOI", function () {
                 KOI.expose({

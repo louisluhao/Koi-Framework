@@ -6,9 +6,15 @@
  *  MIT: http://www.opensource.org/licenses/mit-license.php
  *  GPLv3: http://www.opensource.org/licenses/gpl-3.0.html
  */
-/*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
+/*jslint evil:true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function (KOI) {
     "use strict";
+
+    /**
+     * todo: create readme
+     * todo: create functional testing
+     * todo: isLocal check for ajax (must throw error)
+     */
 
     //------------------------------
     //
@@ -53,7 +59,7 @@
          * The default accept header, by data type.
          * @type {Object<string, string>}
          */
-        DEFAULT_ACCEPT_HEADERS = {
+        DEFAULT_ACCEPT = {
             json: "application/json, text/javascript",
             jsonp: "application/json, text/javascript",
             html: "text/html",
@@ -65,6 +71,12 @@
          * @type {string}
          */
         ACCEPT_ALL = ["*/"] + ["*"],
+
+        /**
+         * The default content type header.
+         * @type {string}
+         */
+        DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded",
 
         /**
          * Matches valid JSON.
@@ -146,8 +158,8 @@
      * @return {HTMLElement} The document head.
      */
     function head() {
-        return document.head || document.getElementsByTagName( "head" )[0] || 
-                document.documentElement;
+        return document.head || document.getElementsByTagName("head")[0] || 
+            document.documentElement;
     }
 
     /**
@@ -158,7 +170,7 @@
      */
     function formatURL(url, cache) {
         if (!cache) {
-            url = (RX_QUERY.test(url) ? "&_=" : "?_=") + now();
+            url += (RX_QUERY.test(url) ? "&_=" : "?_=") + now();
         }
         return url;
     }
@@ -212,16 +224,16 @@
         var isSuccess = false,
             data,
             eventType = ["api", name];
-        if (sCode > 200 && sCode < 300 || sCode === 304) {
+        if ((sCode > 200 && sCode < 300) || sCode === 304) {
             try {
-                data = formatResponseBody(name, bodies);
+                data = formatResponseBodies(name, bodies);
                 isSuccess = true;
-            } catch (e) {
-                data = e;
+            } catch (parseError) {
+                data = parseError;
             }
         } else {
             try {
-                data = formatResponseBody(name, bodies);
+                data = formatResponseBodies(name, bodies);
             } catch (e) {
                 data = bodies.text;
             }
@@ -251,13 +263,13 @@
                 c = calls[name];
             // Insulate against NS_ERROR_NOT_AVAILABLE in firefox
             try {
-                if (xhr.readyState === 4) {
+                if (ro.readyState === 4) {
                     sCode = ro.status;
                     responses = {
                         text: ro.responseText
                     };
                     // Local requests with data should be successful.
-                    if (!sCode && isLocal && !c.crossDomain) {
+                    if (!sCode && KOI.isLocal && !c.crossDomain) {
                         sCode = responses.text ? 200 : 404; 
                     } else if (sCode === 1223) {
                         // IE somtimes returns a 1223 instead of a 204
@@ -267,7 +279,7 @@
             } catch (e) {
                 callResponse(name, -1);
             }
-            if (resposnes) {
+            if (responses) {
                 callResponse(name, sCode, responses);
             }
         };
@@ -276,47 +288,51 @@
     /**
      * Executes an XMLHttpRequest..
      * @param {string} name The name of the call.
-     * @param {string} url The resource requested.
-     * @param {boolean=} cache Allow the resource to be cached. Default false.
-     * @param {Object<string, *>=} data The request data.
-     * @param {string=} action The HTTP action. Default is GET.
-     * @param {Object<string, string>=} header request headers.
+     * @param {Object<string, *>} data The request data.
+     * @param {Object<string, string>} header request headers.
      */
-    function xhr(name, url, cache, data, action, headers) {
-        // Set the action
-        if (!KOI.isValid(action)) {
-            action = "GET";
-        } else {
-            action = action.toUpperCase();
-        }
+    function xhr(name, data, headers) {
+        var c = calls[name],
+            ro,
+            url = c.url,
+            handler;
         // Create the request object
-        var ro;
         try {
             ro = new XMLHttpRequest();
         } catch (e) {
-            ro = new ActiveXObject("Microsoft.XMLHTTP");
+            ro = new window.ActiveXObject("Microsoft.XMLHTTP");
         }
         // Create an empty headers block
         if (!KOI.isObject(headers)) {
             headers = {};
         }
-        // Set the default header type
         if (!KOI.isValid(headers["Content-Type"])) {
-            headers["Content-Type"] = "application/x-www-form-urlencoded";
+            headers["Content-Type"] = c.cType;
+        }
+        if (!KOI.isValid(headers.Accept)) {
+            headers.Accept = c.accept;
         }
         // Handle the post body
-        if (action === "POST") {
+        if (c.method === "POST") {
             data = KOI.toParameters(data);
-        } else {
-            url += (RX_QUERY.test(url) ? "&" : "?") + KOI.toParameters(data);
+        } else if (!KOI.isEmpty(data)) {
+            url += (RX_QUERY.test(c.url) ? "&" : "?") + KOI.toParameters(data);
             data = null;
         }
         // Open the request
-        ro.open(action, formatURL(url, Boolean(cache)), true);
+        ro.open(c.method, formatURL(url, Boolean(c.cache)), true);
+        // Set request headers
+        KOI.each(headers, function (k, v) {
+            try {
+                ro.setRequestHeader(k, v);
+            } catch (ex) {
+                // Noop
+            }
+        });
         // Execute
-        ro.send(data);
+        ro.send(data || null);
         // Get the handler
-        var handler = xhrResponseHandler(ro, name);
+        handler = xhrResponseHandler(ro, name);
         // IE6/7 return from the cache directly, requiring manual triggering
         if (ro.readyState === 4) {
             handler();
@@ -335,11 +351,11 @@
      * @return {string} The JSONP token.
      */
     function jsonp(name) {
-        var name = ["jsonp", now(), uid++].join("_");
-        window[name] = function (data) {
+        var callback = ["jsonp", now(), uid++].join("_");
+        window[callback] = function (data) {
             callResponse(name, 200, "application/json", {json: data});
         };
-        return name;
+        return callback;
     }
 
     /**
@@ -390,31 +406,28 @@
      * Creates an API call.
      * @param {name} name The name of the call.
      * @param {string} url The URL.
+     * @param {string=} method The method. Default is "GET".
      * @param {string=} dType The dataType. Default is "json".
      * @param {boolean=} cache Cache the request. Default is false.
      * @param {string=} accept The accept type. Default depends on dType.
      * @param {string=} cType The contentType.
      */
-    function create(name, url, dType, cache, accept, cType) {
-        var basepath = KOI.basepathChunks,
-            chunks;
+    function create(name, url, method, dType, cache, accept, cType) {
         // Remove the hash and make implicit protocols explicit for IE7
-        url = url.replace(RX_HASH, "").replace(RX_PROTOCOL, basepath[1]);
-        // Chunk the URL for testing
-        chunks = KOI.chunkURL(url);
+        url = url
+            .replace(RX_HASH, "")
+            .replace(RX_PROTOCOL, window.location.protocol);
         // Set the data type
         dType = dType || "json";
         // Define the call
         calls[name] = {
             url: url,
+            method: (method || "GET").toUpperCase(),
             dataType: dType,
             cache: Boolean(cache),
-            accept: accept || DEFAULT_ACCEPT[accept] || ACCEPT_ALL,
-            contentType: cType,
-            crossDomain: (parts && 
-                (chunks[1] !== basepath[1] || chunks[2] !== basepath[2] ||
-                (chunks[3] || (chunks[1] === "http:" ? 80 : 443)) !==
-                    (basepath[3] || basepath[3] === "http:" ? 80 : 443)))
+            accept: accept || DEFAULT_ACCEPT[dType] || ACCEPT_ALL,
+            contentType: cType || DEFAULT_CONTENT_TYPE,
+            crossDomain: KOI.isCrossDomain(url)
         };
     }
 
@@ -440,12 +453,20 @@
     /**
      * Invokes an API call.
      * @param {string} name The name of the call.
-     * @param {Object<string, *>} data The data for the call.
+     * @param {Object<string, *>=} data The data for the call.
+     *
+     * @param {Object<string, string>=} headers The headers for the call.
      */
-    function call(name, data) {
+    function invoke(name, data, headers) {
         var c = calls[name];
         if (!KOI.isValid(c)) {
             throw name + " is not a defined API call.";
+        }
+
+        if (c.crossDomain || KOI.inArray(["jsonp", "script"], c.dataType)) {
+            script(name, c.url, c.cache, data);
+        } else {  
+            xhr(name, data, headers);
         }
     }
 
@@ -479,16 +500,16 @@
      *     handler to notify when the call completes successfully.
      * @param {function(Object|Array|string, number)} failure The handler
      *     to notify when the call fails. 
-     * @return {function(Object<string, *)} The request function. Invoke
-     *     with a data object to trigger a call.
+     * @return {function(Object<string, *>, Object<string, string>)} The 
+     *     request function. Invoke with a data object to trigger a call.
      */
-    function request(name, success, failure) {
+    function requestProxy(name, success, failure) {
         var rid = [name, uid++].join("-");
         requesters[rid] = false;
         bind(onceProxy(rid, success), onceProxy(rid, failure));
-        return function (data) {
+        return function (data, headers) {
             requesters[rid] = true;
-            call(name, data);
+            invoke(name, data, headers);
         };
     }
 
@@ -503,6 +524,25 @@
     // Exposure
     //
     //------------------------------
+
+    KOI.expose({
+
+    //------------------------------
+    // API Calls
+    //------------------------------
+    
+        calls: calls,
+        create: create,
+        bind: bind,
+        invoke: invoke,
+
+    //------------------------------
+    // Request proxy
+    //------------------------------
+
+        requestProxy: requestProxy
+
+    }, "api");
 
 }(window.KOI));
 
