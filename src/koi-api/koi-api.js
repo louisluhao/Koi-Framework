@@ -12,8 +12,7 @@
 
     /**
      * todo: create readme
-     * todo: create functional testing
-     * todo: isLocal check for ajax (must throw error)
+     * todo: finish functional testing
      */
 
     //------------------------------
@@ -50,6 +49,12 @@
          * @type {RegExp}
          */
         RX_PROTOCOL = /^\/\//,
+
+        /**
+         * Matches colon-identified URL parameters. (/a/:b/c/:d/)
+         * @type {RegExp}
+         */
+        RX_URL_PARAMETERS = /:([a-z0-9_\-]+)\b/gi,
 
     //------------------------------
     // Accept header
@@ -180,14 +185,17 @@
      * @param {string} data The JSON to parse.
      */
     function parseJSON(data) {
-        data = data.replace(RX_JSON_AT, "@").replace(RX_JSON_BRACKET, "]")
-            .replace(RX_JSON_INVALID, "");
-        if (RX_JSON.text(data)) {
-            if (window.JSON !== undefined && window.JSON.parse !== undefined) {
-                return window.JSON.parse(data);
-            } else {
-                return (new Function("return " + data))();
-            }
+        if (KOI.isValid(window.JSON) && KOI.isValid(window.JSON.parse)) {
+            return window.JSON.parse(data);
+        }
+
+        var test_data = data
+                .replace(RX_JSON_AT, "@")
+                .replace(RX_JSON_BRACKET, "]")
+                .replace(RX_JSON_INVALID, "");
+
+        if (RX_JSON.test(test_data)) {
+            return (new Function("return " + data))();
         } else {
             throw "JSON parse error";
         }
@@ -224,7 +232,7 @@
         var isSuccess = false,
             data,
             eventType = ["api", name];
-        if ((sCode > 200 && sCode < 300) || sCode === 304) {
+        if ((sCode >= 200 && sCode < 300) || sCode === 304) {
             try {
                 data = formatResponseBodies(name, bodies);
                 isSuccess = true;
@@ -288,13 +296,17 @@
     /**
      * Executes an XMLHttpRequest..
      * @param {string} name The name of the call.
+     * @param {string} url The resource to load.
      * @param {Object<string, *>} data The request data.
      * @param {Object<string, string>} header request headers.
      */
-    function xhr(name, data, headers) {
+    function xhr(name, url, data, headers) {
+        if (KOI.isLocal(window.location.toString())) {
+            throw "AJAX calls cannot be made locally";
+        }
+
         var c = calls[name],
             ro,
-            url = c.url,
             handler;
         // Create the request object
         try {
@@ -350,12 +362,21 @@
      * @param {string} name The name of the call.
      * @return {string} The JSONP token.
      */
-    function jsonp(name) {
+    function jsonpToken(name) {
         var callback = ["jsonp", now(), uid++].join("_");
         window[callback] = function (data) {
-            callResponse(name, 200, "application/json", {json: data});
+            callResponse(name, 200, {json: data});
         };
         return callback;
+    }
+
+    /**
+     * Tests a URL for a JSONP token.
+     * @param {string} url The URL.
+     * @return {boolean} True if the URL has a JSONP token.
+     */
+    function usesJSONP(url) {
+        return RX_JSONP.test(url);
     }
 
     /**
@@ -370,9 +391,11 @@
             h = head(),
             loaded = false,
             triggerHandler = false;
+        url += (RX_QUERY.test(url) ? "&" : "?") + KOI.toParameters(data);
+        data = null;
         // Handle JSONP support
-        if (RX_JSONP.test(url)) {
-            url = url.replace(RX_JSONP, "$1=" + jsonp(name)); 
+        if (usesJSONP(url)) {
+            url = url.replace(RX_JSONP, "$1=" + jsonpToken(name)); 
         } else {
             triggerHandler = true; 
         }
@@ -422,6 +445,7 @@
         // Define the call
         calls[name] = {
             url: url,
+            urlParameters: url.match(RX_URL_PARAMETERS),
             method: (method || "GET").toUpperCase(),
             dataType: dType,
             cache: Boolean(cache),
@@ -458,15 +482,30 @@
      * @param {Object<string, string>=} headers The headers for the call.
      */
     function invoke(name, data, headers) {
-        var c = calls[name];
+        var c = calls[name],
+            url;
         if (!KOI.isValid(c)) {
             throw name + " is not a defined API call.";
         }
 
-        if (c.crossDomain || KOI.inArray(["jsonp", "script"], c.dataType)) {
-            script(name, c.url, c.cache, data);
+        url = c.url;
+
+        if (KOI.isValid(c.urlParameters)) {
+            KOI.each(c.urlParameters, function (index, parameter) {
+                    // Remove the colon
+                var name = parameter.substr(1);
+                if (!KOI.isValid(data) || !KOI.isValid(data[name])) {
+                    throw "URL parameter missing: " + name;
+                }
+                url = url.replace(parameter, data[name]);
+                delete data[name];
+            });
+        }
+
+        if (c.crossDomain || KOI.inArray(c.dataType, ["jsonp", "script"])) {
+            script(name, url, c.cache, data);
         } else {  
-            xhr(name, data, headers);
+            xhr(name, url, data, headers);
         }
     }
 
@@ -506,7 +545,7 @@
     function requestProxy(name, success, failure) {
         var rid = [name, uid++].join("-");
         requesters[rid] = false;
-        bind(onceProxy(rid, success), onceProxy(rid, failure));
+        bind(name, onceProxy(rid, success), onceProxy(rid, failure));
         return function (data, headers) {
             requesters[rid] = true;
             invoke(name, data, headers);
@@ -531,6 +570,8 @@
     // API Calls
     //------------------------------
     
+        jsonpToken: jsonpToken,
+        usesJSONP: usesJSONP,
         calls: calls,
         create: create,
         bind: bind,

@@ -10,18 +10,24 @@
 (function (KOI) {
     "use strict";
 
+    if (KOI.isLocal(window.location.toString())) {
+        alert("Functional testing does not work locally.");
+        return false;
+    }
+
+    /**
+     * todo: finish functional testing
+     */
+
     //------------------------------
     //
     // Create API calls
     //
     //------------------------------
 
-    KOI.api.create("json-sample", "sample.json");
-    KOI.api.create("jsonp-sample", "jsonp.js", "GET", "jsonp");
-    KOI.api.create("js-sample", "sample.js", "GET", "script");
-    KOI.api.create("json-fail", "s.json");
-    KOI.api.create("jsonp-fail", "p.js", "GET", "jsonp");
-    KOI.api.create("js-fail", "j.js", "GET", "script");
+    KOI.api.create("json", ":name.json");
+    KOI.api.create("jsonp", ":name.js", "GET", "jsonp");
+    KOI.api.create("js", ":name.js", "GET", "script");
 
     //------------------------------
     //
@@ -30,25 +36,31 @@
     //------------------------------
 
     function jsonSuccess() {
-        alert("Holy shit");
+        console.log("json Success"); 
     }
 
     function jsonFailure() {
+        console.log("json Failure"); 
     }
 
     function jsonpSuccess() {
+        console.log("jsonp Success");
     }
 
     function jsonpFailure() {
+        console.log("jsonp Failure");
     }
 
     function jsSuccess() {
+        console.log("js Success");
     }
 
     function jsFailure() {
+        console.log("js Failure");
     }
 
     window.jsonpTestCallback = function (d) {
+        console.log("jsonp handler");
     }
 
     //------------------------------
@@ -57,10 +69,19 @@
     //
     //------------------------------
 
-    var json = KOI.api.requestProxy("json-sample", jsonSuccess),
-        jsonf = KOI.api.requestProxy("json-fail", null, jsonFailure);
+    var json = KOI.api.requestProxy("json", jsonSuccess, jsonFailure),
+        jsonp = KOI.api.requestProxy("jsonp", jsonpSuccess, jsonpFailure),
+        js = KOI.api.requestProxy("js", jsSuccess, jsFailure);
 
-    json();
+    json({
+        name: "sample"
+    });
+    jsonp({
+        name: "jsonp"
+    });
+    js({
+       name: "sample" 
+    });
 
 }(window.KOI));
 
