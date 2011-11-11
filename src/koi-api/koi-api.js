@@ -12,7 +12,7 @@
 
     /**
      * todo: create readme
-     * todo: finish functional testing
+     * note: non-json calls do not support error callbacks
      */
 
     //------------------------------
@@ -124,12 +124,6 @@
          */
         uid = 0,
 
-        /**
-         * Defined requesters identifiers for handling on-use calls.
-         * @type {Object<string, boolean>}
-         */
-        requesters = {},
-
     //------------------------------
     // Calls
     //------------------------------
@@ -209,8 +203,12 @@
      * Formats response bodies based on the content type of the call.
      * @param {string} name The name of the call.
      * @param {Object<string, string>} bodies Response bodies.
+     * @return {*} The response body.
      */
     function formatResponseBodies(name, bodies) {
+        if (!KOI.isValid(bodies)) {
+            return "";
+        }
         var c = calls[name];
         if (c.dataType === "jsonp" && KOI.isValid(bodies.json)) {
             return bodies.json; 
@@ -227,11 +225,13 @@
      * @param {string} name The name of the call.
      * @param {number} sCode The status code of the response.
      * @param {Object<string, string>} bodies Response bodies.
+     * @param {string=} rid The request ID for proxies.
      */
-    function callResponse(name, sCode, bodies) {
+    function callResponse(name, sCode, bodies, rid) {
         var isSuccess = false,
             data,
-            eventType = ["api", name];
+            eventType = ["api", name],
+            result;
         if ((sCode >= 200 && sCode < 300) || sCode === 304) {
             try {
                 data = formatResponseBodies(name, bodies);
@@ -246,10 +246,10 @@
                 data = bodies.text;
             }
         }
-        if (isSuccess) {
-            eventType.push("success");
-        } else {
-            eventType.push("failure");
+        result = isSuccess ? "success" : "failure";
+        eventType.push(result);
+        if (KOI.isValid(rid)) {
+            KOI.trigger(["api", rid, result].join("-"), data, sCode);
         }
         KOI.trigger(eventType.join("-"), data, sCode);
     }
@@ -263,8 +263,9 @@
      * Based off jQuery.
      * @param {XMLHTTPRequest} ro The request object.
      * @param {string} name The name of the request.
+     * @param {string=} rid The request ID for proxies.
      */
-    function xhrResponseHandler(ro, name) {
+    function xhrResponseHandler(ro, name, rid) {
         return function () {
             var sCode,
                 responses,
@@ -285,10 +286,10 @@
                     }
                 }
             } catch (e) {
-                callResponse(name, -1);
+                callResponse(name, -1, undefined, rid);
             }
             if (responses) {
-                callResponse(name, sCode, responses);
+                callResponse(name, sCode, responses, rid);
             }
         };
     }
@@ -299,8 +300,9 @@
      * @param {string} url The resource to load.
      * @param {Object<string, *>} data The request data.
      * @param {Object<string, string>} header request headers.
+     * @param {string=} rid The request ID for proxies.
      */
-    function xhr(name, url, data, headers) {
+    function xhr(name, url, data, headers, rid) {
         if (KOI.isLocal(window.location.toString())) {
             throw "AJAX calls cannot be made locally";
         }
@@ -344,7 +346,7 @@
         // Execute
         ro.send(data || null);
         // Get the handler
-        handler = xhrResponseHandler(ro, name);
+        handler = xhrResponseHandler(ro, name, rid);
         // IE6/7 return from the cache directly, requiring manual triggering
         if (ro.readyState === 4) {
             handler();
@@ -360,12 +362,13 @@
     /**
      * Creates a JSONP token for the handler.
      * @param {string} name The name of the call.
+     * @param {string=} rid The request ID for proxies.
      * @return {string} The JSONP token.
      */
-    function jsonpToken(name) {
+    function jsonpToken(name, rid) {
         var callback = ["jsonp", now(), uid++].join("_");
         window[callback] = function (data) {
-            callResponse(name, 200, {json: data});
+            callResponse(name, 200, {json: data}, rid);
         };
         return callback;
     }
@@ -385,8 +388,9 @@
      * @param {string} url The script to load.
      * @param {boolean=} cache Allow the resource to be cached. Default false.
      * @param {Object<string, *>=} data The request data.
+     * @param {string=} rid The request ID for proxies.
      */
-    function script(name, url, cache, data) {
+    function script(name, url, cache, data, rid) {
         var e = document.createElement("script"),
             h = head(),
             loaded = false,
@@ -395,7 +399,7 @@
         data = null;
         // Handle JSONP support
         if (usesJSONP(url)) {
-            url = url.replace(RX_JSONP, "$1=" + jsonpToken(name)); 
+            url = url.replace(RX_JSONP, "$1=" + jsonpToken(name, rid)); 
         } else {
             triggerHandler = true; 
         }
@@ -413,7 +417,7 @@
                 }
                 e = undefined;
                 if (triggerHandler) {
-                    callResponse(name, 200, "text/javascript");
+                    callResponse(name, 200, undefined, rid);
                 }
             }
         };
@@ -480,8 +484,9 @@
      * @param {Object<string, *>=} data The data for the call.
      *
      * @param {Object<string, string>=} headers The headers for the call.
+     * @param {string=} rid The request ID for proxies.
      */
-    function invoke(name, data, headers) {
+    function invoke(name, data, headers, rid) {
         var c = calls[name],
             url;
         if (!KOI.isValid(c)) {
@@ -503,31 +508,15 @@
         }
 
         if (c.crossDomain || KOI.inArray(c.dataType, ["jsonp", "script"])) {
-            script(name, url, c.cache, data);
+            script(name, url, c.cache, data, rid);
         } else {  
-            xhr(name, url, data, headers);
+            xhr(name, url, data, headers, rid);
         }
     }
 
     //------------------------------
     // Request proxy
     //------------------------------
-
-    /**
-     * Wraps the given handler in a proxy to only dispatch it when a
-     * specific call has completed.
-     * @param {string} rid The id of the requester key.
-     * @param {function(Object|Array|string, number)} handler The handler.
-     * @return {function(Object|Array|string, number)} The proxy listener.
-     */
-    function onceProxy(rid, handler) {
-        return function () {
-            if (requesters[rid]) {
-                requesters[rid] = false;
-                handler.apply(handler, arguments);
-            }
-        }
-    }
 
     /**
      * Creates a requrst function for the call.
@@ -544,11 +533,9 @@
      */
     function requestProxy(name, success, failure) {
         var rid = [name, uid++].join("-");
-        requesters[rid] = false;
-        bind(name, onceProxy(rid, success), onceProxy(rid, failure));
+        bind(rid, success, failure);
         return function (data, headers) {
-            requesters[rid] = true;
-            invoke(name, data, headers);
+            invoke(name, data, headers, rid);
         };
     }
 

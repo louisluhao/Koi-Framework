@@ -15,9 +15,20 @@
         return false;
     }
 
+    //------------------------------
+    //
+    // Methods
+    //
+    //------------------------------
+
     /**
-     * todo: finish functional testing
+     * Sets the result class on an element.
+     * @param {string} id The id.
+     * @param {string} result The result class.
      */
+    function mark(id, result) {
+        document.getElementById(id).className = "test " + result;
+    }
 
     //------------------------------
     //
@@ -35,33 +46,53 @@
     //
     //------------------------------
 
-    function jsonSuccess() {
-        console.log("json Success"); 
+    //------------------------------
+    // Successful json call
+    //------------------------------
+
+    function jsonSuccessPass() {
+        mark("json-load-success", "pass");
     }
 
-    function jsonFailure() {
-        console.log("json Failure"); 
+    function jsonSuccessFail() {
+        mark("json-load-success", "fail");
     }
 
-    function jsonpSuccess() {
-        console.log("jsonp Success");
+    //------------------------------
+    // Error json call
+    //------------------------------
+
+    function jsonErrorPass() {
+        mark("json-load-error", "pass");
     }
 
-    function jsonpFailure() {
-        console.log("jsonp Failure");
+    function jsonErrorFail() {
+        mark("json-load-error", "fail");
     }
 
-    function jsSuccess() {
-        console.log("js Success");
+    //------------------------------
+    // Successful jsonp call
+    //------------------------------
+
+    function jsonpPass() {
+        mark("jsonp-load-success", "pass");
     }
 
-    function jsFailure() {
-        console.log("js Failure");
+    //------------------------------
+    // Successful script call
+    //------------------------------
+
+    function scriptPass() {
+        mark("script-load-success", "pass");
     }
+
+    //------------------------------
+    // Successful jsonp data
+    //------------------------------
 
     window.jsonpTestCallback = function (d) {
-        console.log("jsonp handler");
-    }
+        mark("jsonp-data-success", "pass"); 
+    };
 
     //------------------------------
     //
@@ -69,19 +100,35 @@
     //
     //------------------------------
 
-    var json = KOI.api.requestProxy("json", jsonSuccess, jsonFailure),
-        jsonp = KOI.api.requestProxy("jsonp", jsonpSuccess, jsonpFailure),
-        js = KOI.api.requestProxy("js", jsSuccess, jsFailure);
+    var json = KOI.api.requestProxy("json", jsonSuccessPass, jsonSuccessFail),
+        jsonErr = KOI.api.requestProxy("json", jsonErrorFail, jsonErrorPass),
+        jsonp = KOI.api.requestProxy("jsonp", jsonpPass),
+        script = KOI.api.requestProxy("js", scriptPass);
 
-    json({
-        name: "sample"
+    //------------------------------
+    //
+    // Execute
+    //
+    //------------------------------
+
+    KOI.bind("DOMReady", function () {
+
+    //------------------------------
+    // Success
+    //------------------------------
+
+        json({name: "sample"});
+        jsonp({name: "jsonp"});
+        script({name: "sample"});
+
+    //------------------------------
+    // Error
+    //------------------------------
+
+        jsonErr({name: "404"});
+
     });
-    jsonp({
-        name: "jsonp"
-    });
-    js({
-       name: "sample" 
-    });
+
 
 }(window.KOI));
 

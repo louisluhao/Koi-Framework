@@ -17,8 +17,26 @@
 	<script src="../../src/koi-event/koi-event.js" type="text/javascript" charset="utf-8"></script>
 	<script src="../../src/koi-api/koi-api.js" type="text/javascript" charset="utf-8"></script>
     <script src="functional.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css" media="screen">
+		.test {
+			padding: 5px 15px;	
+			border: 1px solid #000;
+			margin-bottom: 5px;
+		}
+		.pass { 
+			background-color: #5A753D;
+		}
+		.fail {
+			background-color: #930;
+		}
+	</style>
 </head>
 <body>
+	<div id="json-load-success" class="test">it can load json</div>
+	<div id="json-load-error" class="test">it handles failing json requests</div>
+	<div id="jsonp-load-success" class="test">it can load jsonp</div>
+	<div id="jsonp-data-success" class="test fail">it receives jsonp data in the handler</div>
+	<div id="script-load-success" class="test">it can load scripts</div>
 </body>
 </html>
 
