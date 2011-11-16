@@ -130,6 +130,67 @@
     }
 
     //------------------------------
+    // Classes
+    //------------------------------
+    
+    /**
+     * Returns an array of class names for a variety of sources.
+     * @param {string|Array<string>|HTMLElement} classNames
+     * @return {Array<string>} An array of class names.
+     */
+    function normalizeClasses(classNames) {
+        if (KOI.isValid(classNames.className)) {
+            // HTMLElements
+            classNames = classNames.className;
+        }
+        if (KOI.isArray(classNames)) {
+            return classNames;
+        }
+        if (KOI.isString(classNames)) {
+            return classNames.split(" ");
+        }
+    }
+
+    /**
+     * Determines if the element has a class.
+     * @param {HTMLElement} element The element.
+     * @param {string} className The class.
+     * @return {boolean} True if the class is present.
+     */
+    function hasClass(element, className) {
+        return KOI.inArray(className, normalizeClasses(element));
+    }
+
+    /**
+     * Adds classes to the element.
+     * @param {HTMLElement} element The element.
+     * @param {string|Array<string>} classNames The classes to add.
+     */
+    function addClass(element, classNames) {
+        KOI.each(normalizeClasses(classNames), function (index, className) {
+            if (!hasClass(element, classNames)) {
+                element.className += " " + className;        
+            }
+        }); 
+    }
+
+    /**
+     * Removes classes from the element.
+     * @param {HTMLElement} element The element.
+     * @param {string|Array<string>} classNames The classes to add.
+     */
+    function removeClass(element, classNames) {
+        classNames = normalizeClasses(classNames);
+        var keep = [];
+        KOI.each(normalizeClasses(element), function (index, className) {
+            if (!KOI.inArray(className, classNames)) {
+                keep.push(className); 
+            }
+        });
+        element.classNames = keep.join(" ");
+    }
+
+    //------------------------------
     //
     // Event bindings
     //
@@ -147,7 +208,15 @@
     // Markup
     //------------------------------
 
-        markup: markup
+        markup: markup,
+
+    //------------------------------
+    // Classes
+    //------------------------------
+
+        hasClass: hasClass,
+        addClass: addClass,
+        removeClass: removeClass
 
     });
 
