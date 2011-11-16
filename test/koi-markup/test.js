@@ -58,23 +58,6 @@
                 expect(e.children[1].children[0]).to(have_id, "target");
             });
         });
-        describe("classes", function () {
-            it ("can test for classes", function () {
-                expect(KOI.hasClass(KOI.markup("a"), "b")).to(be_false);
-                expect(KOI.hasClass(KOI.markup("a.b"), "b")).to(be_true);
-            });
-            it("can add classes", function () {
-                var a = KOI.markup("a.b");
-                KOI.addClass(a, "b c d");
-                expect(a).to(have_classes, ["b", "c", "d"]);
-            });
-            it("can remove classes", function () {
-                var a = KOI.markup("a.b.c.e"); 
-                KOI.removeClass(a, "b c d");
-                expect(a).to_not(have_classes, ["b", "c", "d"]);
-                expect(a).to(have_classes, "e");
-            });
-        });
     });
 
 }());
