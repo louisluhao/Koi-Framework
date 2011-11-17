@@ -24,13 +24,33 @@
          * Matches strings which start with a pound.
          * @type {RegExp}
          */
-    var RX_ID = /^#/;
+    var RX_ID = /^#/,
+
+    //------------------------------
+    // Data
+    //------------------------------
+
+        /**
+         * The element expando name.
+         * @type {RegExp}
+         */
+        EXPANDO = "koi_" + (new Date()).valueOf(),
 
     //------------------------------
     //
     // Properties
     //
     //------------------------------
+
+    //------------------------------
+    // Data
+    //------------------------------
+        
+        /**
+         * A cache of element data.
+         * @type {Array<Object<string, *>>}
+         */
+        cache = [];
 
     //------------------------------
     //
@@ -101,6 +121,85 @@
     }
 
     //------------------------------
+    // Element data
+    //------------------------------
+
+    /**
+     * Returns the data object for an element.
+     * @param {HTMLElement} element The element.
+     * @param {string=} namespace The namespace to return. If the requested
+     *     namespace doesn't exist, and object with that name will be returned.
+     * @return {Object<string, *>} The data store for the object.
+     */
+    function elementData(element, namespace) {
+        if (!KOI.isValid(element[EXPANDO])) {
+            element[EXPANDO] = cache.length;
+            cache.push({});
+        }
+
+        var value = cache[element[EXPANDO]];
+
+        if (KOI.isValid(namespace)) {
+            if (!KOI.isValid(value[namespace])) {
+                value[namespace] = {};
+            }
+
+            return value[namespace];
+        }
+
+        return value;
+    }
+
+    //------------------------------
+    // Processors
+    //------------------------------
+
+    /**
+     * Sets element text.
+     * @param {HTMLElement} e The element.
+     * @param {?string} v The value.
+     */
+    function text(e, v) {
+        if (KOI.isValid(v)) {
+            e.innerHTML = v;
+        }
+    }
+
+    /**
+     * Adds element classes.
+     * @param {HTMLElement} e The element.
+     * @param {?string|Array<string>} v The value.
+     */
+    function classes(e, v) {
+        var d = elementData(e, "koi_update"),
+            classNames;
+        if (!KOI.isValid(d.originalClassNames)) {
+            d.originalClassNames = e.className.split(" ");
+        }
+        classNames = [].concat(d.originalClassNames);
+        if (KOI.isString(v)) {
+            v = v.split(" ");
+        }
+        KOI.each(v, function (i, className) {
+            if (!KOI.inArray(className, classNames)) {
+                classNames.push(className);
+            }
+        });
+        e.className = classNames.join(" "); 
+    }
+
+    /**
+     * Adds element data.
+     * @param {HTMLElement} e The element.
+     * @param {?Object<string, *>} v The value.
+     */
+    function data(e, v) {
+        if (KOI.isObject(v)) {
+            KOI.expose(v, elementData(e));
+        }
+    }
+
+    //------------------------------
     //
     // Event bindings
     //
@@ -113,13 +212,31 @@
     //------------------------------
 
     KOI.expose({
+
+    //------------------------------
+    // Processors
+    //------------------------------
+
+        text: text,
+        classes: classes,
+        data: data
+
+    }, "processors");
+
+    KOI.expose({
     
     //------------------------------
     // Selection
     //------------------------------
 
         hasClass: hasClass,
-        getElements: getElements
+        getElements: getElements,
+    
+    //------------------------------
+    // Data
+    //------------------------------
+    
+        elementData: elementData
 
     });
 

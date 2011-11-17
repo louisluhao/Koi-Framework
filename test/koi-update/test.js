@@ -36,8 +36,52 @@
                     .to(equal, "c");
             });
             it("can test for classes", function () {
-                expect(KOI.hasClass(KOI.getElements("#test-parent"), "test-2"))
-                    .to(be_true);
+                var e = KOI.getElements("#test-parent");
+                expect(KOI.hasClass(e, "test-2")).to(be_true);
+                expect(KOI.hasClass(e, "foo")).to(be_false);
+            });
+        });
+        describe("element data", function () {
+            it("provides element specific data stores", function () {
+                var e1 = KOI.getElements("#header-1"),
+                    e2 = KOI.getElements("#header-2");
+                KOI.elementData(e1).a = "1";
+                KOI.elementData(e2).a = "2";
+                expect(KOI.elementData(e1).a).to(equal, "1");
+                expect(KOI.elementData(e2).a).to(equal, "2");
+            });
+            it("provides namespaces in data stores", function () {
+                var e = KOI.getElements("#header-1");
+                expect(KOI.elementData(e).testns).to(be_undefined);
+                expect(KOI.isObject(KOI.elementData(e, "testns"))).to(be_true);
+                expect(KOI.isObject(KOI.elementData(e).testns)).to(be_true);
+            });
+        });
+        describe("processors", function () {
+            it("can update element text", function () {
+                var e = KOI.getElements("#header-1");
+                expect(e.innerHTML).to(equal, "");
+                KOI.processors.text(e, "Test Value");
+                expect(e.innerHTML).to(equal, "Test Value");
+                KOI.processors.text(e, "<strong>Test Value</strong>");
+                expect(e.innerHTML).to(equal, "<strong>Test Value</strong>");
+            });
+            it("can add element classes", function () {
+                var e = KOI.getElements("#header-1");
+                expect(e.className).to(equal, "test-1");
+                KOI.processors.classes(e, "b c");
+                expect(e).to(have_classes, ["test-1", "b", "c"]);
+                KOI.processors.classes(e, ["d", "e"]);
+                expect(e).to_not(have_classes, ["b", "c"]);
+                expect(e).to(have_classes, ["test-1", "d", "e"]);
+                KOI.processors.classes(e);
+                expect(e).to_not(have_classes, ["d", "e"]);
+                expect(e.className).to(equal, "test-1");
+            });
+            it("can add element data", function () {
+                var e = KOI.getElements("#header-1");
+                KOI.processors.data(e, {foo: "bar"});
+                expect(KOI.elementData(e).foo).to(equal, "bar");
             });
         });
     });
