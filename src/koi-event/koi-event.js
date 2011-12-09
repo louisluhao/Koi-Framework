@@ -364,8 +364,16 @@
     function windowClick(event) {
         var target = event.target || event.srcElement || event.originalTarget;
 
-        if (KOI.inArray("koi-event", target.className.split(" ")) !== -1) {
-            trigger(target.getAttribute("rel"), target);
+        while (KOI.isValid(target)) {
+            if (!KOI.isValid(target.className)) {
+                break;
+            }
+            if (KOI.inArray("koi-event", target.className.split(" "))) {
+                trigger(target.getAttribute("rel"), target);
+                break;
+            } else {
+                target = target.parentNode;
+            }
         }
     }
 
