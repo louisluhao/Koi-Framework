@@ -297,6 +297,29 @@
         }
     }
 
+    /**
+     * Prevent an event's default action.
+     * @param {Event} event The event.
+     */
+    function preventEventDefault(event) {
+        if (KOI.isValid(event.preventDefault)) {
+            event.preventDefault();
+        }
+        event.returnValue = false;
+    }
+
+    /**
+     * Stop an event from bubbling.
+     * @param {Event} event The event.
+     */
+    function stopEvent(event) {
+        preventEventDefault(event);
+        if (KOI.isValid(event.stopPropagation)) {
+            event.stopPropagation();
+        }
+        event.cancelBubble = true;
+    }
+
     //------------------------------
     // Listeners: DOMReady
     //------------------------------
@@ -415,7 +438,9 @@
     //------------------------------
 
         listen: listen,
-        fire: fire
+        fire: fire,
+        preventEventDefault: preventEventDefault,
+        stopEvent: stopEvent
 
     });
 
