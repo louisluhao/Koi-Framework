@@ -107,8 +107,12 @@
      */
     function markup(var_args) {
             // The document fragment
-        var fragment = document.createDocumentFragment();
-        KOI.each(Array.prototype.slice.apply(arguments), function (index, e) {
+        var fragment = document.createDocumentFragment(),
+            elements = Array.prototype.slice.apply(arguments);
+        if (elements.length === 1 && KOI.isArray(elements[0])) {
+            elements = elements[0];
+        }
+        KOI.each(elements, function (index, e) {
             if (KOI.isArray(e)) {
                 if (KOI.isValid(fragment.lastChild)) {
                     fragment.lastChild.appendChild(markup.apply(markup, e));
@@ -121,7 +125,6 @@
                 throw "invalid argument: " + e;
             }
         });
-
         if (fragment.childNodes.length === 1) {
             return fragment.childNodes[0];
         } else {

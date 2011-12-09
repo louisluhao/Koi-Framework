@@ -29,6 +29,11 @@
                     .to(equal, "#123");
                 expect(KOI.markup("div[id=x-x]")).to(have_id, "x-x");
             });
+            it("creates elements from arrays", function () {
+                var e = KOI.markup(["a", "em"]);
+                expect(e.childNodes[0]).to(be_element_type, "a");
+                expect(e.childNodes[1]).to(be_element_type, "em");
+            });
         });
         describe("trees", function () {
             it("creates siblings", function () {
