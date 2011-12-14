@@ -11,9 +11,8 @@
     "use strict";
 
     /**
-     * todo: create readme
      * note: non-json calls do not support error callbacks
-     * todo: convert calls of content type application/json to stringify JSON
+     * todo: create readme
      */
 
     //------------------------------
@@ -57,6 +56,13 @@
          */
         RX_URL_PARAMETERS = /:([a-z0-9_\-]+)\b/gi,
 
+        /**
+         * Matches vendor specific lines in content types.
+         * application/<vendor_specific>+json -> application/json.
+         * @type {RegExp}
+         */
+        RX_CONTENT_VENDOR = /([a-z0-9\._\-]+\+)/,
+
     //------------------------------
     // Accept header
     //------------------------------
@@ -83,31 +89,6 @@
          * @type {string}
          */
         DEFAULT_CONTENT_TYPE = "application/x-www-form-urlencoded",
-
-        /**
-         * Matches valid JSON.
-         * @type {RegExp}
-         */
-        RX_JSON = /^[\],:{}\s]*$/,
-        
-        /**
-         * Replacement for '@' symbols in JSON.
-         * @type {RegExp}
-         */
-        RX_JSON_AT = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,
-
-        /**
-         * Replacement for ']' symbols in JSON.
-         * @type {RegExp}
-         */
-        RX_JSON_BRACKET = 
-            /"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,
-
-        /**
-         * Replacement for invalid characters in JSON.
-         * @type {RegExp}
-         */
-        RX_JSON_INVALID = /(?:^|:|,)(?:\s*\[)+/g,
 
     //------------------------------
     //
@@ -175,27 +156,6 @@
         return url;
     }
 
-    /**
-     * Parses JSON.
-     * @param {string} data The JSON to parse.
-     */
-    function parseJSON(data) {
-        if (KOI.isValid(window.JSON) && KOI.isValid(window.JSON.parse)) {
-            return window.JSON.parse(data);
-        }
-
-        var test_data = data
-                .replace(RX_JSON_AT, "@")
-                .replace(RX_JSON_BRACKET, "]")
-                .replace(RX_JSON_INVALID, "");
-
-        if (RX_JSON.test(test_data)) {
-            return (new Function("return " + data))();
-        } else {
-            throw "JSON parse error";
-        }
-    }
-
     //------------------------------
     // Response handling
     //------------------------------
@@ -215,7 +175,7 @@
             return bodies.json; 
         }
         if (c.dataType === "json" && KOI.isValid(bodies.text)) {
-            return parseJSON(bodies.text);
+            return window.JSON.parse(bodies.text);
         }
         return bodies.text;
     }
@@ -329,7 +289,14 @@
         }
         // Handle the post body
         if (c.method === "POST") {
-            data = KOI.toParameters(data);
+            switch (headers["Content-Type"].replace(RX_CONTENT_VENDOR, "")) {
+            case "application/json":
+                data = window.JSON.stringify(data);
+                break;
+            default:
+                data = KOI.toParameters(data);
+                break;
+            }
         } else if (!KOI.isEmpty(data)) {
             url += (RX_QUERY.test(c.url) ? "&" : "?") + KOI.toParameters(data);
             data = null;
