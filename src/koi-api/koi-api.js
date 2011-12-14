@@ -13,6 +13,7 @@
     /**
      * todo: create readme
      * note: non-json calls do not support error callbacks
+     * todo: convert calls of content type application/json to stringify JSON
      */
 
     //------------------------------
