@@ -66,12 +66,7 @@
                 KOI.processors.text(e, "<strong>Test Value</strong>");
                 expect(e.innerHTML).to(equal, "<strong>Test Value</strong>");
             });
-            it("can add element data", function () {
-                var e = KOI.getElements("#header-1");
-                KOI.processors.data(e, {foo: "bar"});
-                expect(KOI.elementData(e).foo).to(equal, "bar");
-            });
-            it("can add element classes", function () {
+            it("can change element classes", function () {
                 var e = KOI.getElements("#header-1");
                 expect(e.className).to(equal, "test-1");
                 KOI.processors.classes(e, "b c");
@@ -82,6 +77,31 @@
                 KOI.processors.classes(e);
                 expect(e).to_not(have_classes, ["d", "e"]);
                 expect(e.className).to(equal, "test-1");
+            });
+            it("can add classes", function () {
+                var e = KOI.getElements("#header-1");
+                KOI.processors.addClasses(e, "l m");
+                KOI.processors.addClasses(e, "n o");
+                expect(e).to(have_classes, ["l", "m", "n", "o"]);
+            });
+            it("can remove classes", function () {
+                var e = KOI.getElements("#header-1");
+                KOI.processors.addClasses(e, "l m");
+                KOI.processors.removeClasses(e, "m");
+                expect(e).to(have_classes, ["l"]);
+                expect(e).to_not(have_classes, ["m"]);
+            });
+            it("can add element data", function () {
+                var e = KOI.getElements("#header-1");
+                KOI.processors.data(e, {foo: "bar"});
+                expect(KOI.elementData(e).foo).to(equal, "bar");
+            });
+            it("can set element attributes", function () {
+                var e = KOI.getElements("#header-1");
+                KOI.processors.attr(e, {
+                    name: "x"
+                });
+                expect(e.getAttribute("name")).to(equal, "x");
             });
         });
         describe("update", function () {

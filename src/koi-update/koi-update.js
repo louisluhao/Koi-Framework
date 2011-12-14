@@ -206,14 +206,14 @@
             element[EXPANDO] = cache.length;
             cache.push({});
         }
-        var value = cache[element[EXPANDO]];
+        var v = cache[element[EXPANDO]];
         if (KOI.isValid(namespace)) {
-            if (!KOI.isValid(value[namespace])) {
-                value[namespace] = {};
+            if (!KOI.isValid(v[namespace])) {
+                v[namespace] = {};
             }
-            return value[namespace];
+            return v[namespace];
         }
-        return value;
+        return v;
     }
 
     //------------------------------
@@ -232,7 +232,7 @@
     }
 
     /**
-     * Adds element classes.
+     * Sets element classes. Unsets previously modified classes.
      * @param {HTMLElement} e The element.
      * @param {?string|Array<string>} v The value.
      */
@@ -255,6 +255,43 @@
     }
 
     /**
+     * Adds element classes.
+     * @param {HTMLElement} e The element.
+     * @param {?string|Array<string>} v The value.
+     */
+    function addClasses(e, v) {
+        var classNames = e.className.split(" ");
+        if (KOI.isString(v)) {
+            v = v.split(" ");
+        }
+        KOI.each(v, function (i, className) {
+            if (!KOI.inArray(className, classNames)) {
+                classNames.push(className);
+            }
+        });
+        e.className = classNames.join(" "); 
+    }
+
+    /**
+     * Removes element classes.
+     * @param {HTMLElement} e The element.
+     * @param {?string|Array<string>} v The value.
+     */
+    function removeClasses(e, v) {
+        var classNames = e.className.split(" "),
+            newClasses = [];
+        if (KOI.isString(v)) {
+            v = v.split(" ");
+        }
+        KOI.each(classNames, function (i, className) {
+            if (!KOI.inArray(className, v)) {
+                newClasses.push(className);
+            }
+        });
+        e.className = newClasses.join(" "); 
+    }
+
+    /**
      * Adds element data.
      * @param {HTMLElement} e The element.
      * @param {?Object<string, *>} v The value.
@@ -262,6 +299,23 @@
     function data(e, v) {
         if (KOI.isObject(v)) {
             KOI.expose(v, elementData(e));
+        }
+    }
+
+    /**
+     * Sets and removes attributes.
+     * @param {HTMLElement} e The element.
+     * @param {?Object<string, string>} v The values.
+     */
+    function attr(e, v) {
+        if (KOI.isObject(v)) {
+            KOI.each(v, function (k, val) {
+                if (KOI.isValid(val)) {
+                    e.setAttribute(k, val);
+                } else {
+                    e.deleteAttribute(k);
+                }
+            });
         }
     }
 
@@ -281,13 +335,13 @@
      */
     function updateElements(selector, o, context, instance) {
         var elements = KOI.getElements(selector, context, instance, true);
-        KOI.each(o, function (key, value) {
+        KOI.each(o, function (key, v) {
             var processor = KOI.processors[key];
             if (!KOI.isFunction(processor)) {
-                throw new processor + " is not a processor";
+                throw processor + " is not a processor";
             }
             KOI.each(elements, function (i, e) {
-                processor(e, value);
+                processor(e, v);
             });
         });
         if (elements.length === 1) {
@@ -299,7 +353,7 @@
 
     /**
      * Updates the dom.
-     * @param {Object<string, Object<string, *>>} elements The elements object. 
+     * @param {Object<string, Object<string, *>>} elements The elements object.
      *     Each key must be the element selector; the value being the update 
      *     object fed into the {@code KOI.updateElements} call.
      * @param {string|HTMLElement=} context Context to work from. Can either be
@@ -394,7 +448,10 @@
 
         text: text,
         classes: classes,
-        data: data
+        addClasses: addClasses,
+        removeClasses: removeClasses,
+        data: data,
+        attr: attr
 
     }, "processors");
 
