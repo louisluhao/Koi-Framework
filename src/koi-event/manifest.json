@@ -1,8 +1,0 @@
-{
-	"name": "koi-event",
-	"composition": ["js"],
-	"version": "0.3.0",
-	"dependencies": {
-		"koi-core": "0.3.x"
-	}
-}

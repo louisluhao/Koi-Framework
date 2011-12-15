@@ -1,9 +1,0 @@
-{
-	"name": "koi-deeplink",
-	"composition": ["js"],
-	"version": "0.3.0",
-	"dependencies": {
-		"koi-url": "0.3.x",
-        "koi-event": "0.3.x"
-	}
-}
