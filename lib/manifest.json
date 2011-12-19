@@ -1,0 +1,12 @@
+{
+    "api": {
+        "composition": [],
+        "dependencies": ["core", "url", "event"]
+    },
+    "deeplink": ["core", "url", "event"],
+    "event": ["core"],
+    "format": ["core"],
+    "markup": ["core"],
+    "update": ["core"],
+    "url": ["core"]
+}
