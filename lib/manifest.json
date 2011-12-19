@@ -1,12 +1,36 @@
 {
     "api": {
-        "composition": [],
-        "dependencies": ["core", "url", "event"]
+        "comp": ["js"],
+        "reqs": ["core", "url", "event"]
     },
-    "deeplink": ["core", "url", "event"],
-    "event": ["core"],
-    "format": ["core"],
-    "markup": ["core"],
-    "update": ["core"],
-    "url": ["core"]
+    "bootstrap": {
+        "comp": ["js"]
+    },
+    "core": {
+        "comp": ["js"]
+    },
+    "deeplink": {
+        "comp": ["js"],
+        "reqs": ["core", "url", "event"]
+    },
+    "event": {
+        "comp": ["js"],
+        "reqs": ["core"]
+    },
+    "format": {
+        "comp": ["js"],
+        "reqs": ["core"]
+    },
+    "markup": {
+        "comp": ["js"],
+        "reqs": ["core"]
+    },
+    "update": {
+        "comp": ["js"],
+        "reqs": ["core"]
+    },
+    "url": {
+        "comp": ["js"],
+        "reqs": ["core"]
+    }
 }
