@@ -153,9 +153,9 @@
 				expect(KOI.format("{0:.3}", "a")).to(equal, "a");
 			});
 			it("handles padding", function () {
-				expect(KOI.format("{0:5}", "a")).to(equal, "a	");
-				expect(KOI.format("{0:<5}", "a")).to(equal, "a	");
-				expect(KOI.format("{0:>5}", "a")).to(equal, "	a");
+				expect(KOI.format("{0:5}", "a")).to(equal, "a    ");
+				expect(KOI.format("{0:<5}", "a")).to(equal, "a    ");
+				expect(KOI.format("{0:>5}", "a")).to(equal, "    a");
 				expect(KOI.format("{0:^5}", "a")).to(equal, "  a  ");
 				expect(KOI.format("{0: ^5}", "a")).to(equal, "  a  ");
 			});
