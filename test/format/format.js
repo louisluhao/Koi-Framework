@@ -9,30 +9,30 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
 	"use strict";
-   
+
 	Screw.Unit(function () {
 		describe("trims strings", function () {
 			it("left trims", function () {
 				expect(KOI.ltrim("   a   ")).to(equal, "a   ");
-			}); 
+			});
 			it("right trims", function () {
 				expect(KOI.rtrim("   a   ")).to(equal, "   a");
-			}); 
+			});
 			it("trims", function () {
 				expect(KOI.trim("   a   ")).to(equal, "a");
-			}); 
+			});
 		});
 		describe("pads strings", function () {
 			it("left pads strings", function () {
-				expect(KOI.lpad("a", "b", 5)).to(equal, "bbbba");			 
-			}); 
+				expect(KOI.lpad("a", "b", 5)).to(equal, "bbbba");
+			});
 			it("right pads strings", function () {
-				expect(KOI.rpad("a", "b", 5)).to(equal, "abbbb");			 
-			}); 
+				expect(KOI.rpad("a", "b", 5)).to(equal, "abbbb");
+			});
 			it("center pads strings", function () {
-				expect(KOI.pad("a", "b", 5)).to(equal, "bbabb");			 
-				expect(KOI.pad("a", "b", 6)).to(equal, "bbabbb");			 
-			}); 
+				expect(KOI.pad("a", "b", 5)).to(equal, "bbabb");
+				expect(KOI.pad("a", "b", 6)).to(equal, "bbabbb");
+			});
 		});
 		describe("position string formatting", function () {
 			it("supports implicitly positioned replacements", function () {
@@ -57,35 +57,35 @@
 		describe("named string formatting", function () {
 			it("supports named replacements", function () {
 				expect(KOI.format(true, "{a}", {a: "b"})).to(equal, "b");
-			}); 
+			});
 		});
 		describe("mixed string formatting", function () {
 			it("supports implicit and named replacements", function () {
 				expect(KOI.format(true, "{}{a}", {a: "b"}, "c"))
 					.to(equal, "cb");
-			}); 
+			});
 			it("supports explicit and named replacements", function () {
 				expect(KOI.format(true, "{0}{a}", {a: "b"}, "c"))
 					.to(equal, "cb");
-			}); 
+			});
 			it("supports position and named replacement objects", function () {
 				expect(KOI.format(false, "{}{}{a}", {a: "b"}, ["c", "d"]))
 					.to(equal, "cdb");
-			}); 
+			});
 		});
 		describe("complex value formatting", function () {
 			it("supports non-strings as values", function () {
 				expect(KOI.format("{}", {})).to(equal, "[object Object]");
-			}); 
+			});
 			it("supports and coerces numbers as string values", function () {
 				expect(KOI.format("{}", 100)).to(equal, "100");
-			}); 
+			});
 			it("supports object keys", function () {
 				expect(KOI.format("{.a}", {a: "b"})).to(equal, "b");
-			}); 
+			});
 			it("supports nested paramters", function () {
 				expect(KOI.format("{.a.b}", {a: {b: "c"}})).to(equal, "c");
-			}); 
+			});
 		});
 		describe("interger formatting spec", function () {
 			it("formats as binary", function () {
@@ -147,11 +147,11 @@
 			it("formats as string", function () {
 				expect(KOI.format("{0:s}", 1)).to(equal, "1");
 				expect(KOI.format("{0:s}", "a")).to(equal, "a");
-			}); 
+			});
 			it("handles string precision", function () {
 				expect(KOI.format("{0:.3}", "abcdef")).to(equal, "abc");
 				expect(KOI.format("{0:.3}", "a")).to(equal, "a");
-			}); 
+			});
 			it("handles padding", function () {
 				expect(KOI.format("{0:5}", "a")).to(equal, "a	");
 				expect(KOI.format("{0:<5}", "a")).to(equal, "a	");
@@ -180,18 +180,18 @@
 				expect(KOI.format("{0:-}", -50)).to(equal, "-50");
 				expect(KOI.format("{0:+}", -50)).to(equal, "-50");
 				expect(KOI.format("{0: }", -50)).to(equal, "-50");
-			}); 
+			});
 			it("handles number signs for positives", function () {
 				expect(KOI.format("{0:-}", 50)).to(equal, "50");
 				expect(KOI.format("{0:+}", 50)).to(equal, "+50");
 				expect(KOI.format("{0: }", 50)).to(equal, " 50");
-			}); 
+			});
 			it("handles padding with signs", function () {
 				expect(KOI.format("{0:=-05}", 50)).to(equal, "00050");
 				expect(KOI.format("{0:=+05}", 50)).to(equal, "+0050");
 				expect(KOI.format("{0:= 05}", 50)).to(equal, " 0050");
 				expect(KOI.format("{0:< 05}", 50)).to(equal, "00 50");
-			}); 
+			});
 			it("handles alternate format printing", function () {
 				expect(KOI.format("{0:#b}", 16)).to(equal, "0b10000");
 				expect(KOI.format("{0:#o}", 16)).to(equal, "0o20");

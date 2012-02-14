@@ -52,7 +52,7 @@
 					.to(equal, "80");
 				expect(KOI.locationEquivalent("https://a.b/", true).port)
 					.to(equal, "443");
-			}); 
+			});
 			it("can test for local URLs", function () {
 				expect(KOI.isLocal("http://a.b/")).to(be_false);
 				expect(KOI.isLocal("file://a.b/")).to(be_true);

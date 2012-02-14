@@ -9,11 +9,11 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
 	"use strict";
-   
+
 	Screw.Unit(function () {
 		describe("shorthand parsing", function () {
 			it("creates elements", function () {
-				expect(KOI.markup("a")).to(be_element_type, "a"); 
+				expect(KOI.markup("a")).to(be_element_type, "a");
 				expect(KOI.markup("div")).to(be_element_type, "div");
 			});
 			it("supports an id", function () {
@@ -53,7 +53,7 @@
 							"span#target"
 						]
 					]);
-				expect(e).to(be_element_type, "div"); 
+				expect(e).to(be_element_type, "div");
 				expect(e.children).to(have_length, 2);
 				expect(e.children[0]).to(be_element_type, "span");
 				expect(e.children[1]).to(be_element_type, "div");

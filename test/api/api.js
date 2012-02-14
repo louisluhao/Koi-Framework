@@ -13,8 +13,8 @@
 	Screw.Unit(function () {
 		describe("API calls", function () {
 			it("can create API calls", function () {
-				KOI.api.create("foo", "/a/b", "GET", "json", true, 
-					"application/json", "application/json");		  
+				KOI.api.create("foo", "/a/b", "GET", "json", true,
+					"application/json", "application/json");
 				var c = KOI.api.calls.foo;
 				expect(c.url).to(equal, "/a/b");
 				expect(c.method).to(equal, "GET");
@@ -22,7 +22,7 @@
 				expect(c.cache).to(be_true);
 				expect(c.contentType).to(equal, "application/json");
 				expect(c.accept).to(equal, "application/json");
-			}); 
+			});
 			it("can create API calls from defaults", function () {
 				KOI.api.create("bar", "/c/d");
 				var c = KOI.api.calls.bar;
@@ -34,12 +34,12 @@
 					.to(equal, "application/x-www-form-urlencoded");
 				expect(c.accept)
 					.to(equal, "application/json, text/javascript");
-			}); 
+			});
 			it("can bind listeners to API calls", function () {
 				var s = false,
 					f = false;
 				KOI.api.create("baz", "/a/b/");
-				KOI.api.bind("baz", function () { s = true }, 
+				KOI.api.bind("baz", function () { s = true },
 					function () { f = true; });
 				// Simulate call finishing
 				KOI.trigger("api-baz-success");
@@ -66,7 +66,7 @@
 					KOI.api.create("local-call", "/a/");
 					var error;
 					try {
-					   KOI.api.invoke("local-call"); 
+					   KOI.api.invoke("local-call");
 					} catch (e) {
 						error = e;
 					}
@@ -86,7 +86,7 @@
 				expect(c.urlParameters[3]).to(equal, ":g");
 			});
 			it("errors if URL parameters aren't provided", function () {
-				KOI.api.create("foofail", "/:a");	
+				KOI.api.create("foofail", "/:a");
 				var error1;
 				try {
 					KOI.api.invoke("foofail");
@@ -110,7 +110,7 @@
 				KOI.api.bind("jsonp", function (x) {
 					data = x;
 				});
-				
+
 				// Simulate a JSONP call
 				window[token](fake);
 

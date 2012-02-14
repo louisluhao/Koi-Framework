@@ -9,7 +9,7 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
 	"use strict";
-   
+
 	Screw.Unit(function () {
 		describe("type detection", function () {
 			it("detects arrays", function () {
@@ -125,8 +125,8 @@
 			it("can iterate through objects", function () {
 				var iterations = 0;
 				KOI.each({a: "b"}, function (key, value) {
-					expect(key).to(equal, "a");	
-					expect(value).to(equal, "b");	
+					expect(key).to(equal, "a");
+					expect(value).to(equal, "b");
 					iterations += 1;
 				});
 				expect(iterations).to(equal, 1);
@@ -135,9 +135,9 @@
 				var iterations = 0;
 				KOI.each(["a", "b"], function (index, value) {
 					if (index === 0) {
-						expect(value).to(equal, "a");	
+						expect(value).to(equal, "a");
 					} else if (index === 1) {
-						expect(value).to(equal, "b");	
+						expect(value).to(equal, "b");
 					}
 
 					iterations += 1;
@@ -148,9 +148,9 @@
 				var iterations = 0;
 				KOI.each("ab", function (index, value) {
 					if (index === 0) {
-						expect(value).to(equal, "a");	
+						expect(value).to(equal, "a");
 					} else if (index === 1) {
-						expect(value).to(equal, "b");	
+						expect(value).to(equal, "b");
 					}
 
 					iterations += 1;
@@ -160,7 +160,7 @@
 			it("can iterate a given number of times", function () {
 				var iterations = 0;
 				KOI.each(3, function (index, value) {
-					expect(index).to(equal, value);	
+					expect(index).to(equal, value);
 					iterations += 1;
 				});
 				expect(iterations).to(equal, 3);
@@ -203,7 +203,7 @@
 			it("can find items in arrays", function () {
 				expect(KOI.indexOf("a", ["b", "a"])).to(equal, 1);
 				expect(KOI.indexOf("a", ["b"])).to(equal, -1);
-			}); 
+			});
 			it ("can determine if items are in arrays", function () {
 				expect(KOI.inArray("a", ["b", "a"])).to(be_true);
 				expect(KOI.inArray("a", ["b"])).to(be_false);
@@ -223,7 +223,7 @@
 				expect(KOI.isString(KOI.testVar)).to(be_true);
 				expect(KOI.testMethod()).to(equal, "testMethod");
 				expect(KOI.testVar).to(equal, "testVar");
-			}); 
+			});
 			it("exposes via namespaces", function () {
 				KOI.expose({
 					testVar: "testVar",
@@ -238,7 +238,7 @@
 				expect(KOI.isString(KOI.testname.testVar)).to(be_true);
 				expect(KOI.testname.testMethod()).to(equal, "testMethod");
 				expect(KOI.testname.testVar).to(equal, "testVar");
-			}); 
+			});
 			it("allows overriding of methods", function () {
 				KOI.expose({a: function () {
 					return "a";

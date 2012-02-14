@@ -9,7 +9,7 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
 	"use strict";
-   
+
 	Screw.Unit(function () {
 		describe("bind and triggering", function () {
 			it("can bind and trigger an event", function () {
@@ -62,7 +62,7 @@
 				expect(executed).to(equal, 0);
 			});
 			it("supports toggle events", function () {
-				KOI.toggleEvents.testToggle = false; 
+				KOI.toggleEvents.testToggle = false;
 				var triggered = 0;
 				KOI.bind("testToggle", function () {
 					triggered += 1;
@@ -118,7 +118,7 @@
 				var e = document.createElement("a"),
 					triggered = false;
 				KOI.listen(e, "click", function () {
-					triggered = true; 
+					triggered = true;
 				});
 				KOI.fire(e, "click");
 				expect(triggered).to(be_true);
@@ -126,7 +126,7 @@
 			it("can bind a domready event", function () {
 				KOI.bind("DOMReady", function () {
 					expect(KOI.isDOMReady).to(be_true);
-				}); 
+				});
 			});
 			it("triggers koi-event links", function () {
 				var e = document.createElement("a"),

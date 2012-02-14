@@ -9,7 +9,7 @@
 /*jslint regexp: true, browser: true, maxerr: 50, indent: 4, maxlen: 79 */
 (function () {
 	"use strict";
-   
+
 	Screw.Unit(function () {
 		describe("deeplink event resolution", function () {
 
@@ -21,7 +21,7 @@
 				});
 
 				// cheating a bit, but it's not my fault hashchanges are async
-				KOI.executeRoute('/change'); 
+				KOI.executeRoute('/change');
 
 				expect(triggered).to(be_true);
 			});
