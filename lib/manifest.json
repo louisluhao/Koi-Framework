@@ -1,36 +1,50 @@
 {
-    "api": {
-        "comp": ["js"],
-        "reqs": ["core", "url", "event"]
-    },
-    "bootstrap": {
-        "comp": ["js"]
-    },
-    "core": {
-        "comp": ["js"]
-    },
-    "deeplink": {
-        "comp": ["js"],
-        "reqs": ["core", "url", "event"]
-    },
-    "event": {
-        "comp": ["js"],
-        "reqs": ["core"]
-    },
-    "format": {
-        "comp": ["js"],
-        "reqs": ["core"]
-    },
-    "markup": {
-        "comp": ["js"],
-        "reqs": ["core"]
-    },
-    "update": {
-        "comp": ["js"],
-        "reqs": ["core"]
-    },
-    "url": {
-        "comp": ["js"],
-        "reqs": ["core"]
-    }
+	"api": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core", "url", "event"]
+		}
+	},
+	"bootstrap": {
+		"comp": ["js"]
+	},
+	"core": {
+		"comp": ["js"]
+	},
+	"deeplink": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core", "url", "event"]
+		}
+	},
+	"event": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core"]
+		}
+	},
+	"format": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core"]
+		}
+	},
+	"markup": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core"]
+		}
+	},
+	"update": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core"]
+		}
+	},
+	"url": {
+		"comp": ["js"],
+		"reqs": {
+			"koi": ["core"]
+		}
+	}
 }
