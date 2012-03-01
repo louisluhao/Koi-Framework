@@ -88,7 +88,7 @@
       '\\': '\\\\'
     };
     var r = /["\\\x00-\x1f\x7f-\x9f]/g;
-    
+
     var str = r.test(value)
       ? '"' + value.replace(r, function (a) {
           var c = character_substitutions[a];
@@ -223,13 +223,13 @@
             throw(matcher.failure_message(expected, actual, not));
           }
         },
-        
+
         to_not: function(matcher, expected) {
           this.to(matcher, expected, true);
         }
       }
     },
-    
+
     equal: {
       match: function(expected, actual) {
         if (expected instanceof Array) {
@@ -246,12 +246,12 @@
           return expected == actual;
         }
       },
-      
+
       failure_message: function(expected, actual, not) {
         return 'expected ' + $.print(actual) + (not ? ' to not equal ' : ' to equal ') + $.print(expected);
       }
     },
-    
+
     match: {
       match: function(expected, actual) {
         if (expected.constructor == RegExp)
@@ -259,19 +259,19 @@
         else
           return actual.indexOf(expected) > -1;
       },
-      
+
       failure_message: function(expected, actual, not) {
         return 'expected ' + $.print(actual) + (not ? ' to not match ' : ' to match ') + $.print(expected);
       }
     },
-    
+
     be_empty: {
       match: function(expected, actual) {
         if (actual.length == undefined) throw(actual.toString() + " does not respond to length");
-        
+
         return actual.length == 0;
       },
-      
+
       failure_message: function(expected, actual, not) {
         return 'expected ' + $.print(actual) + (not ? ' to not be empty' : ' to be empty');
       }
@@ -359,7 +359,7 @@
   }
 })(jQuery);(function($) {
   $(Screw)
-    .bind('loaded', function() {    
+    .bind('loaded', function() {
       $('.describe, .it')
         .click(function() {
           document.location = location.href.split('?')[0] + '?' + $(this).fn('selector');
@@ -388,7 +388,7 @@
             .append($('<p class="error">').text(reason.toString()))
 
           var file = reason.fileName || reason.sourceURL;
-          var line = reason.lineNumber || reason.line;          
+          var line = reason.lineNumber || reason.line;
           if (file || line) {
             $(this).append($('<p class="error">').text('line ' + line + ', ' + file));
           }
@@ -414,37 +414,37 @@
       parent: function() {
         return $(this).parent('.describes').parent('.describe');
       },
-      
+
       run_befores: function() {
         $(this).fn('parent').fn('run_befores');
         $(this).children('.befores').children('.before').fn('run');
       },
-      
+
       run_afters: function() {
         $(this).fn('parent').fn('run_afters');
         $(this).children('.afters').children('.after').fn('run');
       },
-      
+
       enqueue: function() {
         $(this).children('.its').children('.it').fn('enqueue');
         $(this).children('.describes').children('.describe').fn('enqueue');
       },
-      
+
       selector: function() {
         return $(this).fn('parent').fn('selector')
           + ' > .describes > .describe:eq(' + $(this).parent('.describes').children('.describe').index(this) + ')';
       }
     });
-  
+
     $('body > .describe').fn({
       selector: function() { return 'body > .describe' }
     });
-    
+
     $('.it').fn({
       parent: function() {
         return $(this).parent('.its').parent('.describe');
       },
-      
+
       run: function() {
         try {
           try {
@@ -458,7 +458,7 @@
           $(this).trigger('failed', [e]);
         }
       },
-      
+
       enqueue: function() {
         var self = $(this).trigger('enqueued');
         $(Screw)
@@ -467,17 +467,17 @@
             setTimeout(function() { $(Screw).dequeue() }, 0);
           });
       },
-      
+
       selector: function() {
         return $(this).fn('parent').fn('selector')
           + ' > .its > .it:eq(' + $(this).parent('.its').children('.it').index(this) + ')';
       }
     });
-    
+
     $('.before').fn({
       run: function() { $(this).data('screwunit.run')() }
-    }); 
-  
+    });
+
     $('.after').fn({
       run: function() { $(this).data('screwunit.run')() }
     });

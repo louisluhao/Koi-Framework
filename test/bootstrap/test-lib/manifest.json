@@ -1,0 +1,8 @@
+{
+	"test": {
+		"comp": ["js", "css", "html", "images"],
+		"reqs": {
+			"koi": ["api"]
+		}
+	}
+}

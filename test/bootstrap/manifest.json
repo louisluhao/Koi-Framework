@@ -1,11 +1,27 @@
 {
 	"libraryPathOverrides": {
-		"koi": null
+		"koi": null,
+		"test": "./test-lib"
 	},
 	"includes": {
 		"koi": [
-			"api",
 			"format"
+		],
+		"test": [
+			"test"
+		]
+	},
+	"application": {
+		"scripts": [
+			"http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min",
+			"app/test_script",
+			"../screw",
+			"../matchers",
+			"bootstrap"
+		],
+		"styles": [
+			"app/test_styles",
+			"../screw"
 		]
 	}
 }

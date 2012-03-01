@@ -13,18 +13,21 @@
 
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<!-- ScrewUnit -->
-	<link media="screen" rel="stylesheet" type="text/css" href="../screw.css"/>
 	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js" type="text/javascript" charset="utf-8"></script>
-	<script type="text/javascript" src="../screw.js"></script>
-	<script type="text/javascript" src="../matchers.js"></script>
-	
+
 	<!-- System Under Test -->
-	<script id="koi-bootstrap" src="../../lib/bootstrap/bootstrap.js" type="text/javascript" charset="utf-8"></script>
-	
-	<!-- Spec -->
-	<script src="bootstrap.js" type="text/javascript" charset="utf-8"></script>
+	<script id="koi-bootstrap" src="../../lib/bootstrap/bootstrap.js" type="text/javascript" charset="utf-8"></script>	
+	<script type="text/javascript" charset="utf-8">
+		// Special re-fire for bootstrap testing
+		window.bootstrapping_complete = function () {
+    		$(Screw).trigger('loaded');
+		}
+	</script>
+
 </head>
 <body>
+	<div id="red-test-box"></div>
+	<div id="blue-test-box"></div>
 </body>
 </html>
 
