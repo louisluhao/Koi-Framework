@@ -14,7 +14,8 @@
 	"deeplink": {
 		"comp": ["js"],
 		"reqs": {
-			"koi": ["core", "url", "event"]
+			"koi": ["core", "url", "event"],
+			"history": ["history.adapter.native"]
 		}
 	},
 	"event": {

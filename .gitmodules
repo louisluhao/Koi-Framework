@@ -1,0 +1,3 @@
+[submodule ".koi/src/history"]
+	path = .koi/src/history
+	url = https://github.com/balupton/history.js.git
