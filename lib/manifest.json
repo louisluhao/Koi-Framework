@@ -15,7 +15,7 @@
 		"comp": ["js"],
 		"reqs": {
 			"koi": ["core", "url", "event"],
-			"history": ["history.adapter.native"]
+			"history": ["history.adapter.native.js"]
 		}
 	},
 	"event": {
